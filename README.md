@@ -23,6 +23,14 @@ Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.
 
 ## Changelog
 
+### 0.9.0 · 17 November 2026
+- **The graphical overhaul.** Everything is redrawn, still all in code:
+  - **Board:** raised stone tiles with icons for each region, a glowing circuit path, hills on the horizon, drifting embers, snow, rain or leaves, and proper game pieces for you and your rivals.
+  - **Arenas:** flagstone floors for each region (lava cracks, frost, rain puddles, grass and flowers), rocks round the edge, live weather and lightning flashes.
+  - **Your hero:** a little character with a cape and their class weapon (sword, fists, staff, bow, lance, or mace and shield) that swings, thrusts and draws.
+  - **Enemies:** slimes, flame wisps, darts, hooded hexers, horned brutes and bosses with glowing cores, all still outlined in the element they attack with.
+  - Glowing slash trails, spell trails, spark streaks, a hex-shield guard and a new title screen.
+  - Cards in your hand now look like cards, with an icon for each type.
 ### 0.8.0 · 17 November 2026
 - **A roster of heroes.** Make a new hero of any class without losing the others. Each keeps their own level, gear, gems, deck and any circuit in progress. Switch between them from the title screen.
 - Main menu: how to play, settings (sound, screen shake, board speed), leave a review, support, install the app, get the latest version, and credits.
