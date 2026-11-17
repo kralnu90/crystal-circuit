@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Crystal Circuit</title>
+<meta name="description" content="A board game and an action RPG in one. Roll 2d6, fight in real time, play cards against three AI rivals. Free, from Kralnu Games.">
+<meta name="theme-color" content="#0b1040">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:title" content="Crystal Circuit">
+<meta property="og:description" content="Roll the board. Fight the fates. Out-play your rivals.">
+<meta property="og:image" content="https://kralnugames.com/crystal-circuit.jpg">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#070916;color:#eef1ff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-user-select:none;user-select:none;touch-action:none}
+canvas{position:fixed;left:0;top:0;width:100%;height:100%;display:block;touch-action:none}
+.hidden{display:none!important}
+.win{background:linear-gradient(160deg,#22348a,#0b1040 70%);border:2px solid #cdd6ff;border-radius:10px;box-shadow:0 4px 18px #000a, inset 0 0 0 1px #0008}
+button{font:inherit;color:#eef1ff;background:linear-gradient(#3a4fb5,#1c2a78);border:1.5px solid #cdd6ff;border-radius:8px;padding:9px 14px;font-weight:600;touch-action:manipulation}
+button:active{filter:brightness(1.3)}
+button:disabled{opacity:.4}
+button.gold{background:linear-gradient(#e0b03a,#96650f);border-color:#fff1c2;color:#1a1200}
+button.sm{padding:6px 10px;font-size:13px}
+
+#title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:calc(24px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));gap:12px;overflow-y:auto;touch-action:pan-y}
+#title h1{margin:0;font-size:36px;letter-spacing:2px;text-align:center;text-shadow:0 0 18px #6fd3ff,0 2px 0 #000}
+#title .sub{opacity:.8;font-size:13px;text-align:center;margin-top:-6px}
+#tbox{width:min(420px,100%);padding:14px;display:flex;flex-direction:column;gap:8px}
+#tbox h3{margin:6px 0 2px;font-size:13px;text-transform:uppercase;letter-spacing:1px;opacity:.8}
+#tbox p{margin:0;font-size:13px;line-height:1.4;opacity:.9}
+#tbox textarea,#cardIn input,#cardIn textarea{font:inherit;width:100%;padding:8px;border-radius:8px;border:1.5px solid #cdd6ff;background:#060a2a;color:#fff;-webkit-user-select:text;user-select:text;margin:4px 0}
+#cardIn label{display:block;text-align:left;font-size:13px;margin-top:6px;opacity:.85}
+.stars{display:flex;gap:6px;justify-content:center;font-size:30px}
+.stars button{padding:2px 6px;background:none;border:none;color:#556}
+.stars button.on{color:#ffd66d}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mrow button{padding:9px 6px;font-size:13.5px}
+.hero{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.hero.on{background:linear-gradient(#e0b03a,#96650f);color:#1a1200;border-color:#fff1c2}
+.hero small{opacity:.8;font-weight:400;font-size:12px}
+.help{text-align:left;font-size:13.5px;line-height:1.45}
+.help b{color:#ffd66d}
+#tbox input{font:inherit;width:100%;padding:9px;border-radius:8px;border:1.5px solid #cdd6ff;background:#060a2a;color:#fff;-webkit-user-select:text;user-select:text}
+.brow{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left}
+.brow small{opacity:.75;font-weight:400;font-size:12px}
+.credit{font-size:11px;opacity:.6;text-align:center}
+
+#top{position:fixed;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top));padding:8px 10px;display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;font-size:13px;pointer-events:none}
+.bar{height:11px;background:#050720;border:1px solid #8a94d0;border-radius:6px;overflow:hidden;position:relative}
+.bar i{display:block;height:100%;width:50%}
+.bar span{position:absolute;inset:0;font-size:9px;line-height:10px;text-align:center;text-shadow:0 0 2px #000,0 0 2px #000}
+#hpB i{background:linear-gradient(#6dff8f,#1e9c45)}#mpB i{background:linear-gradient(#7fb8ff,#2b55d4)}#lmB i{background:linear-gradient(#ffd66d,#ff7a2f)}#xpB i{background:#c79bff}
+#bars{display:grid;grid-template-columns:1fr 1fr;gap:4px 6px}
+#info{position:fixed;left:8px;right:8px;top:calc(74px + env(safe-area-inset-top));text-align:center;font-size:12px;pointer-events:none;text-shadow:0 1px 2px #000}
+#info .sb{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:4px;font-size:11.5px}
+#info .sb span{background:#0008;border-radius:6px;padding:2px 6px;display:flex;justify-content:space-between;gap:6px}
+#info .sb i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(146px + env(safe-area-inset-top));padding:8px 14px;font-size:13.5px;font-weight:600;max-width:94%;text-align:center;transition:opacity .35s;opacity:0;pointer-events:none;z-index:5}
+
+#bottom{position:fixed;left:8px;right:8px;bottom:calc(10px + env(safe-area-inset-bottom));padding:10px;display:flex;align-items:center;gap:10px}
+#plays{position:fixed;left:8px;right:8px;bottom:calc(92px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:4px}
+#plays .hi{font-size:11px;text-align:center;opacity:.85;text-shadow:0 1px 2px #000}
+#plays .hr{display:flex;gap:5px}
+#plays .hr button{flex:1;min-width:0;padding:5px 2px;font-size:11px;line-height:1.15;border-width:2px;min-height:44px;background:linear-gradient(#26357e,#111a52)}
+#plays .hr button small{display:block;font-size:9px;font-weight:500;opacity:.8}
+#dice{display:flex;gap:6px;font-size:44px;line-height:40px}
+#dice span{display:inline-block;width:40px;text-align:center}
+#rollBtn{flex:1;font-size:19px;padding:14px 4px}
+
+.overlay{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;padding:14px;z-index:10}
+#cardIn{width:min(380px,100%);max-height:100%;overflow-y:auto;padding:18px;text-align:center;touch-action:pan-y}
+#cardIn h2{margin:0 0 8px;font-size:21px}
+#cardIn p{margin:6px 0;line-height:1.4}
+#cardIn .btns{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.d12{width:92px;height:92px;margin:6px auto 10px;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:800;color:#0b1040;background:linear-gradient(135deg,#fff,#9fd0ff);clip-path:polygon(50% 0,97% 35%,79% 92%,21% 92%,3% 35%);filter:drop-shadow(0 0 8px #6fd3ff)}
+.d12.fight{background:linear-gradient(135deg,#ffd0d0,#ff5a6e)}
+.tag{display:inline-block;padding:1px 7px;border-radius:9px;font-size:11px;font-weight:700;color:#0b1040}
+.rw{display:grid;grid-template-columns:1fr auto;gap:2px 14px;text-align:left;margin:8px auto;max-width:260px}
+.pod{text-align:left;margin:6px 0;font-size:14px}
+.pod div{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+.pod .me{color:#ffd66d;font-weight:700}
+
+#menuIn{width:min(440px,100%);max-height:calc(100% - 20px);display:flex;flex-direction:column}
+.tabs{display:flex;gap:4px;padding:8px;flex-wrap:wrap}
+.tab{padding:7px 8px;font-size:12.5px;background:#101a55}
+.tab.on{background:linear-gradient(#e0b03a,#96650f);color:#1a1200}
+.tab.x{margin-left:auto}
+.mbody{overflow-y:auto;padding:4px 12px 14px;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+.mbody h3{margin:12px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:.75;border-bottom:1px solid #cdd6ff44;padding-bottom:3px}
+.row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #ffffff12;font-size:14px}
+.row .g{flex:1;min-width:0}
+.row small{display:block;opacity:.7;font-size:11.5px}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;font-size:14px}
+.sg div{display:flex;justify-content:space-between}
+.gilc{color:#ffd66d;font-weight:700}
+
+#chud .cb{position:fixed;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;line-height:1.1;background:radial-gradient(circle at 35% 30%,#4a62d8cc,#141d60cc);touch-action:none}
+#chud .cb small{font-size:9px;opacity:.85;font-weight:500}
+#bAtk{right:16px;bottom:calc(26px + env(safe-area-inset-bottom));width:88px;height:88px;font-size:15px!important;background:radial-gradient(circle at 35% 30%,#ff8a6bcc,#8c1d2bcc)!important}
+#bDodge{right:114px;bottom:calc(20px + env(safe-area-inset-bottom));width:62px;height:62px}
+#bGuard{right:24px;bottom:calc(124px + env(safe-area-inset-bottom));width:62px;height:62px}
+#bSkill{right:100px;bottom:calc(94px + env(safe-area-inset-bottom));width:64px;height:64px;background:radial-gradient(circle at 35% 30%,#b98affcc,#44208acc)!important}
+#bLimit{background:radial-gradient(circle at 35% 30%,#ffe28acc,#b3560fcc)!important;color:#1a1200!important}
+#bLimit.rdy{animation:pulse .7s infinite alternate}
+@keyframes pulse{to{box-shadow:0 0 22px 6px #ffc24d}}
+#spells{position:fixed;right:10px;bottom:calc(198px + env(safe-area-inset-bottom));display:flex;gap:6px}
+#spells .cb,#items .cb{position:static!important;width:52px;height:52px;font-size:11px!important}
+#items{position:fixed;left:10px;top:calc(150px + env(safe-area-inset-top));display:flex;gap:8px}
+#items .cb{width:48px;height:48px}
+#khelp{position:fixed;left:10px;bottom:8px;font-size:11px;opacity:.5;pointer-events:none}
+@media (pointer:coarse){#khelp{display:none}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="title">
+  <h1>CRYSTAL CIRCUIT</h1>
+  <div class="sub">Roll the board. Fight the fates. Out-play your rivals. &nbsp;·&nbsp; v0.8.0 · work in progress</div>
+  <div id="tbox" class="win"></div>
+  <div class="credit">Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.<br>A Kralnu Games game · free, no ads.</div>
+</div>
+
+<div id="top" class="win hidden">
+  <div><b id="tName">Lv 1</b></div>
+  <div id="bars">
+    <div class="bar" id="hpB"><i></i><span></span></div>
+    <div class="bar" id="mpB"><i></i><span></span></div>
+    <div class="bar" id="xpB"><i></i><span></span></div>
+    <div class="bar" id="lmB"><i></i><span></span></div>
+  </div>
+  <div class="gilc"><span id="tGil">0</span> gil</div>
+</div>
+<div id="info" class="hidden"></div>
+<div id="toast" class="win"></div>
+
+<div id="plays" class="hidden"></div>
+<div id="bottom" class="win hidden">
+  <div id="dice"><span id="d1">&#9856;</span><span id="d2">&#9856;</span></div>
+  <button id="rollBtn" class="gold" data-act="roll">ROLL</button>
+  <button data-act="menu">MENU</button>
+</div>
+
+<div id="chud" class="hidden">
+  <div id="items">
+    <button class="cb" id="bPot">Potion<small id="nPot">x0</small></button>
+    <button class="cb" id="bEth">Ether<small id="nEth">x0</small></button>
+  </div>
+  <div id="spells"></div>
+  <button class="cb" id="bGuard">GUARD</button>
+  <button class="cb" id="bSkill">SKILL</button>
+  <button class="cb" id="bDodge">DODGE</button>
+  <button class="cb" id="bAtk">ATTACK</button>
+  <div id="khelp">WASD move · J attack · K guard · L dodge · F skill · 1-4 spells · Q potion · E ether · Space limit</div>
+</div>
+
+<div id="card" class="overlay hidden"><div class="win" id="cardIn"></div></div>
+<div id="menu" class="overlay hidden"><div class="win" id="menuIn"></div></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   CRYSTAL CIRCUIT - prototype foundation v0.2
+   Sections:  1 DATA (edit these tables to tune/extend)   2 STATE & SAVE
+              3 BOARD & MATCH FLOW   4 FATE (D12), RIVALS, BOSS ROUNDS
+              5 BATTLE (ARPG)        6 MENUS / SHOP / FORGE   7 RENDER & LOOP
+   ===================================================================== */
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const rf=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const GAME_VERSION='0.8.0';
+let SPD=1,TS=1; // SPD speeds up board waits (Settings > Board speed); TS is a test hook for battle time
+const SET=(()=>{try{return Object.assign({sound:true,shake:true,speed:'normal'},JSON.parse(localStorage.getItem('cc-settings'))||{});}catch(e){return{sound:true,shake:true,speed:'normal'};}})();
+function applySet(){SPD=SET.speed==='fast'?2.2:1;try{localStorage.setItem('cc-settings',JSON.stringify(SET));}catch(e){}}
+let AC=null,lastHit=0;
+function tone(f,d,type,v,when){if(!SET.sound)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+  const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+(when||0);o.type=type||'square';o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(v||.05,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+.02);}catch(e){}}
+const SFX={hit:big=>{const n=performance.now();if(n-lastHit<45)return;lastHit=n;tone(big?620:340,.06,'square',.045);tone(120,.09,'triangle',.05);},
+  hurt:()=>tone(150,.13,'sawtooth',.04),dice:()=>{tone(900,.03,'square',.03);tone(700,.03,'square',.03,.05);},card:()=>[520,780].forEach((f,i)=>tone(f,.08,'triangle',.04,i*.06)),
+  win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.13,'square',.04,i*.09)),lose:()=>[392,311,247].forEach((f,i)=>tone(f,.18,'triangle',.05,i*.12)),trap:()=>tone(90,.25,'sawtooth',.06)};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms/SPD));
+const fmt=n=>n>=10000?(n/1000).toFixed(0)+'k':n>=1000?(n/1000).toFixed(1)+'k':''+Math.round(n);
+
+/* ---------------- 1. DATA ---------------- */
+const ROUNDS=30;
+const EL={fire:{n:'Fire',c:'#ff7b3a'},ice:{n:'Ice',c:'#7fd8ff'},bolt:{n:'Bolt',c:'#ffe45c'},wind:{n:'Wind',c:'#8dffb0'}};
+const BIOMES=[
+ {id:'ember',n:'Ember Reach',el:'fire',opp:'ice', c:'#a8442a',f:'#2b1410',g:'#4a2118'},
+ {id:'frost',n:'Frost Hollow',el:'ice', opp:'fire',c:'#2f7ea6',f:'#0e1c2a',g:'#183248'},
+ {id:'storm',n:'Storm Shelf', el:'bolt',opp:'wind',c:'#9a8226',f:'#1e1a0c',g:'#3a3216'},
+ {id:'gale', n:'Gale Steppe', el:'wind',opp:'bolt',c:'#2d9462',f:'#0d2016',g:'#173a28'}];
+
+// Boards are a path string: R/L/U/D + number of tiles. Close the loop back to the start.
+const BOARDS=[
+ {id:'square',n:'Crown Square',    path:'R7 D7 L7 U7'},
+ {id:'ell',   n:"Serpent's Ell",   path:'R9 D3 L4 D4 L5 U7'},
+ {id:'cross', n:'The Crossing',    path:'R3 D3 R3 D3 L3 D3 L3 U3 L3 U3 R3 U3'},
+ {id:'glass', n:'The Hourglass',   path:'R8 D4 L2 D2 R2 D4 L8 U4 R2 U2 L2 U4'},
+ {id:'grand', n:'Grand Circuit',   path:'R10 D14 L10 U14'},
+ {id:'castle',n:'Castle Walls',    path:'R2 D2 R2 U2 R2 D2 R2 U2 R2 D12 L2 U2 L2 D2 L2 U2 L2 D2 L2 U12'},
+ {id:'coil',  n:'The Long Coil',   path:'R10 D2 L8 D2 R8 D2 L8 D2 R8 D2 L10 U10'}];
+
+// Each class plays differently: its basic attack, a unique skill and its stat spread.
+const CLASSES={
+ warrior: {n:'Warrior', wpn:'Blade',    c:'#6fa8ff',d:'Balanced swordplay, 3-hit combo. Skill: Whirlwind hits all around you.',
+   hp:1.1,mp:.9,str:1.1,mag:.8,def:1.1,spd:1,   atk:{type:'arc',reach:78,cos:.2,cd:.3,dmg:1,hits:3},     skill:{id:'whirl',n:'WHIRL',cd:6}},
+ monk:    {n:'Monk',    wpn:'Gauntlets',c:'#ffb35c',d:'Very fast 5-hit fists at close range, quick on its feet. Skill: Chi Dash strikes through enemies.',
+   hp:1,mp:.8,str:1,mag:.7,def:.9,spd:1.15,     atk:{type:'arc',reach:62,cos:.1,cd:.17,dmg:.62,hits:5},  skill:{id:'chi',n:'CHI DASH',cd:5}},
+ mage:    {n:'Mage',    wpn:'Staff',    c:'#c78bff',d:'Fragile. Fires magic bolts from range, big MP pool that slowly refills, stronger spells. Skill: Meteor.',
+   hp:.8,mp:1.6,str:.6,mag:1.35,def:.8,spd:1,   atk:{type:'shot',stat:'mag',cd:.42,dmg:1,sp:480},        skill:{id:'meteor',n:'METEOR',cd:10},mpRegen:1,spell:1.2},
+ ranger:  {n:'Ranger',  wpn:'Bow',      c:'#8dffb0',d:'Fast arrows from a distance, light armour. Skill: Volley fires a fan of seven arrows.',
+   hp:.9,mp:1,str:1.05,mag:.9,def:.85,spd:1.1,  atk:{type:'shot',stat:'str',cd:.36,dmg:.8,sp:640},       skill:{id:'volley',n:'VOLLEY',cd:6}},
+ lancer:  {n:'Lancer',  wpn:'Lance',    c:'#7fe3e3',d:'Long, narrow thrusts that need good aim. Skill: Jump leaps untouchable, then crashes down.',
+   hp:1,mp:.9,str:1.15,mag:.8,def:1,spd:1,      atk:{type:'arc',reach:128,cos:.82,cd:.42,dmg:1.25,hits:3},skill:{id:'jump',n:'JUMP',cd:8}},
+ guardian:{n:'Guardian',wpn:'Mace',     c:'#ffd66d',d:'Slow, heavy 2-hit swings and the best guard: blocks 88% and hits attackers back. Skill: Shield Bash.',
+   hp:1.3,mp:.9,str:1,mag:.9,def:1.35,spd:.9,   atk:{type:'arc',reach:84,cos:-.1,cd:.5,dmg:1.5,hits:2},  skill:{id:'bash',n:'BASH',cd:7},guard:.12,reflect:true}};
+
+// The D12 "fate" table. 1/4/8/12 are encounters (easiest -> hardest). The rest are placeholders to redesign.
+const FATE={
+ 1:{t:'fight',tier:'easy'},  2:{t:'gil'},   3:{t:'card'},   4:{t:'fight',tier:'normal'},
+ 5:{t:'item'},               6:{t:'spring'},7:{t:'trap'},   8:{t:'fight',tier:'hard'},
+ 9:{t:'merchant'},          10:{t:'exp'},  11:{t:'rare'},  12:{t:'fight',tier:'boss'}};
+// off = enemy level relative to yours. comps = possible enemy groups. p = a rival's base chance to win it.
+const TIERS={
+ easy:  {key:'easy',n:'Easy',  off:-2,c:'#8dffb0',p:.95,cost:.08,comps:[['gloop','gloop'],['dart','gloop'],['wisp','gloop'],['cinder','gloop']]},
+ normal:{key:'normal',n:'Normal',off:0, c:'#ffe45c',p:.82,cost:.15,comps:[['gloop','wisp','gloop'],['dart','dart','wisp'],['hexer','gloop','gloop'],['cinder','cinder','wisp'],['brute','gloop']]},
+ hard:  {key:'hard',n:'Hard',  off:2, c:'#ff9a4a',p:.62,cost:.25,comps:[['wisp','brute','wisp','gloop'],['hexer','brute','dart'],['dart','dart','dart','hexer'],['cinder','cinder','brute','wisp']]},
+ boss:  {key:'boss',n:'Deadly',off:4, c:'#ff5a6e',p:.42,cost:.35,comps:[['gloop','warden','gloop'],['hexer','warden','dart']]}};
+// Boss rounds: everyone must face these at the end of the round.
+const BOSSR={
+ 10:{n:'The Gatekeeper',   d:'A giant of stone and iron bars the road. Every challenger must face it.',comp:['gatekeeper'],off:1,p:.7,cost:.3,c:'#ff9a4a'},
+ 20:{n:'The Storm Hexarch',d:'The sky splits. A sorcerer of the old circuit descends with its thralls.',comp:['dart','hexarch','dart'],off:2,p:.58,cost:.35,c:'#ff5a6e'},
+ 30:{n:'The Crystal Tyrant',d:'The heart of the circuit wakes. This is the final battle.',comp:['tyrant'],off:3,p:.48,cost:.4,c:'#ff3b6e'}};
+
+const ENEMY={
+ gloop: {phys:1,n:'Gloop', hp:38, atk:8, def:1,spd:95, r:18,weak:'fire',c:'#59d98a',exp:10,gil:6},
+ wisp:  {phys:.5,el:'ice',n:'Wisp',  hp:26, atk:7, def:0,spd:120,r:14,weak:'ice', c:'#c78bff',exp:12,gil:7},
+ dart:  {phys:1,el:'wind',n:'Dart',  hp:30, atk:9, def:0,spd:125,r:13,weak:'wind',c:'#6fd3ff',exp:13,gil:7},
+ hexer: {phys:.5,el:'bolt',n:'Hexer', hp:34, atk:10,def:0,spd:85, r:15,weak:'bolt',c:'#ff8ad1',exp:16,gil:10},
+ cinder:{phys:1,el:'fire',n:'Cinder',hp:22, atk:10,def:0,spd:140,r:14,weak:'ice', c:'#ff7b3a',exp:11,gil:6},
+ brute: {phys:.6,n:'Brute', hp:110,atk:13,def:3,spd:60, r:28,weak:'bolt',c:'#d98a59',exp:28,gil:16},
+ warden:    {phys:.7,n:'Warden',        hp:300,atk:14,def:4,spd:70,r:40,c:'#e04a6a',exp:90, gil:55, boss:true,moves:['slam','ring']},
+ gatekeeper:{phys:.5,n:'Gatekeeper',    hp:420,atk:13,def:5,spd:75,r:42,c:'#b9a27a',exp:130,gil:90, boss:true,moves:['slam','charge']},
+ hexarch:   {phys:.55,el:'bolt',n:'Storm Hexarch', hp:500,atk:13,def:3,spd:80,r:36,c:'#b06bff',exp:170,gil:120,boss:true,moves:['rain','ring','summon']},
+ tyrant:    {phys:.6,n:'Crystal Tyrant',hp:900,atk:14,def:5,spd:80,r:46,c:'#ff4f8a',exp:320,gil:250,boss:true,moves:['slam','ring','charge','rain','summon']}};
+
+// Gems slot into weapons (like materia). Spell gems give combat spells, passive gems give bonuses.
+const GEMS={
+ fire:    {n:'Fire',    kind:'spell',el:'fire',mp:4,pow:1.6,cd:1.0,price:120,d:'Homing fireball.'},
+ blizzard:{n:'Blizzard',kind:'spell',el:'ice', mp:4,pow:1.3,cd:1.2,price:150,d:'Ice shard that slows.'},
+ thunder: {n:'Thunder', kind:'spell',el:'bolt',mp:5,pow:1.8,cd:1.5,price:150,d:'Instant strike, small blast.'},
+ aero:    {n:'Aero',    kind:'spell',el:'wind',mp:5,pow:1.2,cd:1.8,price:150,d:'Gust around you, knocks foes back.'},
+ cure:    {n:'Cure',    kind:'spell',el:null,  mp:8,pow:0,  cd:4.0,price:120,d:'Restore some HP.'},
+ vigor:   {n:'Vigor',   kind:'passive',price:200,d:'+20% max HP.'},
+ focus:   {n:'Focus',   kind:'passive',price:200,d:'+20% Magic.'},
+ fury:    {n:'Fury',    kind:'passive',price:260,d:'Limit gauge fills 50% faster.'},
+ elemental:{n:'Elemental',kind:'support',price:250,d:'Link with an element spell. On a weapon: your strikes carry that element. On armour: halves damage from that element.'},
+ spread:  {n:'Spread',  kind:'support',price:300,d:'Link with a spell to widen it: more projectiles, bigger blasts, stronger Cure. Costs 50% more MP.'}};
+// Weapons are named "<pre> <class weapon>", e.g. Iron Lance. lvl = level they start appearing in shops.
+// Traits: el = strikes carry that element, drain = heal from hits, crit = 15% double damage, mphit = extra MP per hit, stag = staggers faster, limit = Limit fills faster.
+const WEAPONS={
+ rust:   {pre:"Traveller's",atk:6, mag:0, slots:[2],    price:0,   lvl:0},
+ bronze: {pre:'Bronze',     atk:8, mag:1, slots:[1,1],  price:90,  lvl:1},
+ iron:   {pre:'Iron',       atk:11,mag:2, slots:[2,1],  price:180, lvl:2},
+ ember:  {pre:'Emberforged',atk:12,mag:4, slots:[2],    price:300, lvl:3, el:'fire'},
+ frost:  {pre:'Frostbite',  atk:12,mag:4, slots:[2],    price:300, lvl:3, el:'ice'},
+ storm:  {pre:'Stormcaller',atk:11,mag:6, slots:[2],    price:300, lvl:4, el:'bolt'},
+ gale:   {pre:'Galewind',   atk:11,mag:5, slots:[2],    price:300, lvl:4, el:'wind'},
+ rune:   {pre:'Runed',      atk:9, mag:9, slots:[2,2],  price:320, lvl:4},
+ vamp:   {pre:'Vampiric',   atk:14,mag:3, slots:[2],    price:450, lvl:6, drain:1},
+ keen:   {pre:'Keen',       atk:15,mag:2, slots:[1,1],  price:420, lvl:6, crit:1},
+ cleaver:{pre:"Warlord's",  atk:19,mag:0, slots:[1,1],  price:520, lvl:7, stag:1},
+ sage:   {pre:"Sage's",     atk:10,mag:14,slots:[2,2],  price:650, lvl:8, mphit:1},
+ crystal:{pre:'Crystal',    atk:16,mag:12,slots:[2,2,1],price:900, lvl:10},
+ tyrant: {pre:"Tyrant's",   atk:22,mag:6, slots:[2,1],  price:1100,lvl:12,crit:1,stag:1},
+ dragon: {pre:'Dragonbone', atk:24,mag:10,slots:[2,2],  price:1350,lvl:14,limit:1}};
+// Armour traits: res = halves that element's damage, mp = extra MP, regen = slowly heals in fights, thorns = melee attackers take damage, dodge = faster dodge recovery, guard = stronger guard.
+const ARMOUR={
+ cloth:  {n:'Cloth Vest',    def:2, hp:0,  slots:[1],    price:0,   lvl:0},
+ padded: {n:'Padded Jerkin', def:4, hp:10, slots:[1,1],  price:90,  lvl:1},
+ leather:{n:'Leather Coat',  def:5, hp:20, slots:[2],    price:160, lvl:2},
+ robe:   {n:'Mage Robe',     def:4, hp:10, slots:[2,1],  price:240, lvl:3, mp:15},
+ escale: {n:'Ember Scale',   def:8, hp:30, slots:[2],    price:340, lvl:4, res:'fire'},
+ fhide:  {n:'Frost Hide',    def:8, hp:30, slots:[2],    price:340, lvl:4, res:'ice'},
+ sweave: {n:'Storm Weave',   def:7, hp:30, slots:[2],    price:340, lvl:5, res:'bolt'},
+ gcloak: {n:'Gale Cloak',    def:6, hp:20, slots:[2,1],  price:360, lvl:5, res:'wind',dodge:1},
+ chain:  {n:'Chain Mail',    def:9, hp:40, slots:[2,1],  price:380, lvl:6},
+ thorn:  {n:'Thornplate',    def:12,hp:50, slots:[2],    price:600, lvl:8, thorns:1},
+ verdant:{n:'Verdant Mail',  def:10,hp:60, slots:[2,1],  price:700, lvl:9, regen:1},
+ mythril:{n:'Mythril Plate', def:14,hp:80, slots:[2,2],  price:800, lvl:10},
+ bastion:{n:'Bastion Plate', def:17,hp:100,slots:[2,1],  price:1100,lvl:12,guard:1},
+ dscale: {n:'Dragon Scale',  def:18,hp:110,slots:[2,2,1],price:1400,lvl:14,mp:20}};
+const ITEMS={ // bought at merchants
+ potion: {n:'Potion',      price:40, d:'Restores 35% HP. Usable in fights.'},
+ ether:  {n:'Ether',       price:60, d:'Restores 50% MP. Usable in fights.'},
+ hipot:  {n:'Hi-Potion',   price:110,d:'Restores 70% HP. Used by the Potion button in fights once Potions run out.'},
+ elixir: {n:'Elixir',      price:320,d:'Fully restores HP and MP. Use it from the menu.'}
+};
+const ACC={
+ band:  {n:'Power Band', d:'+4 Strength',str:4,price:220},
+ ring:  {n:'Mage Ring',  d:'+4 Magic, +10 MP',mag:4,mp:10,price:220},
+ boots: {n:'Swift Boots',d:'+15% move speed',spd:1.15,price:260},
+ charm: {n:'Guard Charm',d:'Guard blocks 90%',guard:0.1,price:300}};
+// ---- CARDS ----  k = how it works. Rarity: C common, R rare, E epic, L legendary.
+const CARDS={
+ haste:     {n:'Haste',        r:'C',k:'move', v:3, d:'+3 to your next roll.'},
+ sprint:    {n:'Sprint',       r:'R',k:'move', v:6, d:'+6 to your next roll.'},
+ pace:      {n:'Pace',         r:'C',k:'pace',      d:'Choose now: +2 or -2 to your next roll.'},
+ fate:      {n:'Fate Shift',   r:'C',k:'fate',      d:'Choose now: +1 or -1 to your next Fate Die.'},
+ safe:      {n:'Safe Passage', r:'R',k:'self',      d:'Your next Fate Die cannot be an encounter.'},
+ hunt:      {n:'Call the Hunt',r:'E',k:'self',      d:'Your next Fate Die is a Hard fight with double rewards.'},
+ warp:      {n:'Warp',         r:'R',k:'self',      d:'Your next move goes straight to the next Merchant ahead.'},
+ rest:      {n:'Second Wind',  r:'C',k:'now',       d:'Restore 20% HP and MP now.'},
+ windfall:  {n:'Windfall',     r:'C',k:'now',       d:'Gain some gil now.'},
+ barrier:   {n:'Barrier',      r:'C',k:'buff',      d:'Your next fight starts with a shield worth 30% of your max HP.'},
+ surge:     {n:'Surge',        r:'C',k:'buff',      d:'Your next fight starts with at least half a Limit gauge.'},
+ berserk:   {n:'Berserk',      r:'C',k:'buff',      d:'Next fight: deal 30% more damage, take 20% more.'},
+ opening:   {n:'Opening',      r:'R',k:'buff',      d:'Next fight: enemies start with their stagger bars half full.'},
+ bounty:    {n:'Bounty',       r:'R',k:'buff',      d:'Double EXP and gil from your next fight win.'},
+ ward:      {n:'Ward',         r:'C',k:'def',       d:'Cancels the next hostile card played on you.'},
+ mirror:    {n:'Mirror',       r:'E',k:'def',       d:'Bounces the next hostile card back at whoever played it.'},
+ reverse:   {n:'Reverse',      r:'C',k:'hostile',   d:"A rival's next roll moves them backwards."},
+ slow:      {n:'Slow',         r:'C',k:'hostile',   d:"-3 to a rival's next roll."},
+ skip:      {n:'Skip',         r:'R',k:'hostile',   d:'A rival misses their next turn.'},
+ curse:     {n:'Curse',        r:'R',k:'hostile',   d:"A rival's next encounter is one tier harder."},
+ sap:       {n:'Sap',          r:'C',k:'hostile',   d:'A rival loses 20% of their HP.'},
+ pickpocket:{n:'Pickpocket',   r:'R',k:'hostile',   d:"Steal a random card from a rival's hand."},
+ sticky:    {n:'Sticky Trap',  r:'C',k:'trap',      d:'Hidden trap on your tile. A rival passing over it is stopped dead there.'},
+ snare:     {n:'Snare',        r:'C',k:'trap',      d:'Hidden trap on your tile. A rival passing over it loses 20% HP.'},
+ ambush:    {n:'Ambush',       r:'R',k:'trap',      d:'Hidden trap on your tile. A rival who lands on it faces a Hard fight.'},
+ buck:      {n:'Pass the Buck',r:'R',k:'buck',      d:'Play when you roll an encounter: hand it to a rival. They get double rewards if they win.'},
+ timestop:  {n:'Time Stop',    r:'L',k:'hostile-all',d:'Every rival who is not Wary misses their next turn.'}};
+const RAR={C:{n:'Common',c:'#cfd6ff',w:60,w2:30,price:50},R:{n:'Rare',c:'#6fd3ff',w:28,w2:40,price:100},E:{n:'Epic',c:'#c78bff',w:10,w2:23,price:180},L:{n:'Legendary',c:'#ffd66d',w:2,w2:7,price:0}};
+const KCOL={move:'#8dffb0',pace:'#8dffb0',fate:'#ffe45c',self:'#ffe45c',now:'#9dffb5',buff:'#ff9a4a',def:'#7fe3ff',hostile:'#ff5a6e','hostile-all':'#ff5a6e',trap:'#ff8ad1',buck:'#ff8ad1'};
+const DECK=15,HAND=5,PLAYMAX=2,TRAPLIFE=6;
+const STARTER=['haste','haste','pace','fate','fate','reverse','slow','skip','ward','ward','sticky','barrier','barrier','surge','buck'];
+const RDECKS={ // rival decks: theme + how they pick targets
+ trapper:  {n:'Trapper',  pers:'Wildcard',   cards:['sticky','sticky','snare','snare','ambush','ambush','ward','ward','haste','haste','slow','slow','barrier','barrier','fate']},
+ speedster:{n:'Speedster',pers:'Opportunist',cards:['haste','haste','sprint','sprint','pace','pace','warp','warp','ward','ward','reverse','reverse','surge','barrier','buck']},
+ saboteur: {n:'Saboteur', pers:'Vengeful',   cards:['skip','skip','reverse','reverse','slow','slow','curse','curse','sap','sap','pickpocket','pickpocket','ward','ward','buck']}};
+const PERS={Wildcard:'targets anyone at random',Opportunist:'goes after whoever is leading',Vengeful:'goes after whoever has hurt it most'};
+const copyMax=id=>CARDS[id].r==='L'?1:2;
+const counts=a=>a.reduce((o,k)=>(o[k]=(o[k]||0)+1,o),{});
+const PRICES={potion:40,ether:60,bore:300,play:90};
+const MAXUP=5;
+const WIPE=.2; // share of distance travelled lost when you are defeated
+// Difficulty: enemy HP / damage multipliers, rec = how long enemies rest between attacks (lower = more aggressive), rw = reward multiplier.
+const DIFF={
+ story:  {n:'Story',  hp:1,   atk:1,   rec:1,   rw:.8, d:'The old v0.2 fights. For relaxing.'},
+ normal: {n:'Normal', hp:1.45,atk:1.5, rec:.75, rw:1,  d:'Guard, dodge and weaknesses all matter.'},
+ hard:   {n:'Hard',   hp:1.8, atk:1.85,rec:.6,  rw:1.3,d:'Mistakes hurt. +30% EXP and gil.'}};
+const DF=()=>DIFF[(G.m&&G.m.diff)||(G.p&&G.p.diff)||'normal'];
+const RIVALS=['Brann','Sera','Ilko','Maeve','Dax','Orla','Tobin','Vessa'];
+const RCOL=['#ff8a6b','#c79bff','#8dffb0'];
+const PRIZE=[600,350,150];
+
+/* ---------------- 2. STATE & SAVE ---------------- */
+const SAVE='crystal-circuit-v2';
+const G={scene:'title',p:null,m:null,board:null,busy:false,doubles:false,time:0,toks:[],hops:[0,0,0,0],shop:false,menuTab:'status'};
+let B=null; // current battle
+
+function newPlayer(cls){return{cls,lvl:1,exp:0,hp:999,mp:999,gil:100,limit:0,weapon:'rust',armour:'cloth',acc:null,
+  weapons:['rust'],armours:['cloth'],accs:[],gems:['fire','cure','elemental'],ws:['fire','elemental'],as:['cure'],up:{},bore:{},potion:2,ether:1,
+  deck:STARTER.slice(),coll:counts(STARTER),wins:0,matches:0,golds:0,crowns:0};}
+const need=l=>Math.floor(40*Math.pow(l,1.5));
+const wName=id=>WEAPONS[id].pre+' '+CLASSES[G.p.cls].wpn;
+// Gem sockets: ws = weapon sockets, as = armour sockets (arrays of gem ids or null). Layout = group sizes; a 2 is a linked pair.
+function layoutOf(where,id){const p=G.p;if(where==='w')return WEAPONS[id].slots.concat(p.bore[id]?[1]:[]);return ARMOUR[id].slots;}
+function slotsOf(id){return layoutOf('w',id).reduce((a,b)=>a+b,0);}
+function aSlotsOf(id){return layoutOf('a',id).reduce((a,b)=>a+b,0);}
+function pairs(where){const p=G.p,L=layoutOf(where,where==='w'?p.weapon:p.armour),arr=where==='w'?p.ws:p.as,out=[];let i=0;for(const g of L){if(g===2)out.push([arr[i],arr[i+1]]);i+=g;}return out;}
+const partner=(pr,kind)=>{const[a,b]=pr;if(a&&GEMS[a].kind===kind)return[a,b];if(b&&GEMS[b].kind===kind)return[b,a];return null;};
+function linkFx(where){ // what each linked pair does
+  const out={el:null,res:[],spread:[]};
+  for(const pr of pairs(where)){
+    const e=partner(pr,'support');if(!e||!e[1])continue;const sup=e[0],sp=GEMS[e[1]];if(sp.kind!=='spell')continue;
+    if(sup==='elemental'&&sp.el){if(where==='w')out.el=sp.el;else out.res.push(sp.el);}
+    if(sup==='spread')out.spread.push(e[1]);
+  }return out;}
+function migrate(p){if(!p.deck){p.deck=STARTER.slice();p.coll=counts(STARTER);delete p.cards;}if(!p.ws){p.ws=(p.slotted||[]).slice();p.as=[];delete p.slotted;}if(!p.gems.includes('elemental'))p.gems.push('elemental');return p;}
+function S(){ // derived stats
+  const p=G.p,C=CLASSES[p.cls],w=WEAPONS[p.weapon],a=ARMOUR[p.armour],c=ACC[p.acc]||{},wu=p.up[p.weapon]||0,au=p.up[p.armour]||0,L=p.lvl-1;
+  const has=g=>p.ws.includes(g)||p.as.includes(g),lw=linkFx('w'),la=linkFx('a');
+  let maxhp=Math.round((100+18*L)*C.hp)+a.hp+au*6; if(has('vigor'))maxhp=Math.round(maxhp*1.2);
+  let mag=Math.round((8+2*L)*C.mag)+w.mag+wu+(c.mag||0); if(has('focus'))mag=Math.round(mag*1.2);
+  return{cls:C,maxhp,maxmp:Math.round((20+4*L)*C.mp)+(c.mp||0)+(a.mp||0),str:Math.round((8+2*L)*C.str)+w.atk+2*wu+(c.str||0),mag,
+    def:Math.round((4+L)*C.def)+a.def+2*au,spd:(c.spd||1)*C.spd,guard:Math.min(c.guard||.3,C.guard||.3,a.guard?.15:.3),slots:slotsOf(p.weapon),limitRate:(has('fury')?1.5:1)*(w.limit?1.3:1),wEl:lw.el||w.el||null,res:la.res.concat(a.res?[a.res]:[]),drain:w.drain,crit:w.crit,mphit:w.mphit,stagB:w.stag?1.5:1,regen:a.regen,thorns:a.thorns,dodgeB:a.dodge?.7:1,spread:lw.spread.concat(la.spread)};
+}
+function fixVitals(){const st=S(),p=G.p;p.hp=clamp(p.hp,0,st.maxhp);p.mp=clamp(p.mp,0,st.maxmp);const fit=(arr,n)=>{arr.length=Math.max(arr.length,0);while(arr.length>n)arr.pop();};fit(p.ws,slotsOf(p.weapon));fit(p.as,aSlotsOf(p.armour));}
+function heal(fh,fm){const st=S(),p=G.p;p.hp=Math.min(st.maxhp,p.hp+Math.round(st.maxhp*fh));p.mp=Math.min(st.maxmp,p.mp+Math.round(st.maxmp*(fm==null?fh:fm)));}
+function gainExp(n){const p=G.p;p.exp+=n;let ups=0;const a=S();while(p.exp>=need(p.lvl)){p.exp-=need(p.lvl);p.lvl++;ups++;}
+  if(ups){const b=S();p.hp+=b.maxhp-a.maxhp;p.mp+=b.maxmp-a.maxmp;}return ups;} // level-ups no longer fully heal
+// Hero roster: every hero keeps their own class, level, gear, gems, deck and circuit in progress.
+const HSAVE='crystal-circuit-heroes';
+function loadAll(){
+  let a=null;try{a=JSON.parse(localStorage.getItem(HSAVE));}catch(e){}
+  if(!a){let s=null;try{s=JSON.parse(localStorage.getItem(SAVE));}catch(e){}a={slots:s&&s.p&&s.p.cls?[{p:s.p,m:s.m}]:[],cur:0};} // older single save becomes hero 1
+  a.slots=(a.slots||[]).filter(x=>x&&x.p&&x.p.cls);a.slots.forEach(x=>migrate(x.p));if(!(a.cur<a.slots.length))a.cur=0;return a;
+}
+function storeAll(a){try{localStorage.setItem(HSAVE,JSON.stringify(a));}catch(e){}}
+function save(){if(!G.p)return;const a=loadAll();if(G.slot==null||G.slot>a.slots.length)G.slot=a.slots.length;a.slots[G.slot]={p:G.p,m:G.m};a.cur=G.slot;storeAll(a);}
+function load(){const a=loadAll(),s=a.slots[a.cur];G.slot=s?a.cur:null;return s||null;}
+
+/* ---------------- 3. BOARD & MATCH FLOW ---------------- */
+function parsePath(str){
+  const dirs={R:[1,0],L:[-1,0],U:[0,-1],D:[0,1]};let x=0,y=0;const pts=[[0,0]];const re=/([RLUD])\s*(\d+)/gi;let m,any=false;
+  while((m=re.exec(str))){any=true;const d=dirs[m[1].toUpperCase()],n=Math.min(30,+m[2]);for(let i=0;i<n;i++){x+=d[0];y+=d[1];pts.push([x,y]);}}
+  if(!any)return{error:'Use moves like R7 D7 L7 U7'};
+  const l=pts[pts.length-1];if(l[0]===0&&l[1]===0)pts.pop();
+  const seen=new Set();for(const p of pts){const k=p.join();if(seen.has(k))return{error:'Path crosses itself'};seen.add(k);}
+  if(pts.length<12)return{error:'Needs at least 12 tiles'};if(pts.length>120)return{error:'Max 120 tiles'};
+  return{pts};
+}
+function buildBoard(def){
+  const r=parsePath(def.path);if(r.error)return null;const n=r.pts.length;
+  const tiles=r.pts.map((p,i)=>({x:p[0],y:p[1],kind:'wild',biome:BIOMES[Math.floor(i/(n/4))%4]}));
+  tiles[0].kind='start';const shops=Math.max(2,Math.round(n/14));
+  for(let k=0;k<shops;k++)tiles[Math.round((k+.6)*n/shops)%n].kind='shop';tiles[0].kind='start';
+  const xs=tiles.map(t=>t.x),ys=tiles.map(t=>t.y);const minx=Math.min(...xs),miny=Math.min(...ys);
+  return{def,tiles,n,minx,miny,cols:Math.max(...xs)-minx+1,rows:Math.max(...ys)-miny+1};
+}
+function newMatch(def){
+  const b=buildBoard(def);if(!b){toast('That board path is not valid');return;}
+  if(G.p.deck.length!==DECK){toast(`Your deck needs exactly ${DECK} cards`);openDeck();return;}
+  const names=RIVALS.slice().sort(()=>Math.random()-.5),cls=Object.keys(CLASSES).sort(()=>Math.random()-.5);
+  G.m={def,diff:G.p.diff||'normal',round:1,pos:0,dist:0,dmg:0,traps:[],log:[],
+    riv:[0,1,2].map(i=>({n:names[i],cls:cls[i],col:RCOL[i],lvl:G.p.lvl,exp:0,hpf:1,pos:0,dist:0,dmg:0,wins:0}))};
+  initCards(G.m);
+  const st=S();G.p.hp=st.maxhp;G.p.mp=st.maxmp;G.p.limit=0; // fresh at the start of a match only
+  enterMatch(b);
+}
+function enterMatch(b){
+  G.board=b||buildBoard(G.m.def);G.busy=false;G.doubles=false;fixVitals();
+  if(!G.m.ps)initCards(G.m);G.m.ps.plays=0;G.m.ps.discUsed=false;drawUp(G.m.ps);
+  G.toks=[0,1,2,3].map(i=>{const t=G.board.tiles[posOf(i)];return{x:t.x,y:t.y};});
+  save();setScene('board');toast(`Round ${G.m.round} of ${ROUNDS} - your turn`);
+}
+const posOf=i=>i===0?G.m.pos:G.m.riv[i-1].pos;
+const DIE=n=>String.fromCharCode(9855+n);
+async function moveTok(i,steps,dir,delay){
+  const m=G.m,n=G.board.n,who=i===0?m:m.riv[i-1],key=i===0?'me':i-1;
+  for(let k=0;k<steps;k++){
+    who.pos=(who.pos+dir+n)%n;who.dist+=dir;G.hops[i]=1;if(dir>0&&who.pos===0)lapBonus(i);await sleep(delay);
+    const ti=m.traps.findIndex(t=>t.pos===who.pos&&t.owner!==key&&t.id!=='ambush');
+    if(ti>=0){const t=m.traps.splice(ti,1)[0];await trapHit(t,key,i);if(t.id==='sticky')return t;}
+  }
+  return null;
+}
+function lapBonus(i){
+  if(i===0){const p=G.p,g=40+p.lvl*8;p.gil+=g;heal(.25);toast(`Circuit complete! +${g} gil, a little rest`);}
+  else{const r=G.m.riv[i-1];r.hpf=Math.min(1,r.hpf+.25);}
+}
+async function rollDice(){let a,b;SFX.dice();for(let i=0;i<9;i++){a=rnd(1,6);b=rnd(1,6);$('d1').textContent=DIE(a);$('d2').textContent=DIE(b);await sleep(55);}return[a,b];}
+async function doRoll(){
+  if(G.busy||G.scene!=='board')return;G.busy=true;$('rollBtn').disabled=true;const m=G.m,ps=m.ps;
+  const[a,b]=await rollDice();G.doubles=a===b;let steps=a+b,dir=1;const notes=[];
+  if(ps.warp){steps=toShop(m.pos);notes.push('Warp to the Merchant');}
+  else{if(ps.mod)notes.push(`${ps.mod>0?'+':''}${ps.mod}`);if(ps.slow)notes.push(`slowed -${ps.slow}`);steps=Math.max(1,steps+ps.mod-ps.slow);if(ps.rev){dir=-1;notes.push('REVERSED');}}
+  ps.mod=0;ps.slow=0;ps.rev=false;ps.warp=false;
+  toast(`Rolled ${a+b}${notes.length?` (${notes.join(', ')}) - moving ${steps}`:''}${G.doubles?' - doubles, roll again':''}`);
+  await sleep(250);await moveTok(0,steps,dir,180);await sleep(200);
+  const tile=G.board.tiles[m.pos],am=takeAmbush('me');
+  if(am){await card('Ambush!','<p>A hidden Ambush springs on you! A Hard fight.</p>',[['Fight!','ok','gold']]);const T=TIERS.hard;await playerFight({n:'Ambush',comp:pick(T.comps),off:T.off,drops:'hard',c:T.c},tile,1);}
+  else if(tile.kind==='start'){heal(.5);await card('Sanctuary',"<p>You rest in the crystal's light. 50% HP and MP restored.</p>",[['Continue','ok']]);}
+  else if(tile.kind==='shop'){if(await card("Merchant's Rest",'<p>A trader has made camp here, anvil and all.</p>',[['Shop & Forge','shop','gold'],['Leave','ok']])==='shop')await shopVisit();}
+  else await fate(tile);
+  fixVitals();save();
+  if(G.doubles){G.busy=false;$('rollBtn').disabled=false;$('rollBtn').textContent='ROLL AGAIN';toast('Doubles - roll again!');return;}
+  await restOfRound();
+}
+async function restOfRound(){
+  const m=G.m;$('rollBtn').textContent='RIVALS...';
+  while(true){
+    for(const r of m.riv)await aiTurn(r);
+    if(BOSSR[m.round])await bossRound(BOSSR[m.round]);
+    if(m.round>=ROUNDS){await finishMatch();return;}
+    m.round++;m.traps=m.traps.filter(t=>m.round-t.round<=TRAPLIFE);
+    const L=leaderKey();for(const k of['me',0,1,2])if(k!==L){const g=AG(k).ps.grudge;g[L]=(g[L]||0)+.5;} // the leader slowly draws everyone's attention
+    m.ps.plays=0;m.ps.discUsed=false;drawUp(m.ps);
+    if(m.ps.skip){m.ps.skip=false;await card('Skipped!','<p>A Skip card lands on you. You miss this turn.</p>',[['Grr...','ok']]);continue;}
+    break;
+  }
+  fixVitals();save();G.busy=false;$('rollBtn').disabled=false;$('rollBtn').textContent='ROLL';
+  const fx=activeFx(m.ps).filter(x=>/Reversed|Slowed/.test(x));toast(`Round ${m.round} of ${ROUNDS} - your turn${fx.length?' ('+fx.join(', ')+')':''}`);
+}
+function standings(key){const m=G.m;return[{n:'You',me:true,v:m[key]},...m.riv.map(r=>({n:r.n,r,v:r[key]}))].sort((a,b)=>b.v-a.v);}
+async function finishMatch(){
+  const p=G.p,race=standings('dist'),dmg=standings('dmg'),k=1+p.lvl*.05;let gil=0,extra=[];
+  const pod=(list,unit)=>'<div class="pod">'+list.map((e,i)=>{let pr='-';if(i<3){const g=Math.round(PRIZE[i]*k/10)*10;pr=g+' gil'+(i===0?' + treasure':'');if(e.me){gil+=g;if(i===0){extra.push(giveRare(),giveCard(true));p.golds++;}else if(Math.random()<.5)extra.push(giveCard(false));}}
+    return `<div class="${e.me?'me':''}"><span>${i+1}. ${e.n} <small>(${fmt(e.v)} ${unit})</small></span><span>${pr}</span></div>`;}).join('')+'</div>';
+  const h=`<p><b>Race</b> - furthest travelled</p>${pod(race,'tiles')}<p><b>Might</b> - most damage dealt</p>${pod(dmg,'dmg')}`;
+  p.gil+=gil;p.matches++;
+  await card('The Circuit Ends',h+`<p>Your winnings: <b class="gilc">${gil} gil</b>${extra.length?' + '+extra.join(', '):''}</p>`,[['Continue','ok','gold']]);
+  if(race[0].me||dmg[0].me){ // Triple Triad nod: beat them and take one of their cards
+    const offer=shuffle([...new Set(G.m.riv.flatMap(r=>RDECKS[r.arch].cards))]).slice(0,3);
+    const c=await card('Claim a Rival Card',`<p>You topped a podium. Take one card from your rivals' decks for your collection.</p>`,offer.map(id=>[`${CARDS[id].n} (${RAR[CARDS[id].r].n})`,id]));
+    G.p.coll[c]=(G.p.coll[c]||0)+1;toast(`${CARDS[c].n} added to your collection`);
+  }
+  G.m=null;G.busy=false;const st=S();p.hp=st.maxhp;p.mp=st.maxmp;save();setScene('title');
+}
+
+/* ---------------- 4. FATE (D12), RIVALS, BOSS ROUNDS ---------------- */
+let cardRes=null;
+function card(title,html,btns){
+  $('cardIn').innerHTML=`<h2>${title}</h2>${html}<div class="btns">${btns.map(b=>`<button class="${b[2]||''}" data-act="card" data-arg="${b[1]}">${b[0]}</button>`).join('')}</div>`;
+  $('card').classList.remove('hidden');
+  return new Promise(r=>{cardRes=r;});
+}
+const OK=[['Continue','ok']];
+const foeNames=comp=>comp.map(k=>ENEMY[k].n).join(', ');
+// A real fight for the player. spec:{n,comp,off,drops,c}. mult = reward multiplier (2 when the buck was passed to you).
+async function playerFight(spec,tile,mult){
+  const p=G.p,ps=G.m&&G.m.ps,buf=ps?ps.buf:{};if(ps)ps.buf={};if(buf.bounty)mult*=2;
+  const res=await battle(spec,tile,buf);
+  if(res.win){
+    let exp=0,gil=0;res.en.forEach(e=>{const k=1+0.3*(e.lvl-1);exp+=Math.round(e.b.exp*k);gil+=Math.round(e.b.gil*(1+.12*(e.lvl-1))*rf(.8,1.2));});exp=Math.round(exp*mult*DF().rw);gil=Math.round(gil*mult*DF().rw);
+    const drops=rollDrops(spec.drops),cd=cardDrop(spec.drops);if(cd)drops.push('New '+cd);p.gil+=gil;p.wins++;if(spec.final)p.crowns++;const ups=gainExp(exp);
+    await card(spec.final?'The Tyrant Falls!':'Victory!',`<div class="rw"><span>EXP${mult>1?' (x2)':''}</span><b>+${exp}</b><span>Gil${mult>1?' (x2)':''}</span><b class="gilc">+${gil}</b>${drops.map(d=>`<span>Found</span><b>${d}</b>`).join('')}</div>${ups?`<p><b style="color:#ffd66d">Level up! Now Lv ${p.lvl}</b></p>`:''}`,OK);
+  }else{
+    const lost=Math.floor(p.gil*0.25);p.gil-=lost;const st=S();p.hp=Math.round(st.maxhp*.5);p.mp=Math.max(p.mp,Math.round(st.maxmp*.25));G.m.pos=0;G.doubles=false;const lt=wipeDist(G.m);
+    await card('Defeated...',`<p>You wake at the Sanctuary at half health, ${lost} gil lighter.</p><p>You lose <b style="color:#ff7b7b">${lt} tiles</b> of travel distance.</p>`,OK);
+  }
+  return res.win;
+}
+// A rival's fight, resolved behind the scenes. They can lose, and wins cost them health.
+function simFight(r,comp,off,pBase,cost,mult){
+  const lvl=Math.max(1,r.lvl+off);let hp=0,exp=0;comp.forEach(k=>{const b=ENEMY[k];hp+=Math.round(b.hp*(1+.22*(lvl-1)));exp+=Math.round(b.exp*(1+.3*(lvl-1)));});
+  let bonus=0;const ps=r.ps;if(ps){for(const b of['barrier','surge','berserk','opening'])if(ps.buf[b])bonus+=.08;if(ps.buf.bounty)mult*=2;ps.buf={};}
+  const win=Math.random()<pBase*(.55+.45*r.hpf)+bonus;
+  hp=Math.round(hp*1.3);if(win){r.dmg+=hp;r.wins++;r.hpf=Math.max(.05,r.hpf-cost*rf(.6,1.3));rivExp(r,exp*mult);}
+  else{r.dmg+=Math.round(hp*rf(.3,.7));r.hpf=.5;r.pos=0;r.sent=true;r.lost=wipeDist(r);}
+  return win;
+}
+function wipeDist(who){const lost=Math.max(5,Math.round(Math.max(0,who.dist)*WIPE));who.dist-=lost;return lost;}
+function rivExp(r,x){r.exp+=x;while(r.exp>=need(r.lvl)){r.exp-=need(r.lvl);r.lvl++;}}
+function leader(){const s=standings('dist')[0];return s.me?'me':s.r;}
+async function aiTurn(r){
+  const m=G.m,k=m.riv.indexOf(r),i=k+1,ps=r.ps;
+  r.lvl=Math.max(r.lvl,G.p.lvl-1); // rivals keep pace with you
+  ps.plays=0;ps.discUsed=false;drawUp(ps);
+  if(ps.skip){ps.skip=false;toast(`${r.n} is skipped this turn`);await sleep(1000);return;}
+  await aiCards(r,k);
+  let again=true,g=0;
+  while(again&&g++<3){
+    const a=rnd(1,6),b=rnd(1,6);again=a===b;$('d1').textContent=DIE(a);$('d2').textContent=DIE(b);
+    let steps=a+b,dir=1,note='';
+    if(ps.warp){steps=toShop(r.pos);note=' - WARP';}
+    else{if(ps.mod>0)note+=` +${ps.mod}`;if(ps.slow)note+=` (slowed -${ps.slow})`;steps=Math.max(1,steps+ps.mod-ps.slow);if(ps.rev){dir=-1;note+=' - REVERSED';}}
+    ps.mod=0;ps.slow=0;ps.rev=false;ps.warp=false;
+    toast(`${r.n} rolls ${a+b}${note}${again?' - doubles':''}`);await sleep(380);
+    await moveTok(i,steps,dir,85);await sleep(150);
+    const msg=await aiLand(r,k);toast(msg);await sleep(1050);
+    if(r.sent){r.sent=false;again=false;}
+  }
+}
+async function aiLand(r,k){
+  const tile=G.board.tiles[r.pos],up=f=>{r.hpf=clamp(r.hpf+f,.05,1);},ps=r.ps,am=takeAmbush(k);
+  if(am){const T=TIERS.hard,w=simFight(r,pick(T.comps),T.off,T.p,T.cost,1);logIt(`${am.owner==='me'?'Your':AG(am.owner).n+"'s"} Ambush caught ${r.n}`);
+    return `${am.owner==='me'?'Your Ambush catches':'An ambush hits'} ${r.n}! ${w?'They survive it':`They're beaten - back to the Sanctuary, -${r.lost} tiles`}`;}
+  if(tile.kind==='start'){up(.5);return `${r.n} rests at the Sanctuary`;}
+  if(tile.kind==='shop'){up(.3);return `${r.n} stocks up at the merchant`;}
+  const n=fateRoll(ps).n,f=FATE[n];
+  if(f.t==='fight'){
+    let tier=f.tier,cursed='';if(ps.curse){tier=TIERUP[tier];ps.curse=false;cursed=' (cursed!)';}
+    const T=TIERS[tier],comp=pick(T.comps),bk=ps.hand.find(c=>c.id==='buck');
+    if((tier==='hard'||tier==='boss')&&bk&&ps.plays<PLAYMAX&&Math.random()<.6){
+      const tgt=chooseTarget(k,RDECKS[r.arch].pers);
+      if(tgt!==null){ps.hand.splice(ps.hand.indexOf(bk),1);if(!bk.t)ps.disc.push(bk);ps.plays++;return await passBuck(k,tgt,comp,T,tile);}
+    }
+    return simFight(r,comp,T.off,T.p,T.cost,1)?`${r.n} wins a ${T.n} fight${cursed}`:`${r.n} loses a ${T.n} fight${cursed} - back to the Sanctuary, -${r.lost} tiles`;
+  }
+  if(f.t==='spring'){up(.25);return `${r.n} finds a healing spring`;}
+  if(f.t==='trap'){up(-.12);return `${r.n} walks into a trap`;}
+  if(f.t==='item'||f.t==='merchant'){up(.15);return `${r.n} picks up supplies`;}
+  if(f.t==='exp'){rivExp(r,Math.round(need(r.lvl)*.25));return `${r.n} gains experience`;}
+  if(f.t==='card'){ps.hand.push({id:pick(vendorStock()),t:true});return `${r.n} finds a card`;}
+  return `${r.n} has a quiet turn`;
+}
+async function bossRound(bs){
+  const m=G.m,p=G.p,final=m.round>=ROUNDS;
+  await card(`Round ${m.round}: ${bs.n}`,`<p>${bs.d}</p><p><span class="tag" style="background:${bs.c}">Boss</span> &nbsp;Enemy Lv ${Math.max(1,p.lvl+bs.off)}</p>`,[['Fight!','ok','gold']]);
+  await playerFight({n:bs.n,comp:bs.comp,off:bs.off,drops:'bossround',c:bs.c,final},G.board.tiles[m.pos],1);
+  let h='';for(const r of m.riv){const w=simFight(r,bs.comp,bs.off,bs.p,bs.cost,1);r.sent=false;h+=`<div><span>${r.n}</span><span>${w?'<b style="color:#8dffb0">Victory</b>':`<b style="color:#ff7b7b">Defeated, -${r.lost} tiles</b>`}</span></div>`;}
+  await card(`Rivals vs ${bs.n}`,`<div class="pod">${h}</div>`,OK);
+}
+async function fate(tile){
+  $('cardIn').innerHTML=`<h2>Fate Die</h2><div class="d12" id="d12">?</div><p>${tile.biome.n}</p>`;$('card').classList.remove('hidden');
+  for(let i=0;i<11;i++){$('d12').textContent=rnd(1,12);await sleep(60);}
+  const fr=fateRoll(G.m.ps),n=fr.n;
+  const f=FATE[n],p=G.p,m=G.m,st=S();const die=`<div class="d12 ${f.t==='fight'?'fight':''}">${n}</div>${fr.notes.length?`<p><small>${fr.notes.join(' · ')}</small></p>`:''}`;
+  if(f.t==='fight'){
+    let tier=f.tier,cursed='';if(m.ps.curse){tier=TIERUP[tier];m.ps.curse=false;cursed='<p><b style="color:#ff5a6e">Cursed! This fight is one tier harder.</b></p>';}
+    const T=TIERS[tier],lvl=Math.max(1,p.lvl+T.off),comp=pick(T.comps),bk=m.ps.hand.find(c=>c.id==='buck');
+    const btns=[['Fight!','ok','gold']];if(bk&&m.ps.plays<PLAYMAX)btns.push(['Pass the Buck','buck']);
+    const c=await card('Encounter!',`${die}${cursed}<p><span class="tag" style="background:${T.c}">${T.n}</span> &nbsp;Enemy Lv ${lvl}</p><p><small>${foeNames(comp)}</small></p><p><small>Attacks: ${[...new Set(comp.map(k=>ENEMY[k].el||tile.biome.el))].map(x=>`<b style="color:${EL[x].c}">${EL[x].n}</b>`).join(', ')}</small></p>`,btns);
+    let passed=false;
+    if(c==='buck'){
+      const w=await card('Pass the Buck','<p>Who gets this fight? They earn double rewards if they win. Wary rivals can\'t be targeted this round.</p>',[...m.riv.map((r,i)=>[`${r.n} (${Math.round(r.hpf*100)}% HP)${r.ps.wary===m.round?' - wary':''}`,''+i]).filter((x,i)=>m.riv[i].ps.wary!==m.round),['Keep it','x']]);
+      if(w!=='x'){m.ps.hand.splice(m.ps.hand.indexOf(bk),1);if(!bk.t)m.ps.disc.push(bk);m.ps.plays++;passed=true;await passBuck('me',+w,comp,T,tile);}
+    }
+    if(!passed)await playerFight({n:T.n,comp,off:T.off,drops:tier,c:T.c},tile,1);
+  }else if(f.t==='gil'){const g=rnd(15,35)+p.lvl*5;p.gil+=g;await card('Lucky Find',`${die}<p>A pouch in the dust: <b class="gilc">+${g} gil</b>.</p>`,OK);}
+  else if(f.t==='card'){const id=pick(vendorStock());m.ps.hand.push({id,t:true});await card('A Trick Up Your Sleeve',`${die}<p>You find a card: <b>${CARDS[id].n}</b> (temporary, added to your hand).</p><p><small>${CARDS[id].d}</small></p>`,OK);}
+  else if(f.t==='item'){const e=Math.random()<.35;if(e)p.ether++;else p.potion++;await card('Supplies',`${die}<p>You find ${e?'an <b>Ether</b>':'a <b>Potion</b>'}.</p>`,OK);}
+  else if(f.t==='spring'){heal(.25);await card('Healing Spring',`${die}<p>Cool water restores 25% HP and MP.</p>`,OK);}
+  else if(f.t==='trap'){const d=Math.min(p.hp-1,Math.round(st.maxhp*.15));p.hp-=d;await card('Trap!',`${die}<p>A hidden snare bites for <b style="color:#ff7b7b">${d} damage</b>.</p>`,OK);}
+  else if(f.t==='merchant'){if(await card('Wandering Merchant',`${die}<p>A pedlar waves you over.</p>`,[['Shop & Forge','shop','gold'],['Leave','ok']])==='shop')await shopVisit();}
+  else if(f.t==='exp'){const x=Math.round(need(p.lvl)*.25),ups=gainExp(x);await card("Hero's Echo",`${die}<p>A memory of an old battle: <b>+${x} EXP</b>.</p>${ups?`<p><b style="color:#ffd66d">Level up! Now Lv ${p.lvl}</b></p>`:''}`,OK);}
+  else if(f.t==='rare'){const g=giveRare();await card('Hidden Cache',`${die}<p>Behind a loose stone: <b>${g}</b>.</p>`,OK);}
+}
+function giveGem(){const un=Object.keys(GEMS).filter(k=>!G.p.gems.includes(k));if(!un.length)return null;const k=pick(un);G.p.gems.push(k);return GEMS[k].n+' Gem';}
+function giveAcc(){const un=Object.keys(ACC).filter(k=>!G.p.accs.includes(k));if(!un.length)return null;const k=pick(un);G.p.accs.push(k);return ACC[k].n;}
+function giveRare(){let g=Math.random()<.6?giveGem()||giveAcc():giveAcc()||giveGem();if(!g){G.p.gil+=150;g='150 gil';}return g;}
+function rollDrops(tier){const p=G.p,out=[],r=Math.random();
+  if(tier==='easy'){if(r<.2){p.potion++;out.push('Potion');}}
+  else if(tier==='normal'){if(r<.35){p.potion++;out.push('Potion');}else if(r<.5){p.ether++;out.push('Ether');}}
+  else if(tier==='hard'){if(r<.6){p.potion++;out.push('Potion');}else{p.ether++;out.push('Ether');}if(Math.random()<.3){const g=giveGem();if(g)out.push(g);}}
+  else{p.potion++;p.ether++;out.push('Potion','Ether',giveRare());}
+  return out;}
+
+
+/* ---------------- 4b. CARDS ENGINE ---------------- */
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+function newPS(ids){return{deck:shuffle(ids.map(id=>({id}))),hand:[],disc:[],mod:0,slow:0,rev:false,skip:false,curse:false,fate:0,safe:false,hunt:false,warp:false,ward:false,mirror:false,wary:0,buf:{},grudge:{},plays:0,discUsed:false};}
+function initCards(m){
+  m.traps=m.traps||[];m.log=m.log||[];
+  if(!m.ps){m.ps=newPS(G.p.deck);drawUp(m.ps);}
+  const ar=shuffle(Object.keys(RDECKS));
+  m.riv.forEach((r,i)=>{if(!r.arch)r.arch=ar[i%ar.length];if(!r.ps){r.ps=newPS(RDECKS[r.arch].cards);drawUp(r.ps);}});
+}
+function drawUp(ps){while(ps.hand.length<HAND){if(!ps.deck.length){if(!ps.disc.length)break;ps.deck=shuffle(ps.disc);ps.disc=[];}ps.hand.push(ps.deck.pop());}}
+function discardDraw(ps,c){const i=ps.hand.indexOf(c);if(i<0)return null;ps.hand.splice(i,1);ps.disc.push(c);ps.discUsed=true;
+  if(!ps.deck.length&&ps.disc.length>1){const keep=ps.disc.pop();ps.deck=shuffle(ps.disc);ps.disc=[keep];}
+  const n=ps.deck.pop();if(n)ps.hand.push(n);return n;}
+const AG=k=>k==='me'?{ps:G.m.ps,n:'You',me:true}:{ps:G.m.riv[k].ps,n:G.m.riv[k].n,r:G.m.riv[k]};
+const distOf=k=>k==='me'?G.m.dist:G.m.riv[k].dist;
+function leaderKey(){const s=standings('dist')[0];return s.me?'me':G.m.riv.indexOf(s.r);}
+function logIt(t){const m=G.m;m.log.push(`R${m.round}: ${t}`);if(m.log.length>40)m.log.shift();}
+const canTrap=pos=>G.board.tiles[pos].kind==='wild'&&!G.m.traps.some(t=>t.pos===pos);
+function toShop(pos){const b=G.board;for(let k=1;k<=b.n;k++)if(b.tiles[(pos+k)%b.n].kind==='shop')return k;return b.n;}
+const TIERUP={easy:'normal',normal:'hard',hard:'boss',boss:'boss'};
+function fateRoll(ps){ // the D12 with Fate Shift / Safe Passage / Call the Hunt applied
+  let n=rnd(1,12);const notes=[];
+  if(ps.fate){n=clamp(n+ps.fate,1,12);notes.push(`Fate Shift ${ps.fate>0?'+':''}${ps.fate}`);}
+  if(ps.safe&&FATE[n].t==='fight'){n=pick([2,3,5,6,7,9,10,11]);notes.push('Safe Passage');}
+  if(ps.hunt){n=8;ps.buf.bounty=true;notes.push('Call the Hunt');}
+  ps.fate=0;ps.safe=false;ps.hunt=false;return{n,notes};
+}
+function chooseTarget(k,pers){ // who a rival aims a hostile card at
+  const m=G.m,L=leaderKey(),c=['me',0,1,2].filter(t=>t!==k&&AG(t).ps.wary!==m.round);if(!c.length)return null;
+  if(pers==='Wildcard')return pick(c);
+  if(pers==='Opportunist')return c.includes(L)?L:c.sort((a,b)=>distOf(b)-distOf(a))[0];
+  const g=AG(k).ps.grudge;let best=null,bv=-1;for(const t of c){const v=(g[t]||0)+(t===L?1:0)+Math.random()*.6;if(v>bv){bv=v;best=t;}}return best;
+}
+// Resolve a hostile card. Wary: anyone hit is immune to more hostile cards for the rest of the round.
+function hostile(src,tgt,id,label){
+  const m=G.m,S0=AG(src),T=AG(tgt),name=label||CARDS[id].n;
+  T.ps.wary=m.round;T.ps.grudge[src]=(T.ps.grudge[src]||0)+3;
+  if(T.ps.ward){T.ps.ward=false;logIt(`${S0.n} → ${T.n}: ${name} (blocked by Ward)`);return `${S0.me?'Your':S0.n+"'s"} ${name} is blocked by ${T.me?'your':T.n+"'s"} Ward!`;}
+  let V=T,thief=S0,bounced=false;
+  if(T.ps.mirror){T.ps.mirror=false;V=S0;thief=T;bounced=true;S0.ps.grudge[tgt]=(S0.ps.grudge[tgt]||0)+1;}
+  const subj=V.me?'You':V.n,poss=V.me?'your':V.n+"'s";let eff='';
+  if(id==='skip'){V.ps.skip=true;eff=`${subj} will miss ${V.me?'your':'their'} next turn`;}
+  else if(id==='reverse'){V.ps.rev=true;eff=`${subj} will move backwards on ${V.me?'your':'their'} next roll`;}
+  else if(id==='slow'){V.ps.slow+=3;eff=`-3 to ${poss} next roll`;}
+  else if(id==='curse'){V.ps.curse=true;eff=`${poss} next encounter will be one tier harder`;}
+  else if(id==='sap'){if(V.me){const st=S();G.p.hp=Math.max(1,G.p.hp-Math.round(st.maxhp*.2));}else V.r.hpf=Math.max(.05,V.r.hpf-.2);eff=`${subj} lose${V.me?'':'s'} 20% HP`;}
+  else if(id==='pickpocket'){if(V.ps.hand.length){const c=V.ps.hand.splice(rnd(0,V.ps.hand.length-1),1)[0];thief.ps.hand.push(c);eff=`${thief.me?'You steal':thief.n+' steals'} ${thief.me||V.me?CARDS[c.id].n:'a card'} from ${V.me?'you':V.n}`;}else eff=`${V.me?'your':V.n+"'s"} hand is empty`;}
+  logIt(`${S0.n} → ${T.n}: ${name}${bounced?' (Mirrored!)':''}`);
+  return bounced?`${T.me?'Your':T.n+"'s"} Mirror bounces ${name} back! ${eff}.`:`${S0.me?'You play':S0.n+' plays'} ${name} on ${T.me?'you':T.n}: ${eff}.`;
+}
+async function playCard(key,c,tgt,choice){
+  const m=G.m,A=AG(key),ps=A.ps,C=CARDS[c.id],me=key==='me',who=me?'You':A.n,ply=me?'play':'plays';
+  const i=ps.hand.indexOf(c);if(i<0)return;if(me)SFX.card();ps.hand.splice(i,1);if(!c.t)ps.disc.push(c);ps.plays++; // temporary cards are spent for good
+  let msg='',atMe=false;
+  if(C.k==='move'){ps.mod+=C.v;msg=`${who} ${ply} ${C.n}: +${C.v} to the next roll`;}
+  else if(C.k==='pace'){ps.mod+=choice;msg=`${who} ${ply} Pace: ${choice>0?'+':''}${choice} to the next roll`;}
+  else if(C.k==='fate'){ps.fate+=choice;msg=`${who} ${ply} Fate Shift (${choice>0?'+1':'-1'})`;}
+  else if(C.k==='self'){ps[c.id]=true;msg=`${who} ${ply} ${C.n}`;}
+  else if(C.k==='now'){if(c.id==='rest'){if(me)heal(.2);else A.r.hpf=Math.min(1,A.r.hpf+.2);}else if(me){const g=30+G.p.lvl*8;G.p.gil+=g;msg=`Windfall: +${g} gil`;}msg=msg||`${who} ${ply} ${C.n}`;}
+  else if(C.k==='buff'){ps.buf[c.id]=true;msg=`${who} ${ply} ${C.n} for the next fight`;}
+  else if(C.k==='def'){ps[c.id]=true;msg=`${who} ${ply} ${C.n}`;}
+  else if(C.k==='trap'){m.traps.push({pos:me?m.pos:A.r.pos,id:c.id,owner:key,round:m.round});msg=me?`${C.n} hidden on this tile`:'';} // rivals' traps are secret
+  else if(C.k==='hostile'){msg=hostile(key,tgt,c.id);atMe=tgt==='me';}
+  else if(C.k==='hostile-all'){const ts=['me',0,1,2].filter(t=>t!==key&&AG(t).ps.wary!==m.round);atMe=ts.includes('me');msg=`${who} ${ply} TIME STOP! `+ts.map(t=>hostile(key,t,'skip','Time Stop')).join(' ');}
+  if(me){if(msg)toast(msg);}
+  else if(atMe)await card(`${A.n} plays ${C.n}!`,`<p>${msg}</p>`,[['Grr...','ok']]);
+  else if(msg){toast(msg);await sleep(1100);}
+}
+async function aiCards(r,k){ // a rival decides what to play this turn (max 2)
+  const m=G.m,ps=r.ps,pers=RDECKS[r.arch].pers;
+  for(const c of shuffle(ps.hand)){
+    if(ps.plays>=PLAYMAX)break;const C=CARDS[c.id];let play=false,tgt=null,ch=0;
+    if(C.k==='move')play=!ps.mod&&Math.random()<.6;
+    else if(C.k==='pace'){play=!ps.mod&&Math.random()<.35;ch=2;}
+    else if(C.k==='fate'){play=!ps.fate&&Math.random()<.3;ch=Math.random()<.5?1:-1;}
+    else if(c.id==='safe')play=r.hpf<.45;else if(c.id==='hunt')play=r.hpf>.8;else if(c.id==='warp')play=!ps.warp&&Math.random()<.35;
+    else if(c.id==='rest')play=r.hpf<.6;else if(c.id==='windfall')play=false;
+    else if(C.k==='buff')play=!ps.buf[c.id]&&Math.random()<.5;
+    else if(C.k==='def')play=!ps.ward&&!ps.mirror&&Math.random()<.6;
+    else if(C.k==='hostile'){if(m.round>1&&Math.random()<.45){tgt=chooseTarget(k,pers);play=tgt!==null;}}
+    else if(C.k==='hostile-all')play=m.round>3&&Math.random()<.5;
+    else if(C.k==='trap')play=canTrap(r.pos)&&Math.random()<.5;
+    if(play)await playCard(k,c,tgt,ch);
+  }
+  if(ps.plays===0&&ps.hand.length>=HAND&&!ps.discUsed)discardDraw(ps,pick(ps.hand));
+}
+async function trapHit(t,key,i){ // someone ran into a hidden trap
+  const m=G.m,V=AG(key),O=AG(t.owner),C=CARDS[t.id];V.ps.grudge[t.owner]=(V.ps.grudge[t.owner]||0)+2;logIt(`${O.me?'Your':O.n+"'s"} ${C.n} caught ${V.me?'you':V.n}`);
+  if(t.id==='snare'){if(V.me){const st=S();G.p.hp=Math.max(1,G.p.hp-Math.round(st.maxhp*.2));}else V.r.hpf=Math.max(.05,V.r.hpf-.2);}
+  const what=t.id==='sticky'?'stopped dead':t.id==='snare'?'cut for 20% HP':'ambushed';
+  if(V.me){SFX.trap();}if(V.me)await card('Trap!',`<p>You're ${what} by a hidden ${C.n}!</p>`,[['Ouch','ok']]);
+  else{toast(t.owner==='me'?`Your ${C.n} catches ${V.n}!`:`${V.n} is ${what} by a hidden trap!`);await sleep(900);}
+}
+function takeAmbush(key){const m=G.m,pos=key==='me'?m.pos:m.riv[key].pos,i=m.traps.findIndex(t=>t.pos===pos&&t.id==='ambush'&&t.owner!==key);return i<0?null:m.traps.splice(i,1)[0];}
+// Pass the Buck: src hands an encounter to tgt. Ward makes the passer fight it; Mirror bounces it back with double rewards.
+async function passBuck(src,tgt,comp,T,tile){
+  const m=G.m,S0=AG(src),Tg=AG(tgt);Tg.ps.wary=m.round;Tg.ps.grudge[src]=(Tg.ps.grudge[src]||0)+3;
+  let face=tgt,mult=2,note=`${S0.me?'You pass':S0.n+' passes'} the buck to ${Tg.me?'you':Tg.n}!`;
+  if(Tg.ps.ward){Tg.ps.ward=false;face=src;mult=1;note=`${Tg.me?'Your':Tg.n+"'s"} Ward blocks the passed fight - ${S0.me?'you have':S0.n+' has'} to fight it.`;}
+  else if(Tg.ps.mirror){Tg.ps.mirror=false;face=src;note=`${Tg.me?'Your':Tg.n+"'s"} Mirror bounces the fight back - ${S0.me?'you face':S0.n+' faces'} it (double rewards).`;}
+  logIt(`${S0.n} → ${Tg.n}: Pass the Buck${face===src?' (bounced)':''}`);
+  if(face==='me'){await card('Pass the Buck',`<p>${note}</p><p><span class="tag" style="background:${T.c}">${T.n}</span> &nbsp;${foeNames(comp)}</p>${mult>1?'<p>Win it for <b>double rewards</b>.</p>':''}`,[['Fight!','ok','gold']]);
+    const w=await playerFight({n:T.n,comp,off:T.off,drops:T.key,c:T.c},G.board.tiles[m.pos],mult);return `the passed fight: you ${w?'won':'lost'}`;}
+  const r=m.riv[face],won=simFight(r,comp,T.off,T.p,T.cost,mult);if(face!==src)r.sent=false;
+  const res=won?`${r.n} wins it${mult>1?' (double rewards)':''}`:`${r.n} loses it - back to the Sanctuary, -${r.lost} tiles`;
+  if(src==='me')await card('Pass the Buck',`<p>${note}</p><p>${res}.</p>`,OK);
+  return `${note} ${res}`;
+}
+function giveCard(rich){ // a permanent card for the collection
+  const tot=Object.values(RAR).reduce((a,R)=>a+(rich?R.w2:R.w),0);let x=Math.random()*tot,rr='C';
+  for(const k in RAR){x-=rich?RAR[k].w2:RAR[k].w;if(x<=0){rr=k;break;}}
+  const id=pick(Object.keys(CARDS).filter(k=>CARDS[k].r===rr));G.p.coll[id]=(G.p.coll[id]||0)+1;
+  return `<span style="color:${RAR[rr].c}">${CARDS[id].n}</span> card (${RAR[rr].n})`;
+}
+function cardDrop(tier){const ch={easy:.05,normal:.08,hard:.15,boss:.25,bossround:1}[tier]||0;return Math.random()<ch?giveCard(tier==='bossround'):null;}
+function vendorStock(){const pool=Object.keys(CARDS).filter(k=>CARDS[k].r==='C'||CARDS[k].r==='R'||(CARDS[k].r==='E'&&Math.random()<.35));return shuffle(pool).slice(0,6);}
+function activeFx(ps){const f=[];if(ps.mod)f.push(`Next roll ${ps.mod>0?'+':''}${ps.mod}`);if(ps.slow)f.push(`Slowed -${ps.slow}`);if(ps.rev)f.push('Reversed');if(ps.skip)f.push('Skipped');if(ps.warp)f.push('Warp');
+  if(ps.fate)f.push(`Fate ${ps.fate>0?'+':''}${ps.fate}`);if(ps.safe)f.push('Safe Passage');if(ps.hunt)f.push('Hunt');if(ps.curse)f.push('Cursed');if(ps.ward)f.push('Ward');if(ps.mirror)f.push('Mirror');
+  for(const b in ps.buf)if(ps.buf[b])f.push(CARDS[b].n);if(ps.wary===G.m.round)f.push('Wary');return f;}
+
+/* ---------------- 5. BATTLE (real-time ARPG arena) ---------------- */
+const inp={mx:0,my:0,atk:false,guard:false,dodgeP:false,keys:{},joy:null};
+function battle(spec,tile,buf){return new Promise(res=>{startBattle(spec,tile,buf||{});B.resolve=res;});}
+function mkEnemy(type,lvl,x,y,biome){const b=ENEMY[type],k=lvl-1,D=DF(),hp=Math.round(b.hp*(1+0.22*k)*D.hp);
+  return{type,b,lvl,x,y,hp,maxhp:hp,atk:b.atk*1.3*(1+0.17*k)*D.atk,def:b.def+k*0.8,r:b.r,weak:b.weak||biome.opp,el:b.el||biome.el,st:'chase',t:rf(.8,1.8),tr:0,mode:'',mult:1,rec:1,
+    cx:0,cy:0,hit:false,fq:0,sums:0,stag:0,stagT:0,slow:0,hurt:0,kx:0,ky:0,sdir:Math.random()<.5?1:-1,dead:0};}
+function startBattle(spec,tile,buf){
+  const lvl=Math.max(1,G.p.lvl+spec.off);fixVitals();
+  B={spec,biome:tile.biome,R:430,t:0,over:false,win:false,endT:0,lvl,st:S(),cam:{x:0,y:150},shake:0,
+    pl:{x:0,y:150,fx:0,fy:-1,atkT:0,atkCd:0,combo:0,comboT:0,atkHit:true,dodgeT:0,dodgeCd:0,inv:0,dx:0,dy:0,lungeT:0,hurt:0,cds:{},gcd:0,guard:false,gStart:-9,skCd:0,jumpT:0,jx:0,jy:0,chi:null},
+    en:[],pr:[],fx:[],fl:[],zn:[],spells:G.p.ws.concat(G.p.as).filter(g=>g&&GEMS[g].kind==='spell').slice(0,4)};
+  spec.comp.forEach((type,i)=>{const a=-Math.PI/2+(i-(spec.comp.length-1)/2)*0.55;B.en.push(mkEnemy(type,lvl,Math.cos(a)*240,Math.sin(a)*240+30,tile.biome));});
+  B.shield=buf.barrier?Math.round(B.st.maxhp*.3):0;if(buf.surge)G.p.limit=Math.max(G.p.limit,50);B.dmgMul=buf.berserk?1.3:1;B.takeMul=buf.berserk?1.2:1;if(buf.opening)B.en.forEach(e=>e.stag=50);
+  B.cardFx=Object.keys(buf).filter(k=>buf[k]).map(k=>CARDS[k].n);
+  $('spells').innerHTML='<button class="cb" id="bLimit" data-lim="1">LIMIT</button>'+B.spells.map((g,i)=>`<button class="cb" data-sp="${i}" style="border-color:${GEMS[g].el?EL[GEMS[g].el].c:'#9dffb5'}">${GEMS[g].n}${B.st.spread.includes(g)?'+':''}<small>${Math.round(GEMS[g].mp*(B.st.spread.includes(g)?1.5:1))} MP</small></button>`).join('');
+  $('bSkill').textContent=B.st.cls.skill.n;hc.lr=undefined;if(!G.p.tips){G.p.tips=1;setTimeout(()=>toast('Tip: grey numbers = resisted, use magic. Tap Guard just before a hit for a PERFECT guard.'),2200/SPD);}
+  inp.atk=inp.guard=inp.dodgeP=false;inp.joy=null;
+  setScene('battle');toast(`${spec.n} - ${tile.biome.n}${B.cardFx.length?' · '+B.cardFx.join(', '):''}`);
+}
+function endBattle(win){if(!B||B.over)return;B.over=true;B.win=win;(win?SFX.win:SFX.lose)();
+  setTimeout(()=>{const b=B;B=null;setScene('board');b.resolve({win,en:b.en});},(win?1100:1500)/SPD);}
+function floater(x,y,txt,c,big){B.fl.push({x:x+rf(-8,8),y,txt,c,t:0.8,big});}
+function spark(x,y,c,n,sp){for(let i=0;i<n;i++){const a=rf(0,6.28),s=rf(.3,1)*sp;B.fx.push({k:'p',x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:rf(.25,.5),T:.5,c});}}
+function gainLimit(n){G.p.limit=Math.min(100,G.p.limit+n*B.st.limitRate);}
+function nearest(){let best=null,bd=1e9;for(const e of B.en){if(e.hp<=0)continue;const d=Math.hypot(e.x-B.pl.x,e.y-B.pl.y)-e.r;if(d<bd){bd=d;best=e;}}return best;}
+
+function hitEnemy(e,raw,el,stag,kb,kx,ky,wep){ // wep = a weapon strike (elemental or not)
+  if(e.hp<=0)return;let d=Math.max(1,raw-e.def*0.5);const st=B.st;let crit=false;
+  if(wep){if(st.crit&&Math.random()<.15){d*=2;crit=true;}stag*=st.stagB;}const weak=!!el&&el===e.weak,res=(!el||wep)&&!weak&&e.stagT<=0&&e.b.phys<1;
+  if(res){d*=e.b.phys;stag*=.6;}if(weak){d*=wep?1.5:2;stag*=wep?2.5:4;}if(e.stagT>0)d*=2;d=Math.round(d*(B.dmgMul||1));if(crit)floater(e.x,e.y-e.r-30,'CRIT','#ffd84a',true);if(wep&&st.drain&&G.p.hp>0){G.p.hp=Math.min(st.maxhp,G.p.hp+Math.max(1,Math.round(d*.06)));}if(G.m)G.m.dmg+=Math.min(d,e.hp);e.hp-=d;e.hurt=.12;
+  if(kb&&!e.b.boss){e.kx+=kx*kb;e.ky+=ky*kb;}
+  SFX.hit(weak||crit);floater(e.x,e.y-e.r-10,d,weak?'#ffd84a':res?'#8a93b8':el?EL[el].c:'#fff',weak);spark(e.x,e.y,el?EL[el].c:'#fff',5,160);
+  if(e.stagT<=0&&e.hp>0){e.stag+=stag;if(e.stag>=100){e.stag=0;e.stagT=e.b.boss?3:4;e.st='chase';e.t=1;floater(e.x,e.y-e.r-28,'STAGGER','#ff9df0',true);}}
+  if(e.hp<=0){e.hp=0;e.dead=.4;spark(e.x,e.y,e.b.c,16,260);}
+}
+function hurtPlayer(raw,src,el,ranged){
+  el=el||(src&&src.el);
+  const p=B.pl,st=B.st;if(B.over||p.inv>0||p.jumpT>0)return;
+  let d=Math.max(1,raw-st.def*0.5);
+  if(p.guard&&B.t-p.gStart<.25){ // PERFECT GUARD: tapped guard just before the hit
+    floater(p.x,p.y-34,'PERFECT','#ffffff',true);spark(p.x,p.y,'#bfe9ff',12,200);gainLimit(8);G.p.mp=Math.min(st.maxmp,G.p.mp+3);p.inv=.25;
+    if(src&&src.hp>0){src.stag+=src.b.boss?25:45;if(st.cls.reflect)hitEnemy(src,raw*2+st.def,null,30,300,0,0);}return;}
+  const rs=el&&st.res.includes(el);if(rs)d*=.5;
+  if(p.guard){d*=st.guard;floater(p.x,p.y-34,'GUARD','#9fd0ff');if(st.cls.reflect&&src&&src.hp>0)hitEnemy(src,raw*1.5+st.def,null,22,300,0,0);}
+  d=Math.max(1,Math.round(d*(B.takeMul||1)));
+  if(B.shield>0){const ab=Math.min(B.shield,d);B.shield-=ab;d-=ab;floater(p.x,p.y-46,'-'+ab+' shield','#7fe3ff');if(d<=0){p.inv=.18;return;}}
+  if(st.thorns&&src&&src.hp>0&&!ranged)hitEnemy(src,raw*.35,null,6,0,0,0);
+  SFX.hurt();G.p.hp-=d;p.hurt=.2;p.inv=.18;B.shake=p.guard?3:8;
+  floater(p.x,p.y-20,rs?d+' resist':d,rs?EL[el].c:'#ff7b7b');gainLimit(d/st.maxhp*90+(p.guard?4:0));
+  if(G.p.hp<=0){G.p.hp=0;endBattle(false);}
+}
+function swingHit(){
+  const p=B.pl,st=B.st,A=st.cls.atk,fin=p.combo===A.hits,reach=A.reach+(fin?16:0),cosA=A.cos-(fin?.45:0);let any=false;
+  for(const e of B.en){if(e.hp<=0)continue;const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy);if(d>reach+e.r)continue;
+    const dot=d<e.r?1:(dx*p.fx+dy*p.fy)/d;if(dot<cosA)continue;
+    hitEnemy(e,st.str*A.dmg*(fin?1.7:1)*rf(.9,1.1),st.wEl,fin?16:8*A.dmg,fin?600:250,p.fx,p.fy,true);any=true;}
+  if(any){gainLimit(fin?6:3*A.dmg);G.p.mp=Math.min(st.maxmp,G.p.mp+(fin?2:1)+(st.mphit?1:0));if(fin)B.shake=5;}
+  B.fx.push({k:'arc',x:p.x,y:p.y,a:Math.atan2(p.fy,p.fx),r:reach,w:Math.acos(clamp(cosA,-1,1)),t:.16,T:.16,fin,c:st.wEl?EL[st.wEl].c:null});
+}
+function aoe(x,y,r,dmg,el,stag,kb){for(const q of B.en){const dx=q.x-x,dy=q.y-y,d=Math.hypot(dx,dy)||1;if(d<r+q.r)hitEnemy(q,dmg,el,stag,kb,dx/d,dy/d);}}
+function skill(){
+  if(!B||B.over)return;const p=B.pl,st=B.st,C=st.cls,id=C.skill.id;if(p.skCd>0||p.dodgeT>0||p.jumpT>0)return;
+  const e=nearest();let dx=p.fx,dy=p.fy;if(e){dx=e.x-p.x;dy=e.y-p.y;const d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;p.fx=dx;p.fy=dy;}
+  if(id==='whirl'){B.fx.push({k:'ring',x:p.x,y:p.y,r:118,t:.3,T:.3,c:C.c});aoe(p.x,p.y,118,st.str*2.4,null,20,500);B.shake=6;}
+  else if(id==='chi'){p.dx=dx;p.dy=dy;p.dodgeT=.3;p.inv=.4;p.chi=new Set();p.atkT=0;p.lungeT=0;p.atkHit=true;}
+  else if(id==='meteor'){if(!e)return;B.zn.push({x:e.x,y:e.y,r:120,t:.7,T:.7,dmg:st.mag*4.5,from:'p',el:'fire'});}
+  else if(id==='volley'){for(let i=-3;i<=3;i++){const a=Math.atan2(dy,dx)+i*.14;B.pr.push({x:p.x,y:p.y,vx:Math.cos(a)*640,vy:Math.sin(a)*640,r:6,from:'p',el:null,c:C.c,dmg:st.str*.95,life:1.2});}}
+  else if(id==='jump'){p.jumpT=.7;p.jx=e?e.x:p.x;p.jy=e?e.y:p.y;p.atkT=0;p.lungeT=0;p.atkHit=true;}
+  else if(id==='bash'){for(const q of B.en){const ex=q.x-p.x,ey=q.y-p.y,d=Math.hypot(ex,ey)||1;if(d<100+q.r&&(ex*dx+ey*dy)/d>0)hitEnemy(q,st.str*1.8,null,60,700,dx,dy);}
+    B.fx.push({k:'arc',x:p.x,y:p.y,a:Math.atan2(dy,dx),r:100,w:1.5,t:.2,T:.2,fin:true});const h=Math.round(st.maxhp*.08);G.p.hp=Math.min(st.maxhp,G.p.hp+h);floater(p.x,p.y-30,'+'+h,'#8dffb0');B.shake=6;}
+  p.skCd=C.skill.cd;gainLimit(5);
+}
+function cast(i){
+  if(!B||B.over)return;const id=B.spells[i];if(!id)return;const g=GEMS[id],p=B.pl,st=B.st,P=G.p,pw=g.pow*(st.cls.spell||1)*1.6,spr=st.spread.includes(id),mp=Math.round(g.mp*(spr?1.5:1));
+  if(p.dodgeT>0||p.jumpT>0||p.gcd>0||(p.cds[id]||0)>0)return;if(P.mp<mp){toast('Not enough MP');return;}
+  const e=nearest();
+  if(id==='cure'){if(P.hp>=st.maxhp)return;const h=Math.round((st.maxhp*.18+st.mag*2)*(spr?1.6:1));P.hp=Math.min(st.maxhp,P.hp+h);floater(p.x,p.y-30,'+'+h,'#8dffb0',true);spark(p.x,p.y,'#8dffb0',14,140);}
+  else if(id==='aero'){const ar=spr?210:135;B.fx.push({k:'ring',x:p.x,y:p.y,r:ar,t:.3,T:.3,c:EL.wind.c});aoe(p.x,p.y,ar,st.mag*pw,'wind',12,900);}
+  else if(id==='thunder'){if(!e)return;B.fx.push({k:'bolt',x:e.x,y:e.y,t:.25,T:.25});B.shake=4;aoe(e.x,e.y,spr?150:70,st.mag*pw,'bolt',12,0);}
+  else{let dx=p.fx,dy=p.fy;if(e){dx=e.x-p.x;dy=e.y-p.y;const d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;p.fx=dx;p.fy=dy;}
+    const a0=Math.atan2(dy,dx);for(const o of spr?[-.35,0,.35]:[0]){const tgt=spr&&o?B.en.filter(q=>q.hp>0).sort((a,b)=>Math.abs(Math.atan2(a.y-p.y,a.x-p.x)-a0-o)-Math.abs(Math.atan2(b.y-p.y,b.x-p.x)-a0-o))[0]:e;
+      B.pr.push({x:p.x+dx*18,y:p.y+dy*18,vx:Math.cos(a0+o)*440,vy:Math.sin(a0+o)*440,r:9,from:'p',el:g.el,dmg:st.mag*pw,home:tgt,life:2,slow:id==='blizzard'});}}
+  P.mp-=mp;p.cds[id]=g.cd;p.gcd=.35;
+}
+function limitBreak(){
+  if(!B||B.over||G.p.limit<100||B.pl.jumpT>0)return;const p=B.pl,st=B.st;G.p.limit=0;p.inv=.9;B.shake=14;
+  B.fx.push({k:'ring',x:p.x,y:p.y,r:240,t:.5,T:.5,c:'#ffd66d'});floater(p.x,p.y-44,'CRYSTAL BURST','#ffd66d',true);
+  aoe(p.x,p.y,240,Math.max(st.str,st.mag)*5,null,45,700);
+}
+function useItem(k){
+  const P=G.p,st=S();
+  if(k==='potion'&&P.potion<1&&(P.hipot||0)>0)k='hipot';
+  if(k==='hipot'){if((P.hipot||0)<1||P.hp>=st.maxhp||P.hp<=0)return;P.hipot--;const h=Math.round(st.maxhp*.7);P.hp=Math.min(st.maxhp,P.hp+h);if(B)floater(B.pl.x,B.pl.y-30,'+'+h,'#8dffb0',true);return;}
+  if(k==='elixir'){if((P.elixir||0)<1)return;P.elixir--;P.hp=st.maxhp;P.mp=st.maxmp;return;}
+  if(k==='potion'){if(P.potion<1||P.hp>=st.maxhp||P.hp<=0)return;P.potion--;const h=Math.max(40,Math.round(st.maxhp*.35));P.hp=Math.min(st.maxhp,P.hp+h);if(B)floater(B.pl.x,B.pl.y-30,'+'+h,'#8dffb0',true);}
+  else{if(P.ether<1||P.mp>=st.maxmp)return;P.ether--;const h=Math.max(15,Math.round(st.maxmp*.5));P.mp=Math.min(st.maxmp,P.mp+h);if(B)floater(B.pl.x,B.pl.y-30,'+'+h+' MP','#7fb8ff',true);}
+}
+function readInput(){
+  let mx=0,my=0;const k=inp.keys;
+  if(k.a||k.arrowleft)mx-=1;if(k.d||k.arrowright)mx+=1;if(k.w||k.arrowup)my-=1;if(k.s||k.arrowdown)my+=1;
+  if(inp.joy){mx+=clamp((inp.joy.x-inp.joy.ox)/46,-1,1);my+=clamp((inp.joy.y-inp.joy.oy)/46,-1,1);}
+  const l=Math.hypot(mx,my);if(l>1){mx/=l;my/=l;}inp.mx=mx;inp.my=my;
+}
+function upBattle(dt){
+  B.t+=dt;B.shake=Math.max(0,B.shake-dt*30);
+  if(!B.over){upPlayer(dt);upEnemies(dt);}
+  upProjectiles(dt);
+  for(const z of B.zn){z.t-=dt;if(z.t<=0){B.fx.push({k:'ring',x:z.x,y:z.y,r:z.r,t:.25,T:.25,c:z.from==='p'?EL.fire.c:'#ff5a5a'});
+    if(z.from==='p'){aoe(z.x,z.y,z.r,z.dmg,z.el,30,300);B.shake=8;}else if(!B.over&&Math.hypot(B.pl.x-z.x,B.pl.y-z.y)<z.r+8)hurtPlayer(z.dmg,null,z.el);}}
+  B.zn=B.zn.filter(z=>z.t>0);
+  for(const f of B.fx){f.t-=dt;if(f.k==='p'){f.x+=f.vx*dt;f.y+=f.vy*dt;}}B.fx=B.fx.filter(f=>f.t>0);
+  for(const f of B.fl){f.t-=dt;f.y-=dt*46;}B.fl=B.fl.filter(f=>f.t>0);
+  for(const e of B.en)if(e.dead>0)e.dead-=dt;
+  B.cam.x+=(B.pl.x-B.cam.x)*Math.min(1,dt*8);B.cam.y+=(B.pl.y-B.cam.y)*Math.min(1,dt*8);
+  if(!B.over&&B.en.every(e=>e.hp<=0)){B.endT+=dt;if(B.endT>.5)endBattle(true);}
+}
+function upPlayer(dt){
+  const p=B.pl,st=B.st,P=G.p,A=st.cls.atk;readInput();
+  const ml=Math.hypot(inp.mx,inp.my),nx=ml>0?inp.mx/ml:0,ny=ml>0?inp.my/ml:0;
+  p.atkT-=dt;p.atkCd-=dt;p.comboT-=dt;p.dodgeT-=dt;p.dodgeCd-=dt;p.inv-=dt;p.lungeT-=dt;p.hurt-=dt;p.gcd-=dt;p.skCd-=dt;
+  for(const k in p.cds)p.cds[k]-=dt;
+  if(st.cls.mpRegen)P.mp=Math.min(st.maxmp,P.mp+dt*st.cls.mpRegen);
+  if(st.regen&&P.hp>0)P.hp=Math.min(st.maxhp,P.hp+st.maxhp*.004*dt);
+  if(p.jumpT>0){ // Lancer's Jump: untouchable in the air, then crash down on the target
+    p.jumpT-=dt;const k=Math.min(1,dt*6);p.x+=(p.jx-p.x)*k;p.y+=(p.jy-p.y)*k;inp.dodgeP=false;
+    if(p.jumpT<=0){p.x=p.jx;p.y=p.jy;B.fx.push({k:'ring',x:p.x,y:p.y,r:115,t:.3,T:.3,c:st.cls.c});aoe(p.x,p.y,115,st.str*3.6,null,35,600);B.shake=10;p.inv=.3;}
+    return;
+  }
+  if(p.dodgeT<=0)p.chi=null;
+  const wasG=p.guard;p.guard=inp.guard&&p.dodgeT<=0&&p.atkT<=0;if(p.guard&&!wasG)p.gStart=B.t;
+  if(inp.dodgeP){inp.dodgeP=false;if(p.dodgeCd<=0&&p.dodgeT<=0){p.dx=ml>.2?nx:p.fx;p.dy=ml>.2?ny:p.fy;p.dodgeT=.22;p.inv=Math.max(p.inv,.26);p.dodgeCd=1.1*st.dodgeB/st.cls.spd;p.atkT=0;p.lungeT=0;p.atkHit=true;p.guard=false;}}
+  if(inp.atk&&p.atkCd<=0&&p.dodgeT<=0&&!p.guard){
+    const e=nearest(),shot=A.type==='shot';
+    if(e){const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy)||1;if(shot||d<270){p.fx=dx/d;p.fy=dy/d;if(!shot&&d>e.r+A.reach-16)p.lungeT=Math.min(.16,(d-e.r-A.reach+26)/520);}}
+    if(shot){B.pr.push({x:p.x+p.fx*14,y:p.y+p.fy*14,vx:p.fx*A.sp,vy:p.fy*A.sp,r:6,from:'p',el:st.wEl,c:st.wEl?EL[st.wEl].c:st.cls.c,dmg:st[A.stat]*A.dmg*rf(.9,1.1),life:1.3,basic:true});p.atkT=.12;p.atkHit=true;p.atkCd=A.cd;}
+    else{if(p.comboT<=0)p.combo=0;p.combo=p.combo%A.hits+1;p.atkT=.2;p.atkHit=false;p.atkCd=p.combo===A.hits?A.cd*1.6:A.cd;p.comboT=A.cd+.5;}
+  }
+  if(!p.atkHit&&p.atkT<.12&&p.lungeT<=0){p.atkHit=true;swingHit();}
+  let vx,vy;
+  if(p.dodgeT>0){const sp=p.chi?820:640;vx=p.dx*sp;vy=p.dy*sp;if(Math.random()<.6)B.fx.push({k:'ghost',x:p.x,y:p.y,t:.18,T:.18});
+    if(p.chi)for(const e of B.en){if(e.hp>0&&!p.chi.has(e)&&Math.hypot(e.x-p.x,e.y-p.y)<e.r+30){p.chi.add(e);hitEnemy(e,st.str*2.2,null,25,300,p.dx,p.dy);}}}
+  else if(p.lungeT>0){vx=p.fx*520;vy=p.fy*520;}
+  else{let sp=215*st.spd;if(p.guard)sp*=.4;else if(p.atkT>0)sp*=A.type==='shot'?.7:.45;vx=inp.mx*sp;vy=inp.my*sp;if(ml>.2&&p.atkT<=0){p.fx=nx;p.fy=ny;}}
+  p.x+=vx*dt;p.y+=vy*dt;
+  if(p.dodgeT<=0)for(const e of B.en){if(e.hp<=0)continue;const dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1,m=e.r+13;if(d<m){p.x=e.x+dx/d*m;p.y=e.y+dy/d*m;}}
+  const d=Math.hypot(p.x,p.y),lim=B.R-14;if(d>lim){p.x*=lim/d;p.y*=lim/d;}
+}
+function windup(e,mode,t,tr,mult,rec){e.st='wind';e.mode=mode;e.t=t;e.T=t;e.tr=tr;e.mult=mult;e.rec=rec*DF().rec;}
+function upEnemies(dt){
+  const p=B.pl;
+  for(const e of B.en.slice()){
+    if(e.hp<=0)continue;e.hurt-=dt;e.slow-=dt;
+    e.x+=e.kx*dt;e.y+=e.ky*dt;const dk=Math.exp(-8*dt);e.kx*=dk;e.ky*=dk;
+    if(e.stagT>0){e.stagT-=dt;}
+    else{
+      const rage=e.b.boss&&e.hp<e.maxhp/2?(e.type==='tyrant'?1.4:1.2):1,sl=(e.slow>0?.5:1)*rage,dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d,sp=e.b.spd*sl*dt;
+      e.t-=dt*sl;
+      if(e.st==='dash'){ // charging in a locked direction
+        e.x+=e.cx*e.dsp*dt;e.y+=e.cy*e.dsp*dt;
+        if(!e.hit&&d<e.r+14){e.hit=true;hurtPlayer(e.atk*e.mult,e);}
+        if(e.t<=0){e.st='rec';e.t=e.rec;}
+      }else if(e.st==='wind'){
+        if(e.t<=0){ // attack lands
+          const m=e.mode;e.st='rec';e.t=e.rec;
+          if(m==='shot'){const a0=Math.atan2(uy,ux);for(const o of[-.22,0,.22])B.pr.push({x:e.x,y:e.y,vx:Math.cos(a0+o)*300,vy:Math.sin(a0+o)*300,r:7,from:'e',dmg:e.atk*.8,life:3.5,c:e.b.c,src:e});}
+          else if(m==='hex'){B.zn.push({x:p.x,y:p.y,r:72,t:.9,T:.9,dmg:e.atk*1.3,from:'e',el:e.el});}
+          else if(m==='ring'){for(let i=0;i<12;i++){const a=i/12*6.283+B.t;B.pr.push({x:e.x,y:e.y,vx:Math.cos(a)*190,vy:Math.sin(a)*190,r:8,from:'e',dmg:e.atk*.8,life:4,c:EL[e.el].c,src:e});}
+            B.pr.push({x:e.x,y:e.y,vx:ux*300,vy:uy*300,r:9,from:'e',dmg:e.atk,life:3,c:'#ffffff',src:e});}
+          else if(m==='charge'){e.st='dash';e.t=e.dur;e.hit=false;}
+          else{B.fx.push({k:'ring',x:e.x,y:e.y,r:e.tr,t:.22,T:.22,c:'#ff5a5a'});if(e.tr>100)B.shake=Math.max(B.shake,6);
+            if(Math.hypot(p.x-e.x,p.y-e.y)<e.tr+10)hurtPlayer(e.atk*e.mult,e);
+            if(e.type==='cinder'){e.hp=0;e.dead=.4;spark(e.x,e.y,e.b.c,20,300);}
+            if(m==='flurry'&&--e.fq>0){e.st='wind';e.t=e.T=.32;}}
+        }
+      }else if(e.st==='rec'){if(e.t<=0){e.st='chase';e.t=(e.b.boss?rf(.7,1.4):(e.type==='wisp'||e.type==='hexer')?rf(1.4,2.1):rf(.4,1))*DF().rec;}}
+      else if(e.b.boss){
+        if(d>e.r+60){e.x+=ux*sp;e.y+=uy*sp;}
+        if(e.t<=0){
+          const alive=B.en.filter(q=>q.hp>0).length;
+          const ok=e.b.moves.concat(e.type==='gatekeeper'||e.type==='tyrant'?['flurry']:[]).filter(m=>m==='slam'||m==='flurry'?d<e.r+100:m==='summon'?(alive<4&&e.sums<2):m==='charge'?d>120:true);
+          const m=ok.length?pick(ok):null;
+          if(m==='slam')windup(e,'slam',1.0,155,1.6,1.1);
+          else if(m==='flurry'){windup(e,'flurry',.7,125,.8,1.1);e.fq=4;}
+          else if(m==='ring')windup(e,'ring',.7,0,1,.9);
+          else if(m==='charge'){windup(e,'charge',.8,0,1.7,1.0);e.cx=ux;e.cy=uy;e.dsp=600;e.dur=.5;}
+          else if(m==='rain'){B.zn.push({x:p.x,y:p.y,r:78,t:1,T:1,dmg:e.atk*1.3,from:'e',el:e.el});for(let i=0;i<3;i++){const a=rf(0,6.28),r=rf(90,170);B.zn.push({x:p.x+Math.cos(a)*r,y:p.y+Math.sin(a)*r,r:78,t:1.1+i*.15,T:1.1+i*.15,dmg:e.atk*1.3,from:'e',el:e.el});}e.st='rec';e.t=1.2;}
+          else if(m==='summon'){e.sums++;for(const s of[-1,1])B.en.push(mkEnemy(pick(['gloop','dart','cinder']),Math.max(1,e.lvl-2),e.x+s*70,e.y+40,B.biome));floater(e.x,e.y-e.r-20,'SUMMON','#ff9df0',true);e.st='rec';e.t=1;}
+          else e.t=.3;
+        }
+      }else if(e.type==='wisp'||e.type==='hexer'){
+        if(d<170){e.x-=ux*sp;e.y-=uy*sp;}else if(d>300){e.x+=ux*sp;e.y+=uy*sp;}else{e.x+=-uy*sp*.7*e.sdir;e.y+=ux*sp*.7*e.sdir;}
+        if(e.t<=0&&d<420)windup(e,e.type==='wisp'?'shot':'hex',e.type==='wisp'?.45:.6,0,1,.3);
+      }else if(e.type==='dart'){
+        if(d>210){e.x+=ux*sp;e.y+=uy*sp;}else{e.x+=-uy*sp*.8*e.sdir;e.y+=ux*sp*.8*e.sdir;}
+        if(e.t<=0&&d<250){windup(e,'charge',.5,0,1.2,.9);e.cx=ux;e.cy=uy;e.dsp=520;e.dur=.38;}
+      }else{ // melee: gloop, brute, cinder
+        const br=e.type==='brute',ci=e.type==='cinder';
+        if(d>e.r+36){e.x+=ux*sp;e.y+=uy*sp;}
+        if(ci){if(d<e.r+60)windup(e,'slam',.9,105,2,.1);}
+        else if(e.t<=0&&d<e.r+(br?70:46)){if(br&&Math.random()<.45){windup(e,'flurry',.6,98,.75,1.1);e.fq=3;}else windup(e,'slam',br?.95:.55,br?125:72,br?1.7:1,br?1.3:.8);}
+      }
+    }
+    const d2=Math.hypot(e.x,e.y),lim=B.R-e.r;if(d2>lim){e.x*=lim/d2;e.y*=lim/d2;}
+  }
+  for(let i=0;i<B.en.length;i++)for(let j=i+1;j<B.en.length;j++){const a=B.en[i],b=B.en[j];if(a.hp<=0||b.hp<=0)continue;
+    const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,m=a.r+b.r+4;if(d<m){const o=(m-d)/2;a.x-=dx/d*o;a.y-=dy/d*o;b.x+=dx/d*o;b.y+=dy/d*o;}}
+}
+function upProjectiles(dt){
+  const p=B.pl;
+  for(const q of B.pr){
+    q.life-=dt;
+    if(q.home&&q.home.hp>0){const dx=q.home.x-q.x,dy=q.home.y-q.y,d=Math.hypot(dx,dy)||1;q.vx+=(dx/d*440-q.vx)*Math.min(1,dt*7);q.vy+=(dy/d*440-q.vy)*Math.min(1,dt*7);}
+    q.x+=q.vx*dt;q.y+=q.vy*dt;
+    if(Math.hypot(q.x,q.y)>B.R+30)q.life=0;
+    if(q.from==='p'){for(const e of B.en){if(e.hp>0&&Math.hypot(e.x-q.x,e.y-q.y)<e.r+q.r){const s=Math.hypot(q.vx,q.vy)||1;hitEnemy(e,q.dmg,q.el,q.basic?7:12,q.basic?120:200,q.vx/s,q.vy/s,q.basic);if(q.slow)e.slow=3;if(q.basic){gainLimit(2);G.p.mp=Math.min(B.st.maxmp,G.p.mp+(B.st.mphit?1.2:.6));}q.life=0;break;}}}
+    else if(!B.over&&Math.hypot(p.x-q.x,p.y-q.y)<q.r+12){if(p.inv<=0&&p.jumpT<=0){hurtPlayer(q.dmg,q.src,null,true);q.life=0;}}
+  }
+  B.pr=B.pr.filter(q=>q.life>0);
+}
+
+/* ---------------- 6. MENUS / SHOP / FORGE ---------------- */
+let menuClose=null;
+function openDeck(){G.menuTab='deck';renderMenu();$('menu').classList.remove('hidden');}
+function gearStock(tbl,owned,n){ // shop gear rolls from your level band, favouring kit near your level
+  const L=G.p.lvl,pool=Object.keys(tbl).filter(k=>tbl[k].price>0&&tbl[k].lvl<=L+3&&!owned.includes(k));
+  return shuffle(pool).sort((a,b)=>Math.abs(tbl[a].lvl-L-1)-Math.abs(tbl[b].lvl-L-1)+rf(-2.5,2.5)).slice(0,n);}
+function rollStock(){const p=G.p;return{cards:vendorStock().slice(0,4),weapons:gearStock(WEAPONS,p.weapons,4),armour:gearStock(ARMOUR,p.armours,4),
+  gems:shuffle(Object.keys(GEMS).filter(k=>!p.gems.includes(k))).slice(0,3),accs:shuffle(Object.keys(ACC).filter(k=>!p.accs.includes(k))).slice(0,2),
+  items:['potion','ether',...shuffle(['hipot','elixir']).slice(0,1+(Math.random()<.5))]};}
+function shopVisit(){G.stock=rollStock();G.shop=true;openMenu('shop');return new Promise(r=>{menuClose=r;});}
+function openMenu(tab){G.menuTab=tab||'status';renderMenu();$('menu').classList.remove('hidden');}
+function closeMenu(){$('menu').classList.add('hidden');G.shop=false;fixVitals();save();if(menuClose){const r=menuClose;menuClose=null;r();}}
+const btn=(label,act,arg,dis,cls)=>`<button class="sm ${cls||''}" data-act="${act}" data-arg="${arg}" ${dis?'disabled':''}>${label}</button>`;
+const wTr=w=>[w.el?`${EL[w.el].n} strikes`:'',w.drain?'heals from hits':'',w.crit?'15% crits':'',w.mphit?'+MP per hit':'',w.stag?'staggers faster':'',w.limit?'Limit fills faster':''].filter(Boolean);
+function wDesc(id){const w=WEAPONS[id],u=G.p.up[id]||0,t=wTr(w);return `ATK ${w.atk+2*u} · MAG ${w.mag+u} · slots ${sockTxt(layoutOf('w',id))}${t.length?' · <b style="color:#ffd66d">'+t.join(', ')+'</b>':''}`;}
+const aTr=a=>[a.res?`halves ${EL[a.res].n}`:'',a.mp?`+${a.mp} MP`:'',a.regen?'regenerates in fights':'',a.thorns?'thorns':'',a.dodge?'faster dodge':'',a.guard?'guard blocks 85%':''].filter(Boolean);
+function aDesc(id){const a=ARMOUR[id],u=G.p.up[id]||0,t=aTr(a);return `DEF ${a.def+2*u} · HP +${a.hp+6*u} · slots ${sockTxt(layoutOf('a',id))}${t.length?' · <b style="color:#ffd66d">'+t.join(', ')+'</b>':''}`;}
+const sockTxt=L=>L.map(g=>g===2?'[o=o]':'[o]').join(' ');
+const cardRow=(id,tmp)=>`<div class="row"><div class="g"><b style="color:${RAR[CARDS[id].r].c}">${CARDS[id].n}</b>${tmp?' <small style="display:inline">(temp)</small>':''} <small>${RAR[CARDS[id].r].n} · ${CARDS[id].d}</small></div></div>`;
+function renderMenu(){
+  const p=G.p,m=G.m,st=S();let tabs=[['status','Status'],['cards','Cards'],['rivals','Rivals'],['equip','Equip'],['gems','Gems']];if(G.shop)tabs.push(['shop','Shop'],['forge','Forge']);if(!m)tabs=[['deck','Deck editor']];
+  if(!tabs.some(t=>t[0]===G.menuTab))G.menuTab='status';
+  let h='<div class="tabs">'+tabs.map(t=>`<button class="tab ${t[0]===G.menuTab?'on':''}" data-act="tab" data-arg="${t[0]}">${t[1]}</button>`).join('')+'<button class="tab x" data-act="closeMenu">Close</button></div><div class="mbody">';
+  const T=G.menuTab,up=id=>p.up[id]?' +'+p.up[id]:'';
+  if(T==='status'){
+    h+=`<h3>${st.cls.n} - Level ${p.lvl}</h3><div class="sg"><div>HP<b>${Math.ceil(p.hp)} / ${st.maxhp}</b></div><div>MP<b>${Math.floor(p.mp)} / ${st.maxmp}</b></div><div>Strength<b>${st.str}</b></div><div>Magic<b>${st.mag}</b></div><div>Defence<b>${st.def}</b></div><div>Next level<b>${need(p.lvl)-p.exp} EXP</b></div><div>Battles won<b>${p.wins}</b></div><div>Circuits played<b>${p.matches}</b></div><div>Podium golds<b>${p.golds}</b></div><div>Tyrants slain<b>${p.crowns}</b></div></div>`;
+    h+=`<p style="font-size:12.5px;opacity:.8;margin:8px 0 0">${st.cls.d}</p>`;
+    h+=`<h3>Items</h3><div class="row"><div class="g">Potion x${p.potion}<small>Restores 35% HP</small></div>${btn('Use','use','potion',p.potion<1||p.hp>=st.maxhp)}</div><div class="row"><div class="g">Ether x${p.ether}<small>Restores 50% MP</small></div>${btn('Use','use','ether',p.ether<1||p.mp>=st.maxmp)}</div>`;
+    h+=`<div class="row"><div class="g">Hi-Potion x${p.hipot||0}<small>Restores 70% HP</small></div>${btn('Use','use','hipot',!(p.hipot>0)||p.hp>=st.maxhp)}</div><div class="row"><div class="g">Elixir x${p.elixir||0}<small>Full HP and MP</small></div>${btn('Use','use','elixir',!(p.elixir>0))}</div>`;
+    h+=`<h3>Match</h3><div class="row"><div class="g">${m.def.n} - round ${m.round} of ${ROUNDS}<small>${G.board.n} tiles · bosses on rounds 10, 20 and 30</small></div>${G.shop?'':btn('Save & quit','toTitle','')}</div>`;
+  }else if(T==='cards'){
+    const ps=m.ps,fx=activeFx(ps),tmp=[...ps.deck,...ps.disc,...ps.hand].filter(c=>c.t).length;
+    h+=`<h3>Hand - ${ps.plays}/${PLAYMAX} plays used${ps.discUsed?' · discard used':''}</h3>`+ps.hand.map(c=>cardRow(c.id,c.t)).join('');
+    h+=`<div class="row"><small>Deck ${ps.deck.length} · discard pile ${ps.disc.length}${tmp?` · ${tmp} temporary`:''}. Your hand refills to ${HAND} at the start of each turn, only for cards you used.</small></div>`;
+    h+=`<h3>Active on you</h3><div class="row"><small>${fx.length?fx.join(' · '):'Nothing right now.'}</small></div>`;
+    const mine=m.traps.filter(t=>t.owner==='me');h+=`<h3>Your hidden traps</h3><div class="row"><small>${mine.length?mine.map(t=>`${CARDS[t.id].n} (expires round ${t.round+TRAPLIFE})`).join(' · '):'None set.'}</small></div>`;
+    h+='<div class="row"><small>Tap a card in your hand on the board to play or discard it. Max 2 plays and 1 discard-and-redraw per turn. Hostile cards make the target <b>Wary</b>: nobody can hit them with another hostile card that round.</small></div>';
+  }else if(T==='deck'){
+    const own=Object.keys(CARDS).filter(id=>(p.coll[id]||0)>0),inD=counts(p.deck),ord='CREL';
+    h+=`<h3>Your deck - ${p.deck.length} / ${DECK}${p.deck.length===DECK?' ✓':''}</h3><div class="row"><small>Build exactly ${DECK} cards. Max 2 copies of a card, 1 for Legendaries. Collection: ${own.length} of ${Object.keys(CARDS).length} cards found. Win more from fights, bosses and podium finishes.</small></div>`;
+    h+=own.sort((a,b)=>ord.indexOf(CARDS[a].r)-ord.indexOf(CARDS[b].r)||CARDS[a].n.localeCompare(CARDS[b].n)).map(id=>{const n=inD[id]||0,o=p.coll[id],lim=Math.min(o,copyMax(id));
+      return `<div class="row"><div class="g"><b style="color:${RAR[CARDS[id].r].c}">${CARDS[id].n}</b> <small>${RAR[CARDS[id].r].n} · owned ${o} · ${CARDS[id].d}</small></div>${btn('−','dk','-:'+id,n<1)}<b style="min-width:18px;text-align:center">${n}</b>${btn('+','dk','+:'+id,n>=lim||p.deck.length>=DECK)}</div>`;}).join('');
+  }else if(T==='rivals'){
+    h+=`<h3>Round ${m.round} of ${ROUNDS}</h3><div class="row"><div class="g"><b style="color:#bfe9ff">You</b> - Lv ${p.lvl} ${st.cls.n}<small>${m.dist} tiles travelled · ${fmt(m.dmg)} damage · ${Math.round(p.hp/st.maxhp*100)}% HP</small></div></div>`;
+    h+=m.riv.map(r=>`<div class="row"><div class="g"><b style="color:${r.col}">${r.n}</b> - Lv ${r.lvl} ${CLASSES[r.cls].n}<small>${RDECKS[r.arch].n} · ${RDECKS[r.arch].pers} (${PERS[RDECKS[r.arch].pers]}) · grudge vs you ${'●'.repeat(Math.min(5,Math.round((r.ps.grudge.me||0)/2)))||'none'}</small><small>${r.dist} tiles travelled · ${fmt(r.dmg)} damage · ${Math.round(r.hpf*100)}% HP · ${r.wins} wins · ${r.ps.hand.length} cards in hand${activeFx(r.ps).length?' · '+activeFx(r.ps).join(', '):''}</small></div></div>`).join('');
+    h+='<h3>Card log</h3>'+(m.log.length?m.log.slice(-14).reverse().map(t=>`<div class="row"><small>${t}</small></div>`).join(''):'<div class="row"><small>No cards played at anyone yet.</small></div>');
+    h+='<div class="row"><small>Prizes at the end of round 30 for 1st, 2nd and 3rd in two races: furthest travelled, and most damage dealt. Rivals fight behind the scenes and can lose.</small></div>';
+  }else if(T==='equip'){
+    h+='<h3>Weapons</h3>'+p.weapons.map(id=>`<div class="row"><div class="g">${wName(id)}${up(id)}<small>${wDesc(id)}</small></div>${id===p.weapon?'<b>Equipped</b>':btn('Equip','equip','weapon:'+id)}</div>`).join('');
+    h+='<h3>Armour</h3>'+p.armours.map(id=>`<div class="row"><div class="g">${ARMOUR[id].n}${up(id)}<small>${aDesc(id)}</small></div>${id===p.armour?'<b>Equipped</b>':btn('Equip','equip','armour:'+id)}</div>`).join('');
+    h+='<h3>Accessory</h3>'+(p.accs.length?p.accs.map(id=>`<div class="row"><div class="g">${ACC[id].n}<small>${ACC[id].d}</small></div>${id===p.acc?btn('Remove','equip','acc:'):btn('Equip','equip','acc:'+id)}</div>`).join(''):'<div class="row"><small>None yet - find or buy one.</small></div>');
+  }else if(T==='gems'){
+    const sel=G.sel,lw=linkFx('w'),la=linkFx('a'),used=new Set(p.ws.concat(p.as).filter(Boolean));
+    const dot=g=>{const G2=GEMS[g];return G2.el?EL[G2.el].c:G2.kind==='passive'?'#ffd66d':G2.kind==='support'?'#ff9df0':'#9dffb5';};
+    const sock=(where,i)=>{const arr=where==='w'?p.ws:p.as,g=arr[i],on=sel&&sel.w===where&&sel.i===i;
+      return `<button class="sm" data-act="sock" data-arg="${where}:${i}" style="min-width:74px;${on?'background:linear-gradient(#e0b03a,#96650f);color:#1a1200;':''}">${g?`<span style="color:${on?'#1a1200':dot(g)}">&#9670;</span> ${GEMS[g].n}`:'empty'}</button>`;};
+    const row=(where,L)=>{let i=0,out='<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0">';
+      for(const g of L){if(g===2)out+=`<span style="display:flex;align-items:center;border:1.5px solid #ff9df0;border-radius:10px;padding:3px">${sock(where,i)}<b style="color:#ff9df0;padding:0 3px">=</b>${sock(where,i+1)}</span>`;else out+=sock(where,i);i+=g;}return out+'</div>';};
+    const fx=(f,where)=>{const t=[];if(f.el)t.push(`Strikes deal <b style="color:${EL[f.el].c}">${EL[f.el].n}</b> damage`);f.res.forEach(r=>t.push(`Halves <b style="color:${EL[r].c}">${EL[r].n}</b> damage taken`));f.spread.forEach(x=>t.push(`${GEMS[x].n} is spread`));return `<small style="display:block;opacity:.85">${t.length?t.join(' · '):'No linked effects.'}</small>`;};
+    h+=`<h3>Weapon - ${wName(p.weapon)}</h3>${row('w',layoutOf('w',p.weapon))}${fx(lw)}`;
+    h+=`<h3>Armour - ${ARMOUR[p.armour].n}</h3>${row('a',layoutOf('a',p.armour))}${fx(la)}`;
+    if(sel){const arr=sel.w==='w'?p.ws:p.as,cur=arr[sel.i];
+      h+=`<h3>${cur?`Socket holds ${GEMS[cur].n}`:'Choose a gem for this socket'}</h3>`;if(cur)h+=`<div class="row"><div class="g">${GEMS[cur].n}<small>${GEMS[cur].d}</small></div>${btn('Remove','unsock','',false,'gold')}</div>`;
+      const bag=p.gems.filter(g=>!used.has(g));
+      h+=bag.length?bag.map(g=>`<div class="row"><div class="g"><span style="color:${dot(g)}">&#9670;</span> ${GEMS[g].n} <small>${GEMS[g].kind==='spell'?GEMS[g].mp+' MP spell · ':GEMS[g].kind==='support'?'Support · ':'Passive · '}${GEMS[g].d}</small></div>${btn(cur?'Swap in':'Place','place',g)}</div>`).join(''):'<div class="row"><small>No spare gems. Buy more at a merchant.</small></div>';
+    }else h+='<div class="row"><small>Tap a socket to fill or empty it.</small></div>';
+    h+='<div class="row"><small><b>Linked sockets</b> (joined with =) let a Support gem power up the spell next to it. Elemental + Fire on your weapon makes your strikes deal Fire damage (great against Fire-weak foes and it gets past weapon resistance on a weakness). Elemental + Fire on armour halves Fire damage you take. An enemy\'s outline colour is the element it attacks with, and the dot by its health bar is its weakness. Spells work from any socket (up to 4 in battle). Landing weapon hits refills MP. Tap Guard just before a hit lands for a PERFECT guard.</small></div>';
+  }else if(T==='shop'){
+    const buy=(k,price)=>btn(price+' gil','buy',k,p.gil<price);
+    h+=`<h3>Your gil: <span class="gilc">${p.gil}</span></h3>`;
+    const SK=G.stock||rollStock();G.stock=SK;
+    h+='<div class="row"><small>Stock changes every visit, and better gear turns up as you level.</small></div><h3>Items</h3>'+SK.items.map(k=>`<div class="row"><div class="g">${ITEMS[k].n} <small>You have ${p[k]||0} · ${ITEMS[k].d}</small></div>${buy('item:'+k,ITEMS[k].price)}</div>`).join('');
+    const ps=m.ps,dsz=ps.deck.length+ps.disc.length+ps.hand.length;
+    h+=`<h3>Cards - temporary, this circuit only</h3><div class="row"><small>Shuffled into your deck. Your circuit deck has ${dsz} cards: every extra card makes the one you want less likely to turn up.</small></div>`;
+    h+=SK.cards.map(id=>`<div class="row"><div class="g"><b style="color:${RAR[CARDS[id].r].c}">${CARDS[id].n}</b> <small>${RAR[CARDS[id].r].n} · ${CARDS[id].d}</small></div>${buy('card:'+id,RAR[CARDS[id].r].price)}</div>`).join('');
+    const tl=[...ps.deck.map((c,i)=>({c,w:'deck',i})),...ps.disc.map((c,i)=>({c,w:'disc',i}))].filter(x=>x.c.t);
+    if(tl.length)h+='<h3>Trim - remove a temporary card (40 gil)</h3>'+tl.map(x=>`<div class="row"><div class="g">${CARDS[x.c.id].n}<small>in your ${x.w==='deck'?'deck':'discard pile'}</small></div>${btn('40 gil','trim',x.w+':'+x.i,p.gil<40)}</div>`).join('');
+    const sec=(title,list,tbl,kind,name,desc,own)=>{const ids=list.filter(k=>!own.includes(k));return `<h3>${title}</h3>`+(ids.length?ids.map(id=>`<div class="row"><div class="g">${name(id)}<small>${desc(id)}</small></div>${buy(kind+':'+id,tbl[id].price)}</div>`).join(''):'<div class="row"><small>Sold out - check the next merchant.</small></div>');};
+    h+=sec('Weapons',SK.weapons,WEAPONS,'weapon',wName,wDesc,p.weapons)+sec('Armour',SK.armour,ARMOUR,'armour',id=>ARMOUR[id].n,aDesc,p.armours)+sec('Gems',SK.gems,GEMS,'gem',id=>GEMS[id].n,id=>GEMS[id].d,p.gems)+sec('Accessories',SK.accs,ACC,'acc',id=>ACC[id].n,id=>ACC[id].d,p.accs);
+  }else if(T==='forge'){
+    const wu=p.up[p.weapon]||0,au=p.up[p.armour]||0,wc=60*(wu+1),ac=60*(au+1);
+    h+=`<h3>Your gil: <span class="gilc">${p.gil}</span></h3>`;
+    h+=`<div class="row"><div class="g">Temper ${wName(p.weapon)}${up(p.weapon)}<small>+2 ATK, +1 MAG per level (max +${MAXUP})</small></div>${wu>=MAXUP?'<b>Max</b>':btn(wc+' gil','forge','weapon',p.gil<wc)}</div>`;
+    h+=`<div class="row"><div class="g">Reinforce ${ARMOUR[p.armour].n}${up(p.armour)}<small>+2 DEF, +6 HP per level (max +${MAXUP})</small></div>${au>=MAXUP?'<b>Max</b>':btn(ac+' gil','forge','armour',p.gil<ac)}</div>`;
+    h+=`<div class="row"><div class="g">Bore gem slot in ${wName(p.weapon)}<small>Adds one extra gem slot (once per weapon)</small></div>${p.bore[p.weapon]?'<b>Done</b>':btn(PRICES.bore+' gil','forge','bore',p.gil<PRICES.bore)}</div>`;
+  }
+  $('menuIn').innerHTML=h+'</div>';
+}
+const ACT={
+  roll:doRoll,
+  menu(){if(!G.busy)openMenu('status');},
+  closeMenu(){closeMenu();if(G.scene==='title')renderTitle();},
+  tab(a){G.menuTab=a;G.sel=null;renderMenu();},
+  card(a){$('card').classList.add('hidden');if(cardRes){const r=cardRes;cardRes=null;r(a);}},
+  use(a){useItem(a);renderMenu();},
+  equip(a){const[k,id]=a.split(':'),p=G.p;if(k==='weapon')p.weapon=id;else if(k==='armour')p.armour=id;else p.acc=id||null;fixVitals();renderMenu();},
+  sock(a){const[w,i]=a.split(':');G.sel=(G.sel&&G.sel.w===w&&G.sel.i===+i)?null:{w,i:+i};renderMenu();},
+  place(g){if(!G.sel)return;const arr=G.sel.w==='w'?G.p.ws:G.p.as;while(arr.length<=G.sel.i)arr.push(null);arr[G.sel.i]=g;G.sel=null;fixVitals();renderMenu();},
+  unsock(){if(!G.sel)return;const arr=G.sel.w==='w'?G.p.ws:G.p.as;arr[G.sel.i]=null;G.sel=null;fixVitals();renderMenu();},
+  buy(a){const p=G.p,[k,id]=a.split(':');
+    if(k==='item'){if(p.gil<ITEMS[id].price)return;p.gil-=ITEMS[id].price;p[id]=(p[id]||0)+1;toast('Bought '+ITEMS[id].n);}
+    else if(k==='card'){const pr=RAR[CARDS[id].r].price;if(p.gil<pr)return;p.gil-=pr;const ps=G.m.ps;ps.deck.splice(rnd(0,ps.deck.length),0,{id,t:true});toast(`${CARDS[id].n} shuffled into your deck`);}
+    else{const tbl={weapon:WEAPONS,armour:ARMOUR,acc:ACC,gem:GEMS}[k],own={weapon:p.weapons,armour:p.armours,acc:p.accs,gem:p.gems}[k];
+      if(p.gil<tbl[id].price||own.includes(id))return;p.gil-=tbl[id].price;own.push(id);toast('Bought '+(k==='weapon'?wName(id):tbl[id].n));}
+    renderMenu();},
+  forge(k){const p=G.p;
+    if(k==='bore'){if(p.gil<PRICES.bore||p.bore[p.weapon])return;p.gil-=PRICES.bore;p.bore[p.weapon]=1;}
+    else{const id=k==='weapon'?p.weapon:p.armour,u=p.up[id]||0,c=60*(u+1);if(u>=MAXUP||p.gil<c)return;p.gil-=c;p.up[id]=u+1;}
+    renderMenu();},
+  async hand(i){ // tap a card in your hand
+    if(G.busy||G.scene!=='board')return;const m=G.m,ps=m.ps,c=ps.hand[+i];if(!c)return;const C=CARDS[c.id];
+    const okT=m.riv.some(r=>r.ps.wary!==m.round);
+    let why='';if(ps.plays>=PLAYMAX)why=`You've used your ${PLAYMAX} plays this turn.`;else if(C.k==='buck')why='Play this when you roll an encounter.';else if(C.k==='trap'&&!canTrap(m.pos))why='Traps need an empty, normal tile.';else if(C.k.startsWith('hostile')&&!okT)why='Every rival is Wary this round.';
+    const btns=[];if(!why)btns.push(['Play','play','gold']);if(!ps.discUsed)btns.push(['Discard & draw','disc']);btns.push(['Close','x']);
+    G.busy=true;
+    const a=await card(C.n,`<p><span class="tag" style="background:${RAR[C.r].c}">${RAR[C.r].n}</span>${c.t?' <small>temporary</small>':''}</p><p>${C.d}</p>${why?`<p><small style="opacity:.8">${why}</small></p>`:''}<p><small>Plays ${ps.plays}/${PLAYMAX}${ps.discUsed?' · discard used':''}</small></p>`,btns);
+    if(a==='disc'){const n=discardDraw(ps,c);toast(`Discarded ${C.n}${n?`, drew ${CARDS[n.id].n}`:''}`);}
+    else if(a==='play'){
+      let tgt=null,ch=0,go=true;
+      if(C.k==='pace'||C.k==='fate'){const v=C.k==='pace'?2:1;const x=await card(C.n,'<p>Lock it in now - you can\'t change it after you roll.</p>',[[`+${v}`,'+'],[`-${v}`,'-'],['Cancel','x']]);if(x==='x')go=false;else ch=x==='+'?v:-v;}
+      else if(C.k==='hostile'){const x=await card(`${C.n} - choose a rival`,'<p>Wary rivals are already protected this round.</p>',[...m.riv.map((r,i)=>[r.n+(r.ps.wary===m.round?' (wary)':''),''+i]).filter((q,i)=>m.riv[i].ps.wary!==m.round),['Cancel','x']]);if(x==='x')go=false;else tgt=+x;}
+      if(go)await playCard('me',c,tgt,ch);
+    }
+    G.busy=false;save();
+  },
+  dk(a){const[op,id]=a.split(':'),p=G.p;if(op==='+'){const n=p.deck.filter(x=>x===id).length;if(p.deck.length<DECK&&n<Math.min(p.coll[id]||0,copyMax(id)))p.deck.push(id);}else{const i=p.deck.indexOf(id);if(i>=0)p.deck.splice(i,1);}save();renderMenu();},
+  trim(a){const[w,i]=a.split(':'),p=G.p,ps=G.m.ps,arr=w==='deck'?ps.deck:ps.disc;if(p.gil<40||!arr[+i]||!arr[+i].t)return;p.gil-=40;const c=arr.splice(+i,1)[0];toast(`${CARDS[c.id].n} removed`);renderMenu();},
+  deck(){openDeck();},
+  toTitle(){closeMenu();save();setScene('title');},
+  cont(){const s=load();if(s&&s.m){G.p=s.p;G.m=s.m;enterMatch();}},
+  hero(i){const a=loadAll();if(!a.slots[+i])return;a.cur=+i;storeAll(a);G.slot=+i;G.p=a.slots[+i].p;G.m=a.slots[+i].m;G.picking=false;renderTitle();toast(`Lv ${G.p.lvl} ${CLASSES[G.p.cls].n} selected`);},
+  newhero(){G.picking=true;renderTitle();},
+  cancelpick(){G.picking=false;renderTitle();},
+  async retire(){const a=loadAll(),s=a.slots[a.cur];if(!s)return;const C=CLASSES[s.p.cls];if(await card('Retire this hero?',`<p>Lv ${s.p.lvl} ${C.n} and everything they own (gear, gems, cards, any circuit in progress) will be gone for good.</p>`,[['Keep them','x','gold'],['Retire','yes']])!=='yes')return;a.slots.splice(a.cur,1);a.cur=0;storeAll(a);G.p=null;G.m=null;G.slot=null;renderTitle();toast('Hero retired');},
+  cls(k){G.p=newPlayer(k);G.m=null;G.slot=loadAll().slots.length;const st=S();G.p.hp=st.maxhp;G.p.mp=st.maxmp;save();G.picking=false;renderTitle();toast('A new '+CLASSES[k].n+' joins your roster');},
+  board(i){newMatch(BOARDS[+i]);},
+  custom(){const v=$('cpath').value.trim(),r=parsePath(v);if(r.error){toast(r.error);return;}newMatch({id:'custom',n:'Custom Board',path:v});},
+  diff(k){G.p.diff=k;save();renderTitle();},
+  howto(){card('How to play',`<div class="help">
+<p><b>The goal.</b> A circuit is ${ROUNDS} rounds against three AI rivals. At the end, prizes go to the top three for <b>distance travelled</b> and for <b>damage dealt</b>. Bosses arrive on rounds 10, 20 and 30.</p>
+<p><b>Your turn.</b> Play up to 2 cards from your hand, then roll 2d6 and move. Doubles roll again. Land on a normal tile and the 12-sided Fate Die decides what happens: 1, 4, 8 and 12 are fights (1 easiest, 12 hardest).</p>
+<p><b>Fights.</b> Drag anywhere to move. Attack, Guard, Dodge, your class Skill and spells are on the right. Tap Guard just before a hit for a PERFECT guard. Grey damage numbers mean the enemy resists your weapon: use magic, or hit its weakness (the coloured dot by its health bar).</p>
+<p><b>Losing a fight</b> sends you back to the Sanctuary with 25% less gil and 20% less distance.</p>
+<p><b>Cards.</b> Your hand refills to 5 for the cards you used. Hostile cards hit a rival and make them Wary for the round. Traps are hidden. Rivals hold grudges against whoever hurts them.</p>
+<p><b>Gear.</b> Merchants change their stock every visit. Weapons and armour have gem sockets: link Elemental with an element spell to add it to your strikes, or to resist it on armour.</p>
+<p><b>Heroes.</b> Make as many heroes as you like, one of each class or several. Each keeps their own level, gear and deck.</p></div>`,[['Got it','ok','gold']]);},
+  settings(){const r=()=>card('Settings',`<div class="help"><p>Sound effects: <b>${SET.sound?'On':'Off'}</b></p><p>Screen shake in fights: <b>${SET.shake?'On':'Off'}</b></p><p>Board speed: <b>${SET.speed==='fast'?'Fast':'Normal'}</b></p></div>`,[['Sound','sound'],['Shake','shake'],['Speed','speed'],['Done','ok','gold']]).then(a=>{if(a==='sound')SET.sound=!SET.sound;else if(a==='shake')SET.shake=!SET.shake;else if(a==='speed')SET.speed=SET.speed==='fast'?'normal':'fast';else return;applySet();r();});r();},
+  credits(){card('Credits',`<p><b>Crystal Circuit</b><br>A Kralnu Games game · v${GAME_VERSION}</p><p>Ideas, design and testing by Kris.<br>Built with Claude, an AI by Anthropic.</p><p><small>Free to play, no ads. If you enjoy it, a coffee on Ko-fi keeps the games coming.</small></p>`,[['Thanks!','ok','gold']]);},
+  review(){RV={rating:0,sent:false};drawReview();},
+  rvStar(n){RV.rating=+n;keepReview();drawReview();},
+  async rvSend(){keepReview();if(!RV.rating){toast('Tap a star rating first');return;}RV.sending=true;drawReview();
+    try{await fetch(`https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`,{method:'POST',mode:'no-cors',body:reviewParams(RV)});RV.sent=true;}catch(e){RV.err=true;}RV.sending=false;drawReview();},
+};
+// Reviews go to Kris's Google Form (shared by all Kralnu Games; the version field names the game).
+const FORM_ID='1FAIpQLSe__mPhU5YGi9um01BreqNND9mJwaaChi_4ZCp-7P5JcCJKcw';
+const FORM_FIELDS={rating:'entry.1904387170',liked:'entry.2084220988',change:'entry.1413261780',name:'entry.1767709403',version:'entry.1994593489'};
+const KOFI='https://ko-fi.com/kralnu90';
+let RV={rating:0};
+function reviewParams(r){const q=new URLSearchParams();q.set(FORM_FIELDS.rating,String(r.rating));q.set(FORM_FIELDS.liked,r.liked||'');q.set(FORM_FIELDS.change,r.change||'');q.set(FORM_FIELDS.name,r.name||'');q.set(FORM_FIELDS.version,'Crystal Circuit '+GAME_VERSION);return q;}
+function keepReview(){const g=id=>{const el=$(id);return el?el.value:undefined;};['liked','change','name'].forEach(k=>{const v=g('rv-'+k);if(v!==undefined)RV[k]=v;});}
+function drawReview(){
+  const esc=t=>(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  if(RV.sent){card('Review sent',`<p>Thank you! Every review gets read, and the good ideas go in.</p>`,[['Close','ok','gold']]);return;}
+  $('cardIn').innerHTML=`<h2>Leave a review</h2><p><small>Tell me what's working and what isn't. It goes straight to me.</small></p>
+  <div class="stars">${[1,2,3,4,5].map(n=>`<button class="${n<=RV.rating?'on':''}" data-act="rvStar" data-arg="${n}" aria-label="${n} stars">★</button>`).join('')}</div>
+  <label for="rv-liked">What did you like?</label><textarea id="rv-liked" rows="2">${esc(RV.liked)}</textarea>
+  <label for="rv-change">What would you change?</label><textarea id="rv-change" rows="2">${esc(RV.change)}</textarea>
+  <label for="rv-name">Name (optional)</label><input id="rv-name" value="${esc(RV.name)}" maxlength="40">
+  ${RV.err?`<p><small>Couldn't send that. Check your connection and try again.</small></p>`:''}
+  <div class="btns"><button data-act="card" data-arg="x">Cancel</button><button class="gold" data-act="rvSend" ${RV.sending?'disabled':''}>${RV.sending?'Sending...':'Send review'}</button></div>`;
+  $('card').classList.remove('hidden');
+}
+function renderTitle(){
+  const a=loadAll(),s=a.slots[a.cur]||null;let h='';G.slot=s?a.cur:null;
+  if(!s||G.picking){
+    if(s)h+='<button class="sm" data-act="cancelpick" style="align-self:flex-start">← Back to your heroes</button>';
+    h+=`<h3>${s?'Choose a class for your new hero':'Choose your class'}</h3><p>Each hero keeps their own level, gear and deck, so you can try them all.</p>`+Object.keys(CLASSES).map(k=>{const C=CLASSES[k];return `<button data-act="cls" data-arg="${k}"><div class="brow"><span style="color:${C.c}">${C.n}</span></div><div class="brow"><small>${C.d}</small></div></button>`;}).join('');
+  }else{
+    G.p=s.p;G.m=s.m;const C=CLASSES[s.p.cls];
+    h+='<h3>Your heroes</h3>'+a.slots.map((x,i)=>{const c=CLASSES[x.p.cls];return `<button class="hero ${i===a.cur?'on':''}" data-act="hero" data-arg="${i}"><span><b style="color:${i===a.cur?'#1a1200':c.c}">Lv ${x.p.lvl} ${c.n}</b></span><small>${x.p.gil} gil${x.m?' · mid-circuit':''}</small></button>`;}).join('')+'<button class="sm" data-act="newhero">+ New hero</button>';
+    h+=`<p><b style="color:${C.c}">Lv ${s.p.lvl} ${C.n}</b> · ${s.p.gil} gil · ${s.p.golds} podium golds · ${s.p.crowns} Tyrants slain</p>`;
+    h+=`<p>A circuit is ${ROUNDS} rounds against three rivals, each with their own deck of cards. Bosses arrive on rounds 10, 20 and 30. Prizes go to the top three for distance travelled and for damage dealt. Your hero keeps everything between circuits.</p>`;
+    h+=`<button data-act="deck"><div class="brow"><span>Deck editor</span><small>${s.p.deck.length}/${DECK} cards${s.p.deck.length!==DECK?' - needs fixing':''} · ${Object.keys(s.p.coll).length} collected</small></div></button>`;
+    if(s.m)h+=`<button class="gold" data-act="cont">Continue - round ${s.m.round} on ${s.m.def.n} (${DIFF[s.m.diff||'normal'].n})</button>`;
+    const cd=s.p.diff||'normal';h+='<h3>Difficulty for new circuits</h3><div class="brow">'+Object.keys(DIFF).map(k=>`<button class="sm ${k===cd?'gold':''}" style="flex:1" data-act="diff" data-arg="${k}">${DIFF[k].n}</button>`).join('')+`</div><p style="font-size:12px;opacity:.75">${DIFF[cd].d}</p>`;
+    h+=`<h3>${s.m?'Or abandon it and start a new circuit':'Start a circuit'}</h3>`;
+    h+=BOARDS.map((b,i)=>{const n=parsePath(b.path).pts.length;return `<button data-act="board" data-arg="${i}"><div class="brow"><span>${b.n}</span><small>${n} tiles${n>=48?' · long':''}</small></div></button>`;}).join('');
+    h+=`<h3>Custom board</h3><input id="cpath" value="R6 D3 R4 D8 L10 U11" autocomplete="off" spellcheck="false"><div class="brow"><small>R, L, U, D + tile count. End where you began. 12 to 120 tiles.</small><button class="sm" data-act="custom">Play</button></div>`;
+    h+='<button class="sm" data-act="retire" style="align-self:center;opacity:.7">Retire this hero</button>';
+  }
+  h+=`<h3>Menu</h3><div class="mrow"><button data-act="howto">How to play</button><button data-act="settings">Settings</button><button data-act="review">Leave a review</button><a class="btn-link" href="${KOFI}" target="_blank" rel="noopener"><button style="width:100%">☕ Support</button></a>
+  <button data-install type="button">Install the app</button><button data-get-latest type="button">Get the latest version</button><button data-act="credits">Credits</button></div><p style="text-align:center;font-size:11.5px;opacity:.7">v${GAME_VERSION} · hello@kralnugames.com</p>`;
+  $('tbox').innerHTML=h;
+}
+let toastT=0;
+function toast(m){const t=$('toast');t.textContent=m;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>{t.style.opacity=0;},2100);}
+function setScene(s){
+  G.scene=s;const sh=(id,on)=>$(id).classList.toggle('hidden',!on);
+  sh('title',s==='title');sh('top',s!=='title');sh('info',s==='board');sh('bottom',s==='board');sh('plays',s==='board');sh('chud',s==='battle');
+  if(s==='title')renderTitle();
+}
+
+/* input wiring */
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t&&!t.disabled&&ACT[t.dataset.act])ACT[t.dataset.act](t.dataset.arg);});
+function hold(id,down,up){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();down();});
+  if(up)['pointerup','pointercancel','pointerleave'].forEach(n=>el.addEventListener(n,up));}
+hold('bAtk',()=>inp.atk=true,()=>inp.atk=false);
+hold('bGuard',()=>inp.guard=true,()=>inp.guard=false);
+hold('bDodge',()=>inp.dodgeP=true);
+hold('bSkill',skill);
+hold('bPot',()=>useItem('potion'));
+hold('bEth',()=>useItem('ether'));
+$('spells').addEventListener('pointerdown',e=>{const t=e.target.closest('button');if(!t)return;e.preventDefault();if(t.dataset.lim)limitBreak();else cast(+t.dataset.sp);});
+const cv=$('cv'),ctx=cv.getContext('2d');let W=0,H=0,DPR=1;
+cv.addEventListener('pointerdown',e=>{if(G.scene==='battle'&&!inp.joy)inp.joy={id:e.pointerId,ox:e.clientX,oy:e.clientY,x:e.clientX,y:e.clientY};});
+cv.addEventListener('pointermove',e=>{if(inp.joy&&inp.joy.id===e.pointerId){inp.joy.x=e.clientX;inp.joy.y=e.clientY;}});
+['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,e=>{if(inp.joy&&inp.joy.id===e.pointerId)inp.joy=null;}));
+addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();inp.keys[k]=true;
+  if(G.scene==='battle'){if(k==='j')inp.atk=true;else if(k==='k')inp.guard=true;else if(k==='l'||k==='shift')inp.dodgeP=true;else if(k==='f')skill();
+    else if(k>='1'&&k<='4')cast(+k-1);else if(k==='q')useItem('potion');else if(k==='e')useItem('ether');else if(k===' ')limitBreak();
+    if(k===' '||k.startsWith('arrow'))e.preventDefault();}
+  else if(G.scene==='board'&&(k===' '||k==='enter')&&$('card').classList.contains('hidden')&&$('menu').classList.contains('hidden')){e.preventDefault();doRoll();}
+});
+addEventListener('keyup',e=>{const k=e.key.toLowerCase();inp.keys[k]=false;if(k==='j')inp.atk=false;if(k==='k')inp.guard=false;});
+addEventListener('blur',()=>{inp.keys={};inp.atk=inp.guard=false;inp.joy=null;});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+/* ---------------- 7. RENDER & LOOP ---------------- */
+function resize(){DPR=Math.min(window.devicePixelRatio||1,2);const w=cv.clientWidth||innerWidth,h=cv.clientHeight||innerHeight;if(w===W&&h===H&&cv.width===Math.round(w*DPR))return;W=w;H=h;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);}
+addEventListener('resize',resize);resize();
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function crystal(x,y,s,rot,c){ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.beginPath();ctx.moveTo(0,-s);ctx.lineTo(s*.55,0);ctx.lineTo(0,s);ctx.lineTo(-s*.55,0);ctx.closePath();ctx.fillStyle=c;ctx.fill();ctx.strokeStyle='#ffffffaa';ctx.lineWidth=1.5;ctx.stroke();ctx.beginPath();ctx.moveTo(0,-s);ctx.lineTo(0,s);ctx.stroke();ctx.restore();}
+function bg(a,b){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,a);g.addColorStop(1,b);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+
+function drawTitle(){bg('#0b1040','#05060f');
+  for(let i=0;i<40;i++){const x=(i*97.3)%W,y=(i*53.7+G.time*(6+i%5))%H;ctx.fillStyle=`rgba(180,210,255,${.15+(i%4)*.1})`;ctx.fillRect(x,y,2,2);}}
+
+const TOFF=[[0,0],[-.22,-.2],[.22,-.2],[0,.24]];
+function drawBoard(dt){
+  const b=G.board,m=G.m,cur=b.tiles[m.pos];bg(cur.biome.f,'#05060f');
+  const top=156,bot=H-178,aw=W-20,ah=bot-top,ts=Math.max(10,Math.min(aw/b.cols,ah/b.rows,60));
+  const ox=(W-ts*b.cols)/2-b.minx*ts,oy=top+(ah-ts*b.rows)/2-b.miny*ts,pad=Math.max(1,ts*.06);
+  b.tiles.forEach((t,i)=>{
+    const x=ox+t.x*ts+pad,y=oy+t.y*ts+pad,s=ts-pad*2;rr(x,y,s,s,ts*.16);
+    ctx.fillStyle=t.kind==='start'?'#e0b03a':t.kind==='shop'?'#7b5fd6':t.biome.c;ctx.fill();
+    ctx.lineWidth=i===m.pos?3:1.2;ctx.strokeStyle=i===m.pos?'#fff':'#ffffff55';ctx.stroke();
+    ctx.fillStyle='#ffffffcc';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`700 ${Math.round(ts*.42)}px system-ui`;
+    if(t.kind==='start')ctx.fillText('★',x+s/2,y+s/2+1);else if(t.kind==='shop')ctx.fillText('$',x+s/2,y+s/2+1);
+    else{ctx.fillStyle='#ffffff30';ctx.beginPath();ctx.arc(x+s/2,y+s/2,ts*.09,0,6.3);ctx.fill();}
+  });
+  for(const t of m.traps)if(t.owner==='me'){const T=b.tiles[t.pos],x=ox+T.x*ts,y=oy+T.y*ts;ctx.fillStyle='#ff8ad1';ctx.font=`700 ${Math.round(ts*.34)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✶',x+ts*.78,y+ts*.24);}
+  for(let i=3;i>=0;i--){ // rivals first, you on top
+    const tk=G.toks[i],t=b.tiles[posOf(i)];
+    if(Math.abs(t.x-tk.x)+Math.abs(t.y-tk.y)>3){tk.x=t.x;tk.y=t.y;}
+    tk.x+=(t.x-tk.x)*Math.min(1,dt*16*SPD);tk.y+=(t.y-tk.y)*Math.min(1,dt*16*SPD);G.hops[i]=Math.max(0,G.hops[i]-dt*5.5);
+    const bx=ox+(tk.x+.5+TOFF[i][0])*ts,by=oy+(tk.y+.5+TOFF[i][1])*ts,py=by-Math.sin(G.hops[i]*Math.PI)*ts*.45-(i===0?Math.sin(G.time*3)*2:0);
+    if(i===0){ctx.fillStyle='#0007';ctx.beginPath();ctx.ellipse(bx,by+ts*.28,ts*.24,ts*.09,0,0,6.3);ctx.fill();
+      ctx.shadowColor='#6fd3ff';ctx.shadowBlur=14;crystal(bx,py-ts*.08,ts*.36,0,'#bfe9ff');ctx.shadowBlur=0;}
+    else{const r=m.riv[i-1];ctx.globalAlpha=r.ps&&r.ps.skip?.45:1;crystal(bx,py,ts*.22,0,r.col);ctx.globalAlpha=1;}
+  }
+  const nextBoss=m.round<=10?10:m.round<=20?20:30;
+  const chip=(col,n,d,g)=>`<span><b><i style="background:${col}"></i>${n}</b><em style="font-style:normal;opacity:.85">${d}t · ${fmt(g)}</em></span>`;
+  const html=`${b.def.n} · Round ${m.round}/${ROUNDS} · boss on ${nextBoss} · ${cur.kind==='start'?'Sanctuary':cur.kind==='shop'?"Merchant's Rest":cur.biome.n}<div class="sb">${chip('#bfe9ff','You',m.dist,m.dmg)}${m.riv.map(r=>chip(r.col,r.n,r.dist,r.dmg)).join('')}</div>`;
+  if(hc.info!==html){hc.info=html;$('info').innerHTML=html;}
+  const ps=m.ps,fx=activeFx(ps),pl=ps.hand.map(c=>c.id+(c.t?'*':'')).join()+'|'+ps.plays+ps.discUsed+ps.deck.length+'|'+fx.join();
+  if(hc.pl!==pl){hc.pl=pl;$('plays').innerHTML=`<div class="hi">Plays ${ps.plays}/${PLAYMAX} · Deck ${ps.deck.length} · Discard ${ps.disc.length}${fx.length?' · '+fx.join(', '):''}</div><div class="hr">`+ps.hand.map((c,i)=>{const C=CARDS[c.id];return `<button data-act="hand" data-arg="${i}" style="border-color:${KCOL[C.k]}">${C.n}<small style="color:${RAR[C.r].c}">${RAR[C.r].n}${c.t?' · temp':''}</small></button>`;}).join('')+'</div>';}
+}
+
+function drawBattle(){
+  const p=B.pl,bio=B.biome,C=B.st.cls;ctx.fillStyle='#04050c';ctx.fillRect(0,0,W,H);
+  const z=clamp(Math.min(W,H)/540,.6,1.5),cx=W/2,cy=H>W?(H-190)/2+50:H/2;
+  ctx.save();const shk=SET.shake?B.shake:0;ctx.translate(cx+rf(-1,1)*shk,cy+rf(-1,1)*shk);ctx.scale(z,z);ctx.translate(-B.cam.x,-B.cam.y);
+  ctx.beginPath();ctx.arc(0,0,B.R,0,6.3);ctx.fillStyle=bio.f;ctx.fill();ctx.lineWidth=6;ctx.strokeStyle=bio.c;ctx.stroke();
+  ctx.strokeStyle=bio.g;ctx.lineWidth=2;for(let r=86;r<B.R;r+=86){ctx.beginPath();ctx.arc(0,0,r,0,6.3);ctx.stroke();}
+  for(let i=0;i<12;i++){const a=i/12*6.283;ctx.beginPath();ctx.moveTo(Math.cos(a)*86,Math.sin(a)*86);ctx.lineTo(Math.cos(a)*B.R,Math.sin(a)*B.R);ctx.stroke();}
+  // telegraphs: red = danger, it lands when the inner shape fills
+  for(const e of B.en){if(e.hp<=0||e.st!=='wind'||e.stagT>0)continue;const k=clamp(1-e.t/e.T,0,1);
+    if(e.tr>0){ctx.beginPath();ctx.arc(e.x,e.y,e.tr,0,6.3);ctx.fillStyle='#ff3b3b2a';ctx.fill();ctx.strokeStyle='#ff5a5a';ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.arc(e.x,e.y,e.tr*k,0,6.3);ctx.fillStyle='#ff3b3b40';ctx.fill();}
+    else if(e.mode==='charge'){const L=e.dsp*e.dur+e.r;ctx.save();ctx.translate(e.x,e.y);ctx.rotate(Math.atan2(e.cy,e.cx));ctx.fillStyle='#ff3b3b2a';ctx.fillRect(0,-e.r,L,e.r*2);ctx.fillStyle='#ff3b3b40';ctx.fillRect(0,-e.r,L*k,e.r*2);ctx.strokeStyle='#ff5a5a';ctx.lineWidth=2;ctx.strokeRect(0,-e.r,L,e.r*2);ctx.restore();}}
+  for(const zn of B.zn){const k=clamp(1-zn.t/zn.T,0,1),c=zn.from==='p'?'#ff9a3b':'#ff3b3b';ctx.beginPath();ctx.arc(zn.x,zn.y,zn.r,0,6.3);ctx.fillStyle=c+'2a';ctx.fill();ctx.strokeStyle=c;ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.arc(zn.x,zn.y,zn.r*k,0,6.3);ctx.fillStyle=c+'40';ctx.fill();}
+  const tg=B.over?null:nearest();if(tg){ctx.strokeStyle='#ffffffaa';ctx.lineWidth=2;ctx.setLineDash([6,6]);ctx.beginPath();ctx.arc(tg.x,tg.y,tg.r+8,B.t*2,B.t*2+6.283);ctx.stroke();ctx.setLineDash([]);}
+  for(const f of B.fx){const k=f.t/f.T;
+    if(f.k==='ring'){ctx.strokeStyle=f.c;ctx.globalAlpha=k;ctx.lineWidth=6;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(1-k*.6),0,6.3);ctx.stroke();ctx.globalAlpha=1;}
+    else if(f.k==='ghost'){ctx.globalAlpha=k*.4;ctx.fillStyle=C.c;ctx.beginPath();ctx.arc(f.x,f.y,13,0,6.3);ctx.fill();ctx.globalAlpha=1;}}
+  for(const e of B.en){
+    if(e.hp<=0&&e.dead<=0)continue;const a=e.hp<=0?Math.max(0,e.dead/.4):1;ctx.globalAlpha=a;
+    const wob=Math.sin(B.t*6+e.x)*.08,fl=e.hurt>0,col=fl?'#fff':e.stagT>0?'#ff9df0':e.b.c;
+    ctx.fillStyle='#0006';ctx.beginPath();ctx.ellipse(e.x,e.y+e.r*.7,e.r,e.r*.35,0,0,6.3);ctx.fill();
+    ctx.fillStyle=col;ctx.strokeStyle=EL[e.el].c;ctx.lineWidth=e.b.boss?4:3;ctx.beginPath();
+    if(e.type==='gloop')ctx.ellipse(e.x,e.y,e.r*(1+wob),e.r*(1-wob),0,0,6.3);
+    else if(e.type==='wisp'){ctx.moveTo(e.x,e.y-e.r*1.3);ctx.lineTo(e.x+e.r,e.y);ctx.lineTo(e.x,e.y+e.r*1.3);ctx.lineTo(e.x-e.r,e.y);ctx.closePath();}
+    else if(e.type==='dart'){const an=Math.atan2(e.st==='dash'||e.mode==='charge'?e.cy:p.y-e.y,e.st==='dash'||e.mode==='charge'?e.cx:p.x-e.x);for(let i=0;i<3;i++){const q=an+i*2.094;ctx.lineTo(e.x+Math.cos(q)*e.r*(i?1.1:1.7),e.y+Math.sin(q)*e.r*(i?1.1:1.7));}ctx.closePath();}
+    else if(e.type==='hexer'){for(let i=0;i<6;i++){const q=i/6*6.283+B.t;ctx.lineTo(e.x+Math.cos(q)*e.r*1.15,e.y+Math.sin(q)*e.r*1.15);}ctx.closePath();}
+    else if(e.type==='cinder'){const pu=e.st==='wind'?1+Math.sin(B.t*40)*.15:1;ctx.arc(e.x,e.y,e.r*pu,0,6.3);}
+    else if(e.type==='brute'||e.type==='gatekeeper'){rr(e.x-e.r,e.y-e.r,e.r*2,e.r*2,9);}
+    else{const n=e.type==='tyrant'?24:16;for(let i=0;i<n;i++){const an=i/n*6.283+B.t*.4,r=i%2?e.r:e.r*1.25;ctx.lineTo(e.x+Math.cos(an)*r,e.y+Math.sin(an)*r);}ctx.closePath();}
+    ctx.fill();ctx.stroke();
+    if(e.st==='wind'&&e.tr===0&&e.mode!=='charge'){ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,e.r+5+Math.sin(B.t*30)*2,0,6.3);ctx.stroke();}
+    const dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1;ctx.fillStyle='#111';
+    for(const s of[-1,1]){ctx.beginPath();ctx.arc(e.x+dx/d*e.r*.35-dy/d*e.r*.3*s,e.y+dy/d*e.r*.35+dx/d*e.r*.3*s,Math.max(2,e.r*.13),0,6.3);ctx.fill();}
+    if(e.hp>0){const w=Math.max(34,e.r*2),bx=e.x-w/2,by=e.y-e.r*1.3-12;
+      ctx.fillStyle='#000a';ctx.fillRect(bx-1,by-1,w+2,9);ctx.fillStyle='#ff5a6e';ctx.fillRect(bx,by,w*e.hp/e.maxhp,4);
+      ctx.fillStyle=e.stagT>0?'#ff9df0':'#ffb84d';ctx.fillRect(bx,by+5,w*(e.stagT>0?1:e.stag/100),2);
+      ctx.fillStyle=EL[e.weak].c;ctx.beginPath();ctx.arc(bx-7,by+3,4,0,6.3);ctx.fill();
+      if(e.slow>0){ctx.fillStyle=EL.ice.c;ctx.fillRect(bx+w+3,by,4,7);}
+      if(e.b.boss){ctx.font='700 12px system-ui';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.fillText(e.b.n,e.x,by-9);}}
+    ctx.globalAlpha=1;
+  }
+  // player
+  const ang=Math.atan2(p.fy,p.fx),air=p.jumpT>0?Math.sin(clamp(p.jumpT/.7,0,1)*Math.PI):0,py=p.y-air*90,sc=1+air*.5;
+  ctx.fillStyle='#0006';ctx.beginPath();ctx.ellipse(p.x,p.y+10,13,5,0,0,6.3);ctx.fill();
+  ctx.globalAlpha=(p.inv>0&&p.dodgeT<=0&&p.jumpT<=0&&Math.floor(B.t*30)%2)?.5:1;
+  ctx.fillStyle=p.hurt>0?'#ff8a8a':'#e8f0ff';ctx.strokeStyle='#1c2a78';ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,py,12*sc,0,6.3);ctx.fill();ctx.stroke();
+  ctx.fillStyle=C.c;ctx.beginPath();ctx.arc(p.x-p.fx*4,py-p.fy*4,6*sc,0,6.3);ctx.fill();
+  const shot=C.atk.type==='shot',len=shot?26:Math.min(60,C.atk.reach*.45);let sa=shot?ang:ang+.9;
+  if(!shot&&p.atkT>0){const k=1-p.atkT/.2,w=C.atk.cos>.6?.25:1.3;sa=ang+(p.combo%2?-1:1)*(w-k*w*2);}
+  ctx.strokeStyle=shot?C.c:'#dfe8ff';ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(p.x+Math.cos(sa)*10,py+Math.sin(sa)*10);ctx.lineTo(p.x+Math.cos(sa)*(10+len),py+Math.sin(sa)*(10+len));ctx.stroke();
+  if(p.guard){ctx.strokeStyle='#9fd0ff';ctx.lineWidth=5;ctx.beginPath();ctx.arc(p.x,p.y,22,ang-1.1,ang+1.1);ctx.stroke();}
+  if(B.shield>0){ctx.globalAlpha=.75;ctx.strokeStyle='#7fe3ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,py,19,0,6.3);ctx.stroke();}
+  ctx.globalAlpha=1;
+  for(const q of B.pr){const c=q.c||(q.el?EL[q.el].c:'#fff');ctx.shadowColor=c;ctx.shadowBlur=12;ctx.fillStyle=c;ctx.beginPath();ctx.arc(q.x,q.y,q.r,0,6.3);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(q.x,q.y,q.r*.45,0,6.3);ctx.fill();}
+  for(const f of B.fx){const k=f.t/f.T;
+    if(f.k==='arc'){ctx.strokeStyle=f.c||(f.fin?'#ffe9a8':'#ffffff');ctx.globalAlpha=k;ctx.lineWidth=f.fin?10:6;ctx.beginPath();ctx.arc(f.x,f.y,f.r*.8,f.a-f.w,f.a+f.w);ctx.stroke();ctx.globalAlpha=1;}
+    else if(f.k==='p'){ctx.globalAlpha=clamp(k,0,1);ctx.fillStyle=f.c;ctx.fillRect(f.x-2,f.y-2,4,4);ctx.globalAlpha=1;}
+    else if(f.k==='bolt'){ctx.strokeStyle=EL.bolt.c;ctx.globalAlpha=k;ctx.lineWidth=5;ctx.beginPath();let x=f.x,y=f.y;ctx.moveTo(x,y);for(let i=0;i<7;i++){x+=rf(-22,22);y-=60;ctx.lineTo(x,y);}ctx.stroke();ctx.beginPath();ctx.arc(f.x,f.y,70*(1-k*.5),0,6.3);ctx.stroke();ctx.globalAlpha=1;}}
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(const f of B.fl){ctx.globalAlpha=clamp(f.t*2.5,0,1);ctx.font=`800 ${f.big?20:15}px system-ui`;ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.strokeText(f.txt,f.x,f.y);ctx.fillStyle=f.c;ctx.fillText(f.txt,f.x,f.y);}
+  ctx.globalAlpha=1;ctx.restore();
+  if(inp.joy){const j=inp.joy,dx=clamp(j.x-j.ox,-46,46),dy=clamp(j.y-j.oy,-46,46);ctx.strokeStyle='#ffffff55';ctx.lineWidth=3;ctx.beginPath();ctx.arc(j.ox,j.oy,46,0,6.3);ctx.stroke();ctx.fillStyle='#ffffff66';ctx.beginPath();ctx.arc(j.ox+dx,j.oy+dy,22,0,6.3);ctx.fill();}
+  if(B.over){ctx.fillStyle=B.win?'#ffd66d':'#ff5a6e';ctx.font='800 34px system-ui';ctx.textAlign='center';ctx.strokeStyle='#000';ctx.lineWidth=5;const m=B.win?'VICTORY':'DEFEATED';ctx.strokeText(m,W/2,H*.3);ctx.fillText(m,W/2,H*.3);}
+}
+const hc={};function setT(id,v){if(hc[id]!==v){hc[id]=v;$(id).textContent=v;}}
+function setBar(id,frac,txt){const k=Math.round(clamp(frac,0,1)*100)+'|'+txt;if(hc[id]===k)return;hc[id]=k;const el=$(id);el.firstElementChild.style.width=clamp(frac,0,1)*100+'%';el.lastElementChild.textContent=txt;}
+function op(el,on,lo){const o=on?'1':lo;if(el.style.opacity!==o)el.style.opacity=o;}
+function updHud(){
+  if(!G.p||G.scene==='title')return;const p=G.p,st=B?B.st:S();
+  setT('tName','Lv '+p.lvl+' '+st.cls.n);setT('tGil',p.gil);
+  setBar('hpB',p.hp/st.maxhp,`HP ${Math.ceil(p.hp)}/${st.maxhp}`);setBar('mpB',p.mp/st.maxmp,`MP ${Math.floor(p.mp)}/${st.maxmp}`);
+  setBar('xpB',p.exp/need(p.lvl),'EXP');setBar('lmB',p.limit/100,p.limit>=100?'LIMIT READY':'LIMIT');
+  if(B){setT('nPot','x'+(p.potion||(p.hipot?p.hipot+' Hi':0)));setT('nEth','x'+p.ether);
+    const rdy=p.limit>=100,lb=$('bLimit');if(lb&&hc.lr!==rdy){hc.lr=rdy;lb.classList.toggle('rdy',rdy);lb.style.opacity=rdy?1:.35;}
+    const sb=$('spells').children;for(let i=1;i<sb.length;i++){const id=B.spells[i-1];op(sb[i],(B.pl.cds[id]||0)<=0&&p.mp>=GEMS[id].mp*(st.spread.includes(id)?1.5:1),'.4');}
+    op($('bDodge'),B.pl.dodgeCd<=0,'.45');op($('bSkill'),B.pl.skCd<=0,'.4');}
+}
+let last=0;
+function frame(t){
+  const dt=Math.min(.033,Math.max(0,(t-last)/1000)||0);last=t;G.time+=dt;
+  resize();ctx.setTransform(DPR,0,0,DPR,0,0);
+  if(G.scene==='battle'&&B){for(let i=0;i<TS&&B;i++)upBattle(dt);if(B)drawBattle();}
+  else if(G.scene==='board'&&G.board&&G.m)drawBoard(dt);
+  else drawTitle();
+  updHud();requestAnimationFrame(frame);
+}
+applySet();setScene('title');requestAnimationFrame(frame);
+</script>
+<!-- Kralnu Games install kit: Install button, Android/desktop prompt and iPhone instructions -->
+<style id="kg-install-style">
+html:not(.kg-can-install) [data-install]{display:none!important}
+.kg-sheet{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483000;width:min(420px,calc(100% - 24px));background:#14205e;color:#eef1ff;border:2px solid #cdd6ff;border-radius:16px;padding:14px 16px;box-shadow:0 12px 30px rgba(0,0,0,.35);font:15px/1.45 system-ui,sans-serif;display:grid;gap:10px;text-align:left}
+.kg-sheet b{font-size:17px}
+.kg-sheet p{margin:0}
+.kg-row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.kg-row button{font:inherit;font-weight:700;border-radius:999px;padding:9px 16px;cursor:pointer;border:2px solid #cdd6ff;background:transparent;color:inherit}
+.kg-row .kg-yes{background:#e0b03a;border-color:#e0b03a;color:#1a1200}
+.kg-row button:focus-visible{outline:3px solid #f2c14e;outline-offset:2px}
+</style>
+<script id="kg-install">
+(function(){
+  var NAME='Crystal Circuit',KEY='cc-install-snooze',AUTO=0;
+  var evt=null,sheet=null,root=document.documentElement;
+  var ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  function standalone(){return matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true}
+  function can(){return !standalone()&&(!!evt||ios)}
+  function sync(){root.classList.toggle('kg-can-install',can())}
+  function snoozed(){try{return Date.now()<(+localStorage.getItem(KEY)||0)}catch(e){return false}}
+  function snooze(days){try{localStorage.setItem(KEY,String(Date.now()+days*864e5))}catch(e){}}
+  function close(){if(sheet){sheet.remove();sheet=null}}
+  function show(auto){close();var iosHelp=!evt&&ios;sheet=document.createElement('div');sheet.className='kg-sheet';sheet.setAttribute('role','dialog');sheet.setAttribute('aria-label','Install '+NAME);
+    sheet.innerHTML='<b>Install '+NAME+'?</b><p>'+(iosHelp?'In Safari, tap the <b>Share</b> button, then <b>Add to Home Screen</b>. It then opens full screen and works offline.':'Put it on your home screen and play full screen like a proper app, even without a signal.')+'</p><div class="kg-row"><button type="button" class="kg-no">'+(iosHelp?'Got it':'Not now')+'</button>'+(iosHelp?'':'<button type="button" class="kg-yes">Install</button>')+'</div>';
+    document.body.appendChild(sheet);
+    sheet.querySelector('.kg-no').onclick=function(){snooze(auto?3:1);close()};
+    var y=sheet.querySelector('.kg-yes');if(y){y.onclick=install;y.focus()}}
+  function install(){close();var e=evt;evt=null;if(!e){sync();return}e.prompt();Promise.resolve(e.userChoice).then(sync,sync)}
+  addEventListener('beforeinstallprompt',function(e){e.preventDefault();evt=e;sync();if(AUTO&&!snoozed())setTimeout(function(){if(evt&&!sheet&&!standalone())show(true)},AUTO)});
+  addEventListener('appinstalled',function(){evt=null;sync();close()});
+  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-install]');if(!b)return;e.preventDefault();e.stopPropagation();if(evt)install();else if(ios)show(false)},true);
+  sync();
+  window.KralnuInstall={can:can,open:function(){show(false)}};
+  if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+})();
+</script>
+
+<style id="kg-update-style">
+.kg-upd{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,calc(-100% - 24px));transition:transform .35s ease;z-index:2147483001;width:min(440px,calc(100% - 20px));box-sizing:border-box;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#14205e;color:#eef1ff;border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:10px 10px 10px 14px;box-shadow:0 10px 28px rgba(0,0,0,.4);font:600 14px/1.35 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;text-align:left;letter-spacing:0;text-transform:none}
+.kg-upd.on{transform:translate(-50%,0)}
+.kg-upd span{flex:1 1 160px}
+.kg-upd button{font:inherit;border-radius:999px;padding:8px 14px;cursor:pointer;border:1px solid rgba(255,255,255,.25);background:transparent;color:inherit;white-space:nowrap;width:auto;margin:0}
+.kg-upd .kg-go{background:#e0b03a;border-color:#e0b03a;color:#1a1200}
+.kg-upd button:focus-visible{outline:3px solid #f2c14e;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.kg-upd{transition:none}}
+</style>
+<script id="kg-update">
+// Kralnu Games update check. When you push an update, change the game's version
+// AND version.json to the same new value; players then get a "new version" notice.
+(function(){
+  var NAME="Crystal Circuit",BUILD="0.8.0",CACHES=["cc-"],CHECK=true;
+  var path=location.pathname,dir=path.replace(/[^/]*$/,''),last=0,bar=null,busy=false;
+  if(/^\?v=\d+$/.test(location.search)){try{history.replaceState(history.state,'',path+location.hash)}catch(e){}}
+  function build(){return String(window.kgBuild!=null?window.kgBuild:BUILD)}
+  function skipped(v){try{return sessionStorage.getItem('kg-upd-skip')===v}catch(e){return false}}
+  function hide(){if(!bar)return;var b=bar;bar=null;b.classList.remove('on');setTimeout(function(){b.remove()},400)}
+  function note(html,buttons){hide();bar=document.createElement('div');bar.className='kg-upd';bar.setAttribute('role','status');
+    bar.innerHTML='<span>'+html+'</span>'+buttons;document.body.appendChild(bar);
+    var b=bar;requestAnimationFrame(function(){requestAnimationFrame(function(){b.classList.add('on')})});return b}
+  function latest(){return fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json()})}
+  function now(){if(busy)return;busy=true;
+    // Only clear the offline copy once we know the newest version can be downloaded.
+    latest().then(function(){
+      try{window.kgBeforeUpdate&&window.kgBeforeUpdate()}catch(e){}
+      var jobs=[];
+      try{if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)jobs.push(navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.filter(function(r){return r.scope.indexOf(location.origin+dir)===0}).map(function(r){return r.unregister()}))}))}catch(e){}
+      try{if(window.caches)jobs.push(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return CACHES.some(function(p){return k.indexOf(p)===0})}).map(function(k){return caches.delete(k)}))}))}catch(e){}
+      var done=false,go=function(){if(done)return;done=true;location.replace(path+'?v='+Date.now())};
+      Promise.all(jobs).then(go,go);setTimeout(go,3000);
+    },function(){busy=false;
+      var b=note('No connection right now. Get online, then try again.','<button type="button" class="kg-later">OK</button>');
+      b.querySelector('.kg-later').onclick=hide;setTimeout(function(){if(bar===b)hide()},6000);
+    });
+  }
+  function show(v){if(bar||skipped(v))return;
+    var b=note('A new version of '+NAME+' is ready.','<button type="button" class="kg-later">Later</button><button type="button" class="kg-go">Update</button>');
+    b.querySelector('.kg-go').onclick=now;
+    b.querySelector('.kg-later').onclick=function(){try{sessionStorage.setItem('kg-upd-skip',v)}catch(e){}hide()};
+  }
+  function check(force){if(!CHECK)return;var t=Date.now();if(!force&&t-last<6e5)return;last=t;
+    latest().then(function(j){if(j&&j.version!=null&&String(j.version)!==build())show(String(j.version))}).catch(function(){})}
+  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-get-latest]');if(!b)return;e.preventDefault();e.stopPropagation();now()},true);
+  addEventListener('load',function(){setTimeout(function(){check(true)},4000)});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)check(false)});
+  setInterval(function(){if(!document.hidden)check(false)},18e5);
+  window.KralnuUpdate={now:now,check:function(){check(true)},build:build};
+})();
+</script>
+</body>
+</html>
