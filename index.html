@@ -277,7 +277,7 @@ const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const rf=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const GAME_VERSION='1.5.1';window.kgBuild=GAME_VERSION; // the update notice reads this, so it always matches the game version
+const GAME_VERSION='1.6.0';window.kgBuild=GAME_VERSION; // the update notice reads this, so it always matches the game version
 // Design tokens from the visual overhaul spec.
 const THEME = {
   void: { abyss: '#05061A', night: '#120E3A', violet: '#6B2FD6', teal: '#1FB5C9' },
@@ -970,7 +970,7 @@ function skill(){
     B.fx.push({k:'arc',x:p.x,y:p.y,a:Math.atan2(dy,dx),r:100,w:1.5,t:.2,T:.2,fin:true});const h=Math.round(st.maxhp*.08);G.p.hp=Math.min(st.maxhp,G.p.hp+h);floater(p.x,p.y-30,'+'+h,'#8dffb0');B.shake=6;if(st.sig){B.reflT=2;floater(p.x,p.y-48,'REFLECT','#ffe9a8',true);}}
   if(st.sig&&id==='chi'&&!p.chain){p.chain=true;p.chainUntil=B.t+1.6;p.cdEnd=B.t+C.skill.cd;p.skCd=.45;}
   else if(p.chain){p.chain=false;p.skCd=Math.max(.45,p.cdEnd-B.t);}else p.skCd=C.skill.cd;
-  gainLimit(5);objEv('skill');
+  gainLimit(5);objEv('skill');p.skAnim=.4;
 }
 function cast(i){
   if(!B||B.over)return;const id=B.spells[i];if(!id)return;const g=GEMS[id],p=B.pl,st=B.st,P=G.p,pw=g.pow*(st.cls.spell||1)*1.6,spr=st.spread.includes(id),mp=Math.round(g.mp*(spr?1.5:1));
@@ -1020,7 +1020,7 @@ function upBattle(dt){
 function upPlayer(dt){
   const p=B.pl,st=B.st,P=G.p,A=st.cls.atk;readInput();
   const ml=Math.hypot(inp.mx,inp.my),nx=ml>0?inp.mx/ml:0,ny=ml>0?inp.my/ml:0;
-  p.atkT-=dt;p.atkCd-=dt;p.comboT-=dt;p.dodgeT-=dt;p.dodgeCd-=dt;p.inv-=dt;p.lungeT-=dt;p.hurt-=dt;p.gcd-=dt;p.skCd-=dt;
+  p.atkT-=dt;p.atkCd-=dt;p.comboT-=dt;p.skAnim=(p.skAnim||0)-dt;p.dodgeT-=dt;p.dodgeCd-=dt;p.inv-=dt;p.lungeT-=dt;p.hurt-=dt;p.gcd-=dt;p.skCd-=dt;
   for(const k in p.cds)p.cds[k]-=dt;
   if(B.reflT>0)B.reflT-=dt;if(p.chain&&B.t>p.chainUntil){p.chain=false;p.skCd=Math.max(p.skCd,p.cdEnd-B.t);}
   if(st.cls.mpRegen)P.mp=Math.min(st.maxmp,P.mp+dt*st.cls.mpRegen);
@@ -1384,7 +1384,7 @@ function drawReview(){
   $('card').classList.remove('hidden');
 }
 // ---- Main menu: tile grids with gem icons (Tight Lines style), each opening its own sub-menu
-const CHANGES=[['1.5.1','Ranger rebalance: arrows hit a little softer, lose power at point-blank range, and Volley is a crowd skill rather than a single-target nuke'],['1.5.0','Rival aggression setting (Calm, Normal, Ruthless). Shops only sell gear up to your level, and top-tier gear costs much more'],['1.4.0','Gauntlet mode: ten duels against hero classes with an objective in each fight. Bank class essences, craft your class signature item'],['1.3.0','Colosseum Cups: tournaments for your real hero between circuits. Spend a ticket (earned by finishing circuits), win round after round, cash out or push on for the cup and its prizes'],['1.2.0','The Colosseum: practice fights against any foe, with the class, level and gear you choose. No rewards, no risk'],['1.1.0','A main menu of gem pads, and the same pads for the in-game menu'],['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
+const CHANGES=[['1.6.0','Pixel-art sprites for all six classes in battle, for your hero and for Gauntlet opponents'],['1.5.1','Ranger rebalance: arrows hit a little softer, lose power at point-blank range, and Volley is a crowd skill rather than a single-target nuke'],['1.5.0','Rival aggression setting (Calm, Normal, Ruthless). Shops only sell gear up to your level, and top-tier gear costs much more'],['1.4.0','Gauntlet mode: ten duels against hero classes with an objective in each fight. Bank class essences, craft your class signature item'],['1.3.0','Colosseum Cups: tournaments for your real hero between circuits. Spend a ticket (earned by finishing circuits), win round after round, cash out or push on for the cup and its prizes'],['1.2.0','The Colosseum: practice fights against any foe, with the class, level and gear you choose. No rewards, no risk'],['1.1.0','A main menu of gem pads, and the same pads for the in-game menu'],['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
 const menuTile=(act,arg,ico,label,o={})=>`<button class="tile${o.on?' on':''}${o.cls?' '+o.cls:''}" ${act?`data-act="${act}"`:''} ${arg!=null?`data-arg="${arg}"`:''} ${o.attr||''} style="--g:${o.g||'#6FD3FF'}"><span class="ti">${ico}</span><span class="tl">${label}</span>${o.badge!=null?`<span class="tb">${o.badge}</span>`:''}${o.sub?`<small>${o.sub}</small>`:''}</button>`;
 function boardSVG(path){const r=parsePath(path);if(r.error)return '';const xs=r.pts.map(p=>p[0]),ys=r.pts.map(p=>p[1]),mx=Math.min(...xs),my=Math.min(...ys),w=Math.max(...xs)-mx+1,h=Math.max(...ys)-my+1,c=Math.min(46/w,46/h),n=r.pts.length,cols=['#FF3D5A','#3D7BFF','#FFC93D','#22D39A'];
   return `<svg viewBox="0 0 48 48" width="44" height="44">${r.pts.map((p,i)=>`<rect x="${(1+(p[0]-mx)*c+(46-w*c)/2).toFixed(1)}" y="${(1+(p[1]-my)*c+(46-h*c)/2).toFixed(1)}" width="${(c*.82).toFixed(1)}" height="${(c*.82).toFixed(1)}" rx="${(c*.2).toFixed(1)}" fill="${i===0?'#F4F7FF':cols.at(Math.floor(i/(n/4))%4)}"/>`).join('')}</svg>`;}
@@ -1761,10 +1761,39 @@ function drawHero(p,C,py,sc,ang,sa){
   ctx.restore();
 }
 
+/* ---- Pixel-art hero sprites. A class with a sheet uses it; any class without one falls back to the drawn hero. ----
+   Sheets are 144x168 frames, feet on y=150. Frames are [col,row]. side = which way the side-view frames face (mirrored for the other way). */
+const SPR={
+ warrior:{src:'sprites/warrior.png',fw:144,fh:168,foot:150,side:'left',a:{
+   idle_d:[[0,0],[1,0],[2,0],[3,0]], walk_d:[[0,1],[1,0],[1,1],[3,0]], walk_u:[[0,2],[1,2],[2,2],[3,2]], walk_s:[[0,3],[1,3]],
+   atk_d:[[0,4],[2,4],[3,4]], atk_u:[[0,6],[1,6]], atk_s:[[2,3],[3,3]], hurt:[[2,6]], skill:[[3,6]]}},
+ monk:{src:'sprites/monk.png',fw:144,fh:168,foot:150,side:'right',a:{idle_d:[[0,0],[1,0],[2,0],[3,0]],walk_d:[[0,1],[1,1],[2,1],[3,1]],walk_u:[[2,2],[3,2]],walk_s:[[0,3],[1,3],[2,3],[3,3]],atk_s:[[0,5],[1,5],[2,5],[3,5]],atk_u:[[0,6],[1,6],[2,6],[3,6]],hurt:[[1,7]],skill:[[0,8],[1,8],[2,8],[3,8]]}},
+ mage:{src:'sprites/mage.png',fw:144,fh:168,foot:150,side:'right',a:{idle_d:[[0,0],[1,0],[2,0],[3,0]],walk_d:[[0,1],[1,1],[0,0],[1,0]],walk_u:[[0,2],[1,2],[2,2],[3,2]],walk_s:[[0,3],[1,3],[2,3],[3,3]],atk_s:[[0,5],[1,5],[2,5],[3,5]],hurt:[[1,7]],skill:[[0,8],[1,8],[2,8],[3,8]]}},
+ ranger:{src:'sprites/ranger.png',fw:144,fh:168,foot:150,side:'right',a:{idle_d:[[0,0],[1,0],[2,0],[3,0]],walk_d:[[0,1],[1,1],[2,1],[3,1]],walk_u:[[0,2],[1,2],[2,2],[3,2]],walk_s:[[0,3],[1,3],[2,3],[3,3]],atk_s:[[0,5],[1,5],[2,5],[3,5]],atk_u:[[0,6],[1,6],[2,6],[3,6]],skill:[[0,8],[1,8],[2,8],[3,8]]}},
+ lancer:{src:'sprites/lancer.png',fw:196,fh:168,foot:150,side:'right',a:{idle_d:[[0,0],[1,0],[2,0],[3,0],[4,0]],walk_d:[[0,1],[1,1],[2,1]],walk_u:[[0,2],[1,2],[2,2],[3,2],[4,2]],walk_s:[[0,3],[1,3],[2,3],[3,3],[4,3]],atk_s:[[0,5],[1,5],[2,5],[3,5]],atk_u:[[0,6],[1,6],[2,6],[3,6]],hurt:[[1,7]],skill:[[0,8],[1,8],[2,8],[3,8]]}},
+ guardian:{src:'sprites/guardian.png',fw:144,fh:168,foot:150,side:'right',a:{idle_d:[[0,0],[1,0],[2,0],[3,0]],walk_d:[[0,1],[1,1],[2,1],[3,1]],walk_u:[[0,2],[1,2],[2,2],[3,2]],walk_s:[[0,3],[1,3],[2,3],[3,3]],atk_s:[[0,5],[1,5],[2,5],[3,5]],atk_u:[[0,6],[1,6],[2,6],[3,6]],hurt:[[2,7]],skill:[[0,8],[1,8],[2,8],[3,8]]}}};
+for(const k in SPR){const S0=SPR[k],im=new Image();im.onload=()=>{S0.ok=true;};im.src=S0.src;S0.img=im;}
+// state: {fx,fy,moving,walk,atk(0..1 or -1),hurt,skill,t}
+function drawSpr(cls,x,footY,sc,st,alpha){const S0=SPR[cls];if(!S0||!S0.ok)return false;
+  const ax=Math.abs(st.fx),ay=Math.abs(st.fy);let dir=ay>=ax*1.1?(st.fy>0?'d':'u'):'s';
+  if((st.atk>=0||st.skill)&&!st.hurt&&dir!=='s'&&!S0.a['atk_'+dir])dir='s';
+  const flip=dir==='s'&&((st.fx>=0)===(S0.side==='left'));
+  let A,f;const pickA=(...ks)=>{for(const k of ks)if(S0.a[k])return S0.a[k];return S0.a.idle_d;};
+  if(st.hurt)A=pickA('hurt');else if(st.skill)A=pickA('skill','atk_'+dir);else if(st.air)A=pickA('skill','idle_d');
+  else if(st.atk>=0)A=pickA('atk_'+dir,'atk_d');else if(st.moving)A=pickA('walk_'+dir,'walk_d');else A=pickA(dir==='u'?'walk_u':dir==='s'?'walk_s':'idle_d');
+  if(st.atk>=0&&!st.hurt&&!st.skill)f=A[Math.min(A.length-1,Math.floor(st.atk*A.length))];
+  else if(st.moving&&!st.hurt&&!st.skill)f=A[Math.floor(st.walk/2.6)%A.length];
+  else f=A[Math.floor(st.t*(dir==='d'?4:2))%A.length];
+  const H=112*sc,Wd=H*S0.fw/S0.fh,dx=x-Wd/2,dy=footY-H*S0.foot/S0.fh;
+  ctx.save();if(alpha!=null)ctx.globalAlpha*=alpha;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  if(flip){ctx.translate(x,0);ctx.scale(-1,1);ctx.translate(-x,0);}
+  ctx.drawImage(S0.img,f[0]*S0.fw,f[1]*S0.fh,S0.fw,S0.fh,dx,dy,Wd,H);ctx.restore();return true;}
 function drawFoeHero(e,p){const C=CLASSES[e.b.hero],ang=Math.atan2(p.y-e.y,p.x-e.x),air=e.airT>0?Math.sin(clamp(e.airT/.88,0,1)*Math.PI):0,py=e.y-air*90;
   ctx.save();ctx.strokeStyle='rgba(255,61,90,.85)';ctx.shadowColor='#FF3D5A';ctx.shadowBlur=8;ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(e.x,e.y+12,18,7,0,0,6.3);ctx.stroke();ctx.restore();
   const shot=C.atk.type==='shot',winding=e.st==='wind'||e.st==='dash',q={x:e.x,walk:e.walk,hurt:e.hurt>0||e.stagT>0?1:0,atkT:winding?.1:0,combo:e.fq||1,atkCd:winding?1:0};
-  drawHero(q,C,py,1+air*.5,ang,shot?ang:ang+(winding?-.6:.9));
+  const mv=Math.abs((e.walk||0)-(e.pw||0))>.01;e.pw=e.walk;
+  if(!drawSpr(e.b.hero,e.x,py+12,1+air*.5,{fx:Math.cos(ang),fy:Math.sin(ang),moving:mv,walk:e.walk||0,atk:winding?clamp(1-(e.st==='wind'?e.t/e.T:0),0,.99):-1,hurt:e.hurt>0||e.stagT>0,skill:false,t:B.t}))
+    drawHero(q,C,py,1+air*.5,ang,shot?ang:ang+(winding?-.6:.9));
   if(e.gT>0){ctx.save();ctx.strokeStyle='#9fd0ff';ctx.lineWidth=3;ctx.shadowColor='#9fd0ff';ctx.shadowBlur=10;ctx.beginPath();ctx.arc(e.x,e.y,24,ang-1.1,ang+1.1);ctx.stroke();ctx.restore();}}
 // ---- enemy sprites
 function drawEnemy(e,p,col){
@@ -2036,7 +2065,9 @@ function drawBattle(){
   const shot=C.atk.type==='shot';let sa=shot?ang:ang+.9;
   if(!shot&&p.atkT>0){const k=1-p.atkT/.2,w=C.atk.cos>.6?.25:1.3;sa=ang+(p.combo%2?-1:1)*(w-k*w*2);}
   if(C.atk.cos>.6&&!shot)sa=ang+(p.atkT>0?(sa-ang):.25);
-  drawHero(p,C,py,sc,ang,sa);
+  {const k=B.st.cls===CLASSES[G.p.cls]?G.p.cls:Object.keys(CLASSES).find(c=>CLASSES[c]===C),mv=Math.hypot(inp.mx,inp.my)>.2||p.dodgeT>0||p.lungeT>0,
+    atk=p.atkT>0?clamp(1-p.atkT/(C.atk.type==='shot'?.12:.2),0,.99):-1;
+   if(!drawSpr(k,p.x,py+12,sc,{fx:p.fx,fy:p.fy,moving:mv,walk:p.walk||0,atk,hurt:p.hurt>0,skill:p.skAnim>0,air:p.jumpT>0,t:B.t}))drawHero(p,C,py,sc,ang,sa);}
   if(B.reflT>0){ctx.save();ctx.strokeStyle='#ffe9a8';ctx.shadowColor='#ffe9a8';ctx.shadowBlur=12;ctx.lineWidth=2.5;ctx.globalAlpha=.6+.4*Math.sin(B.t*12);ctx.beginPath();ctx.arc(p.x,p.y,34,0,6.3);ctx.stroke();ctx.restore();}
   if(p.guard){ctx.save();ctx.strokeStyle='#9fd0ff';ctx.fillStyle='rgba(159,208,255,.18)';ctx.lineWidth=3;ctx.shadowColor='#9fd0ff';ctx.shadowBlur=10;ctx.beginPath();for(let i=0;i<=6;i++){const a=ang-1.1+i*2.2/6;ctx.lineTo(p.x+Math.cos(a)*24,p.y+Math.sin(a)*24);}for(let i=6;i>=0;i--){const a=ang-1.1+i*2.2/6;ctx.lineTo(p.x+Math.cos(a)*18,p.y+Math.sin(a)*18);}ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
   if(B.shield>0){ctx.globalAlpha=.75;ctx.strokeStyle='#7fe3ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,py,19,0,6.3);ctx.stroke();}

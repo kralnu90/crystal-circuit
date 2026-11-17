@@ -24,6 +24,9 @@ Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.
 
 ## Changelog
 
+### 1.6.0 · 17 November 2026
+- **Pixel-art heroes.** All six classes now have proper sprites in battle, with idle, walking (front, back and side), attacks, hurt and skill animations. Gauntlet opponents use them too, so you can tell a Lancer from a Monk at a glance.
+
 ### 1.5.1 · 17 November 2026
 - **Ranger rebalance.** Arrows deal about 20% less damage, and 30% less again at point-blank range (the bow can't be drawn fully, shown by greyer arrows), so staying at range is how Ranger is meant to play.
 - **Volley** arrows deal about 40% less each: still great against a group, no longer a single-target nuke up close.
