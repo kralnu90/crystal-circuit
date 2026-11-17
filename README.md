@@ -23,6 +23,14 @@ Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.
 
 ## Changelog
 
+### 1.1.0 · 17 November 2026
+- **A proper main menu.** The title screen is now a set of gem-icon buttons: Grand Circuit, Custom board, Heroes, Deck, Settings, What's new, How to play, Review and Get the latest, each opening its own page.
+- **Board picker with mini maps.** Every board shows a little map of its shape, its length and its region before you start.
+- **Heroes page.** Switch between your heroes or make a new one from one place.
+- **In-game hub.** The MENU button opens the same gem pads: Status, Cards, Rivals, Equip, Gems, Settings, How to play and Save & quit, each with a back arrow, in place of the old tabs.
+- **Merchant's Rest hub.** Shop and Forge sit at the top of the hub when you stop at a merchant, so you can change gear and gems there too.
+- **Settings pads.** Sound, Screen shake and Board speed are the same toggle pads on the title screen and in-game.
+
 ### 1.0.0 · 17 November 2026
 - **The Fantasy Crystals overhaul.** A new look from top to bottom:
   - **The board** floats in a cosmic void: a nebula tinted for the region you're in, stars, a faint crystal grid with a light sweep, and a turning sigil in the middle showing the round (it pulses purple on boss rounds).

@@ -31,7 +31,31 @@ button.sm{padding:6px 10px;font-size:13px}
 #title h1{margin:0;font-family:Cinzel,Georgia,serif;font-weight:700;font-size:34px;letter-spacing:3px;text-align:center;text-shadow:0 0 18px #6fd3ff,0 2px 0 #000}
 #title .sub{opacity:.8;font-size:13px;text-align:center;margin-top:-6px}
 #tbox{width:min(420px,100%);padding:14px;display:flex;flex-direction:column;gap:8px}
-#tbox h3{margin:6px 0 2px;font-size:13px;text-transform:uppercase;letter-spacing:1px;opacity:.8}
+#tbox .tiles,#menuIn .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#tbox .tiles.two,#menuIn .tiles.two{grid-template-columns:repeat(2,1fr)}
+#tbox .tile,#menuIn .tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:86px;padding:10px 4px;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));color:#EEF1FF;font:600 12.5px/1.15 Inter,system-ui,sans-serif;text-align:center;text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.12);transition:transform .12s,border-color .2s}
+#tbox .tile:active,#menuIn .tile:active{transform:scale(.96)}
+#tbox .tile.on,#menuIn .tile.on{border-color:var(--g);box-shadow:0 0 12px -2px var(--g),inset 0 0 0 1px var(--g)}
+#tbox .tile .ti,#menuIn .tile .ti{width:42px;height:46px;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,var(--g),rgba(18,14,58,.95) 80%);filter:drop-shadow(0 0 6px var(--g))}
+#tbox .tile.brd .ti,#menuIn .tile.brd .ti{background:rgba(5,6,26,.75);width:50px;height:54px}
+#tbox .tile small,#menuIn .tile small{display:block;font-weight:400;font-size:11px;opacity:.75;line-height:1.3}
+#tbox .tile.wide,#menuIn .tile.wide{min-height:96px;padding:12px 8px}
+#tbox .tile .tb,#menuIn .tile .tb{position:absolute;top:6px;right:6px;min-width:18px;padding:1px 6px;border-radius:999px;background:#FFC93D;color:#1a1200;font-size:11px;font-weight:800}
+#tbox .back{align-self:flex-start;background:rgba(255,255,255,.06)}
+#tbox .big{display:flex;flex-direction:column;align-items:center;font:700 17px Cinzel,Georgia,serif;letter-spacing:1px;padding:12px}
+#tbox .big small{font:400 12px Inter,system-ui,sans-serif;letter-spacing:0;opacity:.85;margin-top:2px}
+#tbox .herocard{display:flex;align-items:center;gap:12px;padding:6px 2px 4px}
+#tbox .herocard .pg{width:46px;height:52px}
+#tbox .herocard b{display:block;font:700 16px Cinzel,Georgia,serif}
+#tbox .herocard small{opacity:.8;font-size:12px}
+#tbox .note{font-size:12px;opacity:.75}
+#tbox .warn{font-size:12.5px;color:#FFC93D;margin:0}
+#tbox .news{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;line-height:1.4}
+#tbox .news b{color:#FFC93D;min-width:44px}
+#tbox .cprev{display:flex;justify-content:center;padding:8px}
+#tbox .cprev svg{width:120px;height:120px}
+#tbox{background:linear-gradient(135deg,rgba(107,47,214,.22),rgba(31,181,201,.10) 60%,rgba(5,6,26,.6));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#tbox h3{font-family:Cinzel,Georgia,serif;margin:6px 0 2px;font-size:13px;text-transform:uppercase;letter-spacing:1px;opacity:.8}
 #tbox p{margin:0;font-size:13px;line-height:1.4;opacity:.9}
 #tbox textarea,#cardIn input,#cardIn textarea{font:inherit;width:100%;padding:8px;border-radius:8px;border:1.5px solid #cdd6ff;background:#060a2a;color:#fff;-webkit-user-select:text;user-select:text;margin:4px 0}
 #cardIn label{display:block;text-align:left;font-size:13px;margin-top:6px;opacity:.85}
@@ -116,6 +140,13 @@ button.sm{padding:6px 10px;font-size:13px}
 .tcBig{width:120px;height:180px;margin:4px auto 10px;border-radius:12px;border:3px solid var(--tc);box-shadow:inset 0 0 0 1px var(--rc),0 0 22px -4px var(--tc);background-size:cover;position:relative;overflow:hidden}
 .tcBig b{position:absolute;left:5px;right:5px;bottom:6px;font:700 14px Cinzel,Georgia,serif;border-top:1px solid rgba(255,201,61,.6);padding-top:4px;background:linear-gradient(transparent,rgba(5,6,26,.85) 30%)}
 #cardIn h2,.mbody h3,#menuIn .tab{font-family:Cinzel,Georgia,serif}
+#menuIn{background:linear-gradient(135deg,rgba(107,47,214,.3),rgba(31,181,201,.12) 60%,rgba(5,6,26,.85));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.mhead{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}
+.mhead b{flex:1;font:700 17px Cinzel,Georgia,serif;letter-spacing:1px}
+#menuIn .herocard{display:flex;align-items:center;gap:12px;padding:4px 0 12px}
+#menuIn .herocard .pg{width:46px;height:52px}
+#menuIn .herocard b{display:block;font:700 15px Cinzel,Georgia,serif}
+#menuIn .herocard small{opacity:.8;font-size:12px}
 #dice{display:flex;gap:6px;font-size:44px;line-height:40px;color:#EEF1FF;text-shadow:0 0 10px rgba(111,211,255,.6)}
 #dice span{display:inline-block;width:40px;text-align:center}
 #rollBtn{flex:1;font:700 19px Cinzel,Georgia,serif;letter-spacing:2px;padding:14px 4px}
@@ -222,7 +253,7 @@ const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const rf=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const GAME_VERSION='1.0.0';
+const GAME_VERSION='1.1.0';
 // Design tokens from the visual overhaul spec.
 const THEME = {
   void: { abyss: '#05061A', night: '#120E3A', violet: '#6B2FD6', teal: '#1FB5C9' },
@@ -1046,8 +1077,8 @@ function gearStock(tbl,owned,n){ // shop gear rolls from your level band, favour
 function rollStock(){const p=G.p;return{cards:vendorStock().slice(0,4),weapons:gearStock(WEAPONS,p.weapons,4),armour:gearStock(ARMOUR,p.armours,4),
   gems:shuffle(Object.keys(GEMS).filter(k=>!p.gems.includes(k))).slice(0,3),accs:shuffle(Object.keys(ACC).filter(k=>!p.accs.includes(k))).slice(0,2),
   items:['potion','ether',...shuffle(['hipot','elixir']).slice(0,1+(Math.random()<.5))]};}
-function shopVisit(){G.stock=rollStock();G.shop=true;openMenu('shop');return new Promise(r=>{menuClose=r;});}
-function openMenu(tab){G.menuTab=tab||'status';renderMenu();$('menu').classList.remove('hidden');}
+function shopVisit(){G.stock=rollStock();G.shop=true;openMenu('hub');return new Promise(r=>{menuClose=r;});}
+function openMenu(tab){G.menuTab=tab||'hub';renderMenu();$('menu').classList.remove('hidden');}
 function closeMenu(){$('menu').classList.add('hidden');G.shop=false;fixVitals();save();if(menuClose){const r=menuClose;menuClose=null;r();}}
 const btn=(label,act,arg,dis,cls)=>`<button class="sm ${cls||''}" data-act="${act}" data-arg="${arg}" ${dis?'disabled':''}>${label}</button>`;
 const wTr=w=>[w.el?`${EL[w.el].n} strikes`:'',w.drain?'heals from hits':'',w.crit?'15% crits':'',w.mphit?'+MP per hit':'',w.stag?'staggers faster':'',w.limit?'Limit fills faster':''].filter(Boolean);
@@ -1057,11 +1088,20 @@ function aDesc(id){const a=ARMOUR[id],u=G.p.up[id]||0,t=aTr(a);return `DEF ${a.d
 const sockTxt=L=>L.map(g=>g===2?'[o=o]':'[o]').join(' ');
 const cardRow=(id,tmp)=>`<div class="row"><div class="g"><b style="color:${RAR[CARDS[id].r].c}">${CARDS[id].n}</b>${tmp?' <small style="display:inline">(temp)</small>':''} <small>${RAR[CARDS[id].r].n} · ${CARDS[id].d}</small></div></div>`;
 function renderMenu(){
-  const p=G.p,m=G.m,st=S();let tabs=[['status','Status'],['cards','Cards'],['rivals','Rivals'],['equip','Equip'],['gems','Gems']];if(G.shop)tabs.push(['shop','Shop'],['forge','Forge']);if(!m)tabs=[['deck','Deck editor']];
-  if(!tabs.some(t=>t[0]===G.menuTab))G.menuTab='status';
-  let h='<div class="tabs">'+tabs.map(t=>`<button class="tab ${t[0]===G.menuTab?'on':''}" data-act="tab" data-arg="${t[0]}">${t[1]}</button>`).join('')+'<button class="tab x" data-act="closeMenu">Close</button></div><div class="mbody">';
+  const p=G.p,m=G.m,st=S();const NAMES={hub:G.shop?"Merchant's Rest":'Menu',status:'Status',cards:'Cards',rivals:'Rivals',equip:'Equip',gems:'Gems',shop:'Shop',forge:'Forge',settings:'Settings',deck:'Deck editor'};
+  const onTitle=!m||G.scene==='title';if(onTitle)G.menuTab='deck';if(!NAMES[G.menuTab])G.menuTab='hub';
+  const backTo=G.menuTab==='hub'||onTitle?'':`<button class="sm back" data-act="tab" data-arg="hub">←</button>`;
+  let h=`<div class="mhead">${backTo}<b>${NAMES[G.menuTab]}</b><button class="sm" data-act="closeMenu">✕</button></div><div class="mbody">`;
   const T=G.menuTab,up=id=>p.up[id]?' +'+p.up[id]:'';
-  if(T==='status'){
+  if(T==='hub'){
+    const used=p.ws.concat(p.as).filter(Boolean).length,shopT=G.shop?menuTile('tab','shop','🛒','Shop',{g:'#FFC93D',sub:`${p.gil} gil`})+menuTile('tab','forge','⚒️','Forge',{g:'#FF8A5C',sub:'Temper and bore'}):'';
+    h+=`<div class="herocard"><div class="pg" style="--cc:${st.cls.c}"><span>${CLASS_GLYPH[p.cls]}</span></div><div><b>Lv ${p.lvl} ${st.cls.n}</b><small>${m.def.n} · round ${m.round} of ${ROUNDS} · ${Math.ceil(p.hp)}/${st.maxhp} HP</small></div></div>`;
+    h+='<div class="tiles">'+shopT+menuTile('tab','status','📜','Status',{g:st.cls.c})+menuTile('tab','cards','🃏','Cards',{g:'#B06BFF',badge:m.ps.hand.length})+menuTile('tab','rivals','👥','Rivals',{g:'#FF8A5C'})
+      +menuTile('tab','equip','🗡️','Equip',{g:'#CFD6FF'})+menuTile('tab','gems','💎','Gems',{g:'#6FD3FF',badge:used})+menuTile('tab','settings','⚙️','Settings',{g:'#1FB5C9'})
+      +menuTile('howto',null,'❓','How to play',{g:'#22D39A'})+(G.shop?'':menuTile('toTitle',null,'🏠','Save & quit',{g:'#FF3D5A'}))+'</div>';
+  }else if(T==='settings'){
+    h+='<div class="tiles">'+menuTile('setTog','sound',SET.sound?'🔊':'🔇','Sound',{g:'#1FB5C9',on:SET.sound,sub:SET.sound?'On':'Off'})+menuTile('setTog','shake','📳','Screen shake',{g:'#FF8A5C',on:SET.shake,sub:SET.shake?'On':'Off'})+menuTile('setTog','speed','⏩','Board speed',{g:'#22D39A',on:SET.speed==='fast',sub:SET.speed==='fast'?'Fast':'Normal'})+'</div>';
+  }else if(T==='status'){
     h+=`<h3>${st.cls.n} - Level ${p.lvl}</h3><div class="sg"><div>HP<b>${Math.ceil(p.hp)} / ${st.maxhp}</b></div><div>MP<b>${Math.floor(p.mp)} / ${st.maxmp}</b></div><div>Strength<b>${st.str}</b></div><div>Magic<b>${st.mag}</b></div><div>Defence<b>${st.def}</b></div><div>Next level<b>${need(p.lvl)-p.exp} EXP</b></div><div>Battles won<b>${p.wins}</b></div><div>Circuits played<b>${p.matches}</b></div><div>Podium golds<b>${p.golds}</b></div><div>Tyrants slain<b>${p.crowns}</b></div></div>`;
     h+=`<p style="font-size:12.5px;opacity:.8;margin:8px 0 0">${st.cls.d}</p>`;
     h+=`<h3>Items</h3><div class="row"><div class="g">Potion x${p.potion}<small>Restores 35% HP</small></div>${btn('Use','use','potion',p.potion<1||p.hp>=st.maxhp)}</div><div class="row"><div class="g">Ether x${p.ether}<small>Restores 50% MP</small></div>${btn('Use','use','ether',p.ether<1||p.mp>=st.maxmp)}</div>`;
@@ -1127,7 +1167,7 @@ function renderMenu(){
 }
 const ACT={
   roll:doRoll,
-  menu(){if(!G.busy)openMenu('status');},
+  menu(){if(!G.busy)openMenu('hub');},
   closeMenu(){closeMenu();if(G.scene==='title')renderTitle();},
   tab(a){G.menuTab=a;G.sel=null;renderMenu();},
   card(a){$('card').classList.add('hidden');if(cardRes){const r=cardRes;cardRes=null;r(a);}},
@@ -1169,9 +1209,11 @@ const ACT={
   cont(){const s=load();if(s&&s.m){G.p=s.p;G.m=s.m;enterMatch();}},
   hero(i){const a=loadAll();if(!a.slots[+i])return;a.cur=+i;storeAll(a);G.slot=+i;G.p=a.slots[+i].p;G.m=a.slots[+i].m;G.picking=false;renderTitle();toast(`Lv ${G.p.lvl} ${CLASSES[G.p.cls].n} selected`);},
   newhero(){G.picking=true;renderTitle();},
-  cancelpick(){G.picking=false;renderTitle();},
+  view(v){G.view=v;G.picking=false;renderTitle();document.getElementById('title').scrollTop=0;},
+  setTog(k){if(k==='sound')SET.sound=!SET.sound;else if(k==='shake')SET.shake=!SET.shake;else SET.speed=SET.speed==='fast'?'normal':'fast';applySet();if(!$('menu').classList.contains('hidden'))renderMenu();else renderTitle();},
+  cancelpick(){G.picking=false;G.view='heroes';renderTitle();},
   async retire(){const a=loadAll(),s=a.slots[a.cur];if(!s)return;const C=CLASSES[s.p.cls];if(await card('Retire this hero?',`<p>Lv ${s.p.lvl} ${C.n} and everything they own (gear, gems, cards, any circuit in progress) will be gone for good.</p>`,[['Keep them','x','gold'],['Retire','yes']])!=='yes')return;a.slots.splice(a.cur,1);a.cur=0;storeAll(a);G.p=null;G.m=null;G.slot=null;renderTitle();toast('Hero retired');},
-  cls(k){G.p=newPlayer(k);G.m=null;G.slot=loadAll().slots.length;const st=S();G.p.hp=st.maxhp;G.p.mp=st.maxmp;save();G.picking=false;renderTitle();toast('A new '+CLASSES[k].n+' joins your roster');},
+  cls(k){G.p=newPlayer(k);G.m=null;G.slot=loadAll().slots.length;const st=S();G.p.hp=st.maxhp;G.p.mp=st.maxmp;save();G.picking=false;G.view='main';renderTitle();toast('A new '+CLASSES[k].n+' joins your roster');},
   board(i){newMatch(BOARDS[+i]);},
   custom(){const v=$('cpath').value.trim(),r=parsePath(v);if(r.error){toast(r.error);return;}newMatch({id:'custom',n:'Custom Board',path:v});},
   diff(k){G.p.diff=k;save();renderTitle();},
@@ -1209,34 +1251,55 @@ function drawReview(){
   <div class="btns"><button data-act="card" data-arg="x">Cancel</button><button class="gold" data-act="rvSend" ${RV.sending?'disabled':''}>${RV.sending?'Sending...':'Send review'}</button></div>`;
   $('card').classList.remove('hidden');
 }
+// ---- Main menu: tile grids with gem icons (Tight Lines style), each opening its own sub-menu
+const CHANGES=[['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
+const menuTile=(act,arg,ico,label,o={})=>`<button class="tile${o.on?' on':''}${o.cls?' '+o.cls:''}" ${act?`data-act="${act}"`:''} ${arg!=null?`data-arg="${arg}"`:''} ${o.attr||''} style="--g:${o.g||'#6FD3FF'}"><span class="ti">${ico}</span><span class="tl">${label}</span>${o.badge!=null?`<span class="tb">${o.badge}</span>`:''}${o.sub?`<small>${o.sub}</small>`:''}</button>`;
+function boardSVG(path){const r=parsePath(path);if(r.error)return '';const xs=r.pts.map(p=>p[0]),ys=r.pts.map(p=>p[1]),mx=Math.min(...xs),my=Math.min(...ys),w=Math.max(...xs)-mx+1,h=Math.max(...ys)-my+1,c=Math.min(46/w,46/h),n=r.pts.length,cols=['#FF3D5A','#3D7BFF','#FFC93D','#22D39A'];
+  return `<svg viewBox="0 0 48 48" width="44" height="44">${r.pts.map((p,i)=>`<rect x="${(1+(p[0]-mx)*c+(46-w*c)/2).toFixed(1)}" y="${(1+(p[1]-my)*c+(46-h*c)/2).toFixed(1)}" width="${(c*.82).toFixed(1)}" height="${(c*.82).toFixed(1)}" rx="${(c*.2).toFixed(1)}" fill="${i===0?'#F4F7FF':cols.at(Math.floor(i/(n/4))%4)}"/>`).join('')}</svg>`;}
 function renderTitle(){
-  const a=loadAll(),s=a.slots[a.cur]||null;let h='';G.slot=s?a.cur:null;
-  if(!s||G.picking){
-    if(s)h+='<button class="sm" data-act="cancelpick" style="align-self:flex-start">← Back to your heroes</button>';
-    h+=`<h3>${s?'Choose a class for your new hero':'Choose your class'}</h3><p>Each hero keeps their own level, gear and deck, so you can try them all.</p>`+Object.keys(CLASSES).map(k=>{const C=CLASSES[k];return `<button data-act="cls" data-arg="${k}"><div class="brow"><span style="color:${C.c}">${C.n}</span></div><div class="brow"><small>${C.d}</small></div></button>`;}).join('');
+  const a=loadAll(),s=a.slots[a.cur]||null,v=G.view||'main';let h='';G.slot=s?a.cur:null;
+  const back=(to,label)=>`<button class="sm back" data-act="view" data-arg="${to||'main'}">← ${label||'Main menu'}</button>`;
+  if(!s||G.picking){ // pick a class
+    if(s)h+=back('heroes','Your heroes');
+    h+=`<h3>${s?'Choose a class for your new hero':'Choose your class'}</h3><p>Each hero keeps their own level, gear and deck, so you can try them all.</p><div class="tiles two">`+Object.keys(CLASSES).map(k=>{const C=CLASSES[k];return menuTile('cls',k,CLASS_GLYPH[k],C.n,{g:C.c,sub:C.d,cls:'wide'});}).join('')+'</div>';
   }else{
-    G.p=s.p;G.m=s.m;const C=CLASSES[s.p.cls];
-    h+='<h3>Your heroes</h3>'+a.slots.map((x,i)=>{const c=CLASSES[x.p.cls];return `<button class="hero ${i===a.cur?'on':''}" data-act="hero" data-arg="${i}"><span><b style="color:${i===a.cur?'#1a1200':c.c}">Lv ${x.p.lvl} ${c.n}</b></span><small>${x.p.gil} gil${x.m?' · mid-circuit':''}</small></button>`;}).join('')+'<button class="sm" data-act="newhero">+ New hero</button>';
-    h+=`<p><b style="color:${C.c}">Lv ${s.p.lvl} ${C.n}</b> · ${s.p.gil} gil · ${s.p.golds} podium golds · ${s.p.crowns} Tyrants slain</p>`;
-    h+=`<p>A circuit is ${ROUNDS} rounds against three rivals, each with their own deck of cards. Bosses arrive on rounds 10, 20 and 30. Prizes go to the top three for distance travelled and for damage dealt. Your hero keeps everything between circuits.</p>`;
-    h+=`<button data-act="deck"><div class="brow"><span>Deck editor</span><small>${s.p.deck.length}/${DECK} cards${s.p.deck.length!==DECK?' - needs fixing':''} · ${Object.keys(s.p.coll).length} collected</small></div></button>`;
-    if(s.m)h+=`<button class="gold" data-act="cont">Continue - round ${s.m.round} on ${s.m.def.n} (${DIFF[s.m.diff||'normal'].n})</button>`;
-    const cd=s.p.diff||'normal';h+='<h3>Difficulty for new circuits</h3><div class="brow">'+Object.keys(DIFF).map(k=>`<button class="sm ${k===cd?'gold':''}" style="flex:1" data-act="diff" data-arg="${k}">${DIFF[k].n}</button>`).join('')+`</div><p style="font-size:12px;opacity:.75">${DIFF[cd].d}</p>`;
-    h+=`<h3>${s.m?'Or abandon it and start a new circuit':'Start a circuit'}</h3>`;
-    h+=BOARDS.map((b,i)=>{const n=parsePath(b.path).pts.length;return `<button data-act="board" data-arg="${i}"><div class="brow"><span>${b.n}</span><small>${n} tiles${n>=48?' · long':''}</small></div></button>`;}).join('');
-    h+=`<h3>Custom board</h3><input id="cpath" value="R6 D3 R4 D8 L10 U11" autocomplete="off" spellcheck="false"><div class="brow"><small>R, L, U, D + tile count. End where you began. 12 to 120 tiles.</small><button class="sm" data-act="custom">Play</button></div>`;
-    h+='<button class="sm" data-act="retire" style="align-self:center;opacity:.7">Retire this hero</button>';
+    G.p=s.p;G.m=s.m;const C=CLASSES[s.p.cls],p=s.p;
+    if(v==='main'){
+      h+=`<div class="herocard"><div class="pg" style="--cc:${C.c}"><span>${CLASS_GLYPH[p.cls]}</span></div><div><b>Lv ${p.lvl} ${C.n}</b><small>${p.gil} gil · ${p.golds} podium golds · ${p.crowns} Tyrants slain</small></div></div>`;
+      if(s.m)h+=`<button class="gold big" data-act="cont">Continue<small>Round ${s.m.round} of ${ROUNDS} · ${s.m.def.n} · ${DIFF[s.m.diff||'normal'].n}</small></button>`;
+      h+=`<button class="${s.m?'':'gold '}big" data-act="view" data-arg="circuit">${s.m?'New circuit':'Start a circuit'}<small>${ROUNDS} rounds against three rivals</small></button>`;
+      h+='<div class="tiles">'+menuTile('view','heroes','🛡️','Heroes',{g:C.c,badge:a.slots.length})+menuTile('deck',null,'🃏','Deck',{g:'#B06BFF',badge:p.deck.length!==DECK?'!':null})+menuTile('howto',null,'❓','How to play',{g:'#1FB5C9'})
+        +menuTile('view','settings','⚙️','Settings',{g:'#CFD6FF'})+menuTile('view','news',"📰","What's new",{g:'#FFC93D'})+menuTile('review',null,'⭐','Review',{g:'#FFC93D'})
+        +menuTile('',null,'🔄','Get the latest',{g:'#22D39A',attr:'data-get-latest type="button"'})+menuTile('',null,'📲','Install',{g:'#3D7BFF',attr:'data-install type="button"'})
+        +`<a class="tile" href="${KOFI}" target="_blank" rel="noopener" style="--g:#FF8A5C"><span class="ti">☕</span><span class="tl">Ko-fi</span></a>`+menuTile('credits',null,'✨','Credits',{g:'#F4F7FF'})+'</div>';
+    }else if(v==='circuit'){
+      h+=back();if(s.m)h+=`<p class="warn">Starting a new circuit abandons the one in progress (round ${s.m.round} on ${s.m.def.n}).</p>`;
+      const cd=p.diff||'normal';
+      h+='<h3>Difficulty</h3><div class="tiles">'+[['story','🌙','#8dffb0'],['normal','⚔️','#FFC93D'],['hard','💀','#FF3D5A']].map(([k,ic,g])=>menuTile('diff',k,ic,DIFF[k].n,{g,on:k===cd})).join('')+`</div><p class="note">${DIFF[cd].d}</p>`;
+      h+='<h3>Choose a board</h3><div class="tiles two">'+BOARDS.map((b,i)=>{const n=parsePath(b.path).pts.length;return menuTile('board',i,boardSVG(b.path),b.n,{g:'#6FD3FF',sub:`${n} tiles${n>=48?' · long':''}`,cls:'brd'});}).join('')
+        +menuTile('view','custom','✏️','Custom board',{g:'#B06BFF',sub:'Draw your own path',cls:'brd'})+'</div>';
+    }else if(v==='custom'){
+      h+=back('circuit','Boards')+`<h3>Custom board</h3><p class="note">Type a path with R, L, U or D and a tile count. End where you began. 12 to 120 tiles.</p><input id="cpath" value="${G.cpath||'R6 D3 R4 D8 L10 U11'}" autocomplete="off" spellcheck="false"><div class="cprev" id="cprev">${boardSVG(G.cpath||'R6 D3 R4 D8 L10 U11')}</div><button class="gold big" data-act="custom">Play this board</button>`;
+    }else if(v==='heroes'){
+      h+=back()+'<h3>Your heroes</h3><div class="tiles two">'+a.slots.map((x,i)=>{const c=CLASSES[x.p.cls];return menuTile('hero',i,CLASS_GLYPH[x.p.cls],`Lv ${x.p.lvl} ${c.n}`,{g:c.c,on:i===a.cur,sub:`${x.p.gil} gil${x.m?' · mid-circuit':''}`,cls:'wide'});}).join('')
+        +menuTile('newhero',null,'＋','New hero',{g:'#22D39A',sub:'Any class',cls:'wide'})+'</div>'
+        +`<div class="tiles" style="margin-top:12px">${menuTile('deck',null,'🃏','Deck editor',{g:'#B06BFF',sub:`${p.deck.length}/${DECK}`})}${menuTile('retire',null,'🕯️','Retire hero',{g:'#FF3D5A',sub:`Lv ${p.lvl} ${C.n}`})}</div>`;
+    }else if(v==='settings'){
+      h+=back()+'<h3>Settings</h3><div class="tiles">'+menuTile('setTog','sound',SET.sound?'🔊':'🔇','Sound',{g:'#1FB5C9',on:SET.sound,sub:SET.sound?'On':'Off'})+menuTile('setTog','shake','📳','Screen shake',{g:'#FF8A5C',on:SET.shake,sub:SET.shake?'On':'Off'})+menuTile('setTog','speed','⏩','Board speed',{g:'#22D39A',on:SET.speed==='fast',sub:SET.speed==='fast'?'Fast':'Normal'})+'</div>';
+    }else if(v==='news'){
+      h+=back()+"<h3>What's new</h3>"+CHANGES.map(([vv,t])=>`<div class="news"><b>v${vv}</b><span>${t}</span></div>`).join('');
+    }
   }
-  h+=`<h3>Menu</h3><div class="mrow"><button data-act="howto">How to play</button><button data-act="settings">Settings</button><button data-act="review">Leave a review</button><a class="btn-link" href="${KOFI}" target="_blank" rel="noopener"><button style="width:100%">☕ Support</button></a>
-  <button data-install type="button">Install the app</button><button data-get-latest type="button">Get the latest version</button><button data-act="credits">Credits</button></div><p style="text-align:center;font-size:11.5px;opacity:.7">v${GAME_VERSION} · hello@kralnugames.com</p>`;
+  h+=`<p style="text-align:center;font-size:11.5px;opacity:.7;margin-top:6px">v${GAME_VERSION} · hello@kralnugames.com</p>`;
   $('tbox').innerHTML=h;
+  if(v==='custom'&&$('cpath'))$('cpath').addEventListener('input',e=>{G.cpath=e.target.value;$('cprev').innerHTML=boardSVG(G.cpath)||'<small>Not a valid loop yet</small>';});
 }
 let toastT=0;
 function toast(m){const t=$('toast');t.textContent=m;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>{t.style.opacity=0;},2100);}
 function setScene(s){G.sel=null;G.targeting=null;
   G.scene=s;const sh=(id,on)=>$(id).classList.toggle('hidden',!on);
   sh('title',s==='title');sh('top',s!=='title');sh('info',s==='board');sh('bottom',s==='board');sh('plays',s==='board');sh('chud',s==='battle');
-  if(s==='title')renderTitle();
+  if(s==='title'){G.view='main';renderTitle();clearTimeout(toastT);$('toast').style.opacity=0;}
 }
 
 /* input wiring */
@@ -1788,7 +1851,7 @@ html:not(.kg-can-install) [data-install]{display:none!important}
 // Kralnu Games update check. When you push an update, change the game's version
 // AND version.json to the same new value; players then get a "new version" notice.
 (function(){
-  var NAME="Crystal Circuit",BUILD="1.0.0",CACHES=["cc-"],CHECK=true;
+  var NAME="Crystal Circuit",BUILD="1.1.0",CACHES=["cc-"],CHECK=true;
   var path=location.pathname,dir=path.replace(/[^/]*$/,''),last=0,bar=null,busy=false;
   if(/^\?v=\d+$/.test(location.search)){try{history.replaceState(history.state,'',path+location.hash)}catch(e){}}
   function build(){return String(window.kgBuild!=null?window.kgBuild:BUILD)}
