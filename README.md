@@ -11,6 +11,7 @@ A board game and an action RPG in one, from Kralnu Games. Race three AI rivals r
 - **Six classes.** Warrior, Monk, Mage, Ranger, Lancer and Guardian, each with its own attack and skill. Make as many heroes as you like.
 - **Three rivals with their own decks.** Everyone holds a hand of five cards and can play two a turn: hostile cards, hidden traps, Ward and Mirror to defend, and Pass the Buck to hand someone else your fight. Rivals hold grudges against whoever hurts them.
 - **Something to aim for.** Bosses on rounds 10, 20 and 30, and prizes for the top three in distance travelled and in damage dealt.
+- **The Colosseum.** Practice any fight with any class, level and gear. No rewards, no risk.
 - **Gear that matters.** Weapons and armour with traits and linked gem sockets, merchants whose stock changes every visit, and a 15-card deck you build from cards you win.
 
 Works offline once installed. Saves stay on your device.
@@ -22,6 +23,12 @@ This is an early build. Things will change, and saves may reset between versions
 Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.
 
 ## Changelog
+
+### 1.2.0 · 17 November 2026
+- **The Colosseum.** Practice fights from the main menu. Pick any class, your level (1 to 40), any weapon and armour, the gems in every socket, a forge level and how many potions and ethers to bring.
+- **Choose your foe:** Easy to Deadly groups, the four bosses, or a duel with a single enemy, at any enemy level you like, in any region and on any difficulty.
+- **No rewards, no risk.** Nothing you do in the Colosseum touches your heroes. It just remembers your best clear time against each foe.
+- A Leave button to quit a practice fight early, and a results card with your time, damage dealt and damage taken.
 
 ### 1.1.0 · 17 November 2026
 - **A proper main menu.** The title screen is now a set of gem-icon buttons: Grand Circuit, Custom board, Heroes, Deck, Settings, What's new, How to play, Review and Get the latest, each opening its own page.

@@ -55,6 +55,16 @@ button.sm{padding:6px 10px;font-size:13px}
 #tbox .cprev{display:flex;justify-content:center;padding:8px}
 #tbox .cprev svg{width:120px;height:120px}
 #tbox{background:linear-gradient(135deg,rgba(107,47,214,.22),rgba(31,181,201,.10) 60%,rgba(5,6,26,.6));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#bYield{position:fixed;right:10px;top:calc(env(safe-area-inset-top,0px) + 84px);z-index:6;padding:6px 12px;border-radius:999px;font-size:12px;background:rgba(18,14,58,.6);border:1px solid rgba(255,255,255,.35);color:#EEF1FF;backdrop-filter:blur(6px)}
+#top.arena .gl .gil,#top.arena .xp{visibility:hidden}
+#tbox .ac-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+#tbox .ac-row b{font-size:13px}#tbox .ac-row small{display:block;font-size:11px;opacity:.7;font-weight:400}
+#tbox .step{display:flex;align-items:center;gap:6px}#tbox .step button{width:34px;height:34px;padding:0;border-radius:10px;font-size:18px}
+#tbox .step span{min-width:34px;text-align:center;font:700 16px Cinzel,Georgia,serif}
+#tbox select{width:100%;padding:8px;border-radius:10px;background:#120e3a;color:#EEF1FF;border:1px solid rgba(255,255,255,.3);font:inherit;font-size:13px}
+#tbox .socks{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}#tbox .sg{display:flex;gap:4px;align-items:center;padding:4px;border-radius:10px;border:1px dashed rgba(255,255,255,.25);flex:1 1 140px}
+#tbox .sg.link{border:1px solid #6FD3FF;box-shadow:0 0 8px rgba(111,211,255,.35)}#tbox .sg select{appearance:none;-webkit-appearance:none;text-align:center;text-align-last:center;padding:7px 2px;font-size:12px;min-width:0;flex:1}#tbox .sg i{font-style:normal;color:#6FD3FF}
+#tbox .ares{padding:10px 12px;border-radius:12px;margin:8px 0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2)}#tbox .ares.w{border-color:#22D39A}#tbox .ares.l{border-color:#FF3D5A}
 #tbox h3{font-family:Cinzel,Georgia,serif;margin:6px 0 2px;font-size:13px;text-transform:uppercase;letter-spacing:1px;opacity:.8}
 #tbox p{margin:0;font-size:13px;line-height:1.4;opacity:.9}
 #tbox textarea,#cardIn input,#cardIn textarea{font:inherit;width:100%;padding:8px;border-radius:8px;border:1.5px solid #cdd6ff;background:#060a2a;color:#fff;-webkit-user-select:text;user-select:text;margin:4px 0}
@@ -234,6 +244,7 @@ button.sm{padding:6px 10px;font-size:13px}
   <button class="cb" id="bSkill">SKILL</button>
   <button class="cb" id="bDodge">DODGE</button>
   <button class="cb" id="bAtk">ATTACK</button>
+  <button id="bYield" class="hidden" data-act="yieldFight">✕ Leave</button>
   <div id="khelp">WASD move · J attack · K guard · L dodge · F skill · 1-4 spells · Q potion · E ether · Space limit</div>
 </div>
 
@@ -253,7 +264,7 @@ const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const rf=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const GAME_VERSION='1.1.0';
+const GAME_VERSION='1.2.0';
 // Design tokens from the visual overhaul spec.
 const THEME = {
   void: { abyss: '#05061A', night: '#120E3A', violet: '#6B2FD6', teal: '#1FB5C9' },
@@ -504,7 +515,7 @@ function loadAll(){
   a.slots=(a.slots||[]).filter(x=>x&&x.p&&x.p.cls);a.slots.forEach(x=>migrate(x.p));if(!(a.cur<a.slots.length))a.cur=0;return a;
 }
 function storeAll(a){try{localStorage.setItem(HSAVE,JSON.stringify(a));}catch(e){}}
-function save(){if(!G.p)return;const a=loadAll();if(G.slot==null||G.slot>a.slots.length)G.slot=a.slots.length;a.slots[G.slot]={p:G.p,m:G.m};a.cur=G.slot;storeAll(a);}
+function save(){if(!G.p||G.arena)return;const a=loadAll();if(G.slot==null||G.slot>a.slots.length)G.slot=a.slots.length;a.slots[G.slot]={p:G.p,m:G.m};a.cur=G.slot;storeAll(a);}
 function load(){const a=loadAll(),s=a.slots[a.cur];G.slot=s?a.cur:null;return s||null;}
 
 /* ---------------- 3. BOARD & MATCH FLOW ---------------- */
@@ -868,7 +879,7 @@ function startBattle(spec,tile,buf){
   setScene('battle');toast(`${spec.n} - ${tile.biome.n}${B.cardFx.length?' · '+B.cardFx.join(', '):''}`);
 }
 function endBattle(win){if(!B||B.over)return;B.over=true;B.win=win;(win?SFX.win:SFX.lose)();
-  setTimeout(()=>{const b=B;B=null;setScene('board');b.resolve({win,en:b.en});},(win?1100:1500)/SPD);}
+  setTimeout(()=>{const b=B;B=null;if(G.arena){arenaDone(b,win);return;}setScene('board');b.resolve({win,en:b.en});},(win?1100:1500)/SPD);}
 function floater(x,y,txt,c,big){B.fl.push({x:x+rf(-8,8),y,txt,c,t:0.8,big});}
 function spark(x,y,c,n,sp){for(let i=0;i<n;i++){const a=rf(0,6.28),s=rf(.3,1)*sp;B.fx.push({k:'p',x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:rf(.25,.5),T:.5,c});}}
 function gainLimit(n){G.p.limit=Math.min(100,G.p.limit+n*B.st.limitRate);}
@@ -895,7 +906,7 @@ function hurtPlayer(raw,src,el,ranged){
   d=Math.max(1,Math.round(d*(B.takeMul||1)));
   if(B.shield>0){const ab=Math.min(B.shield,d);B.shield-=ab;d-=ab;floater(p.x,p.y-46,'-'+ab+' shield','#7fe3ff');if(d<=0){p.inv=.18;return;}}
   if(st.thorns&&src&&src.hp>0&&!ranged)hitEnemy(src,raw*.35,null,6,0,0,0);
-  SFX.hurt();G.p.hp-=d;p.hurt=.2;p.inv=.18;B.shake=p.guard?3:8;
+  SFX.hurt();B.taken=(B.taken||0)+d;G.p.hp-=d;p.hurt=.2;p.inv=.18;B.shake=p.guard?3:8;
   floater(p.x,p.y-20,rs?d+' resist':d,rs?EL[el].c:'#ff7b7b');gainLimit(d/st.maxhp*90+(p.guard?4:0));
   if(G.p.hp<=0){G.p.hp=0;endBattle(false);}
 }
@@ -1209,6 +1220,14 @@ const ACT={
   cont(){const s=load();if(s&&s.m){G.p=s.p;G.m=s.m;enterMatch();}},
   hero(i){const a=loadAll();if(!a.slots[+i])return;a.cur=+i;storeAll(a);G.slot=+i;G.p=a.slots[+i].p;G.m=a.slots[+i].m;G.picking=false;renderTitle();toast(`Lv ${G.p.lvl} ${CLASSES[G.p.cls].n} selected`);},
   newhero(){G.picking=true;renderTitle();},
+  ac(arg){const a=G.ac,[k,v]=arg.split(':'),lim={lvl:[1,40],elvl:[1,40],up:[0,MAXUP],pot:[0,9],hipot:[0,9],eth:[0,9]};
+    if(lim[k]){const old=a[k];a[k]=clamp(a[k]+(+v),lim[k][0],lim[k][1]);if(k==='lvl'&&a.elvl===old)a.elvl=a[k];}
+    else if(k==='ws'||k==='as'){}else if(/^(ws|as)\d+$/.test(k)){a[k.slice(0,2)][+k.slice(2)]=v||null;}
+    else a[k]=v;const y=document.getElementById('title').scrollTop;renderTitle();document.getElementById('title').scrollTop=y;},
+  arenaFight(){const a=G.ac,f=FOES[a.foe];G.arena=true;G.p=arenaHero();G.m=null;const st=S();G.p.hp=st.maxhp;G.p.mp=st.maxmp;
+    const comp=f.comp||pick(TIERS[f.tier].comps),biome=a.biome==='any'?pick(BIOMES):BIOMES.find(b=>b.id===a.biome);
+    $('top').classList.add('arena');battle({n:'Colosseum: '+f.n,comp,off:a.elvl-a.lvl},{biome},{});$('bYield').classList.remove('hidden');},
+  yieldFight(){if(B&&!B.over&&G.arena)endBattle(false);},
   view(v){G.view=v;G.picking=false;renderTitle();document.getElementById('title').scrollTop=0;},
   setTog(k){if(k==='sound')SET.sound=!SET.sound;else if(k==='shake')SET.shake=!SET.shake;else SET.speed=SET.speed==='fast'?'normal':'fast';applySet();if(!$('menu').classList.contains('hidden'))renderMenu();else renderTitle();},
   cancelpick(){G.picking=false;G.view='heroes';renderTitle();},
@@ -1252,7 +1271,7 @@ function drawReview(){
   $('card').classList.remove('hidden');
 }
 // ---- Main menu: tile grids with gem icons (Tight Lines style), each opening its own sub-menu
-const CHANGES=[['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
+const CHANGES=[['1.2.0','The Colosseum: practice fights against any foe, with the class, level and gear you choose. No rewards, no risk'],['1.1.0','A main menu of gem pads, and the same pads for the in-game menu'],['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
 const menuTile=(act,arg,ico,label,o={})=>`<button class="tile${o.on?' on':''}${o.cls?' '+o.cls:''}" ${act?`data-act="${act}"`:''} ${arg!=null?`data-arg="${arg}"`:''} ${o.attr||''} style="--g:${o.g||'#6FD3FF'}"><span class="ti">${ico}</span><span class="tl">${label}</span>${o.badge!=null?`<span class="tb">${o.badge}</span>`:''}${o.sub?`<small>${o.sub}</small>`:''}</button>`;
 function boardSVG(path){const r=parsePath(path);if(r.error)return '';const xs=r.pts.map(p=>p[0]),ys=r.pts.map(p=>p[1]),mx=Math.min(...xs),my=Math.min(...ys),w=Math.max(...xs)-mx+1,h=Math.max(...ys)-my+1,c=Math.min(46/w,46/h),n=r.pts.length,cols=['#FF3D5A','#3D7BFF','#FFC93D','#22D39A'];
   return `<svg viewBox="0 0 48 48" width="44" height="44">${r.pts.map((p,i)=>`<rect x="${(1+(p[0]-mx)*c+(46-w*c)/2).toFixed(1)}" y="${(1+(p[1]-my)*c+(46-h*c)/2).toFixed(1)}" width="${(c*.82).toFixed(1)}" height="${(c*.82).toFixed(1)}" rx="${(c*.2).toFixed(1)}" fill="${i===0?'#F4F7FF':cols.at(Math.floor(i/(n/4))%4)}"/>`).join('')}</svg>`;}
@@ -1268,6 +1287,7 @@ function renderTitle(){
       h+=`<div class="herocard"><div class="pg" style="--cc:${C.c}"><span>${CLASS_GLYPH[p.cls]}</span></div><div><b>Lv ${p.lvl} ${C.n}</b><small>${p.gil} gil · ${p.golds} podium golds · ${p.crowns} Tyrants slain</small></div></div>`;
       if(s.m)h+=`<button class="gold big" data-act="cont">Continue<small>Round ${s.m.round} of ${ROUNDS} · ${s.m.def.n} · ${DIFF[s.m.diff||'normal'].n}</small></button>`;
       h+=`<button class="${s.m?'':'gold '}big" data-act="view" data-arg="circuit">${s.m?'New circuit':'Start a circuit'}<small>${ROUNDS} rounds against three rivals</small></button>`;
+      h+=`<button class="big" data-act="view" data-arg="arena">Colosseum<small>Practice fights · pick your foe, level and gear</small></button>`;
       h+='<div class="tiles">'+menuTile('view','heroes','🛡️','Heroes',{g:C.c,badge:a.slots.length})+menuTile('deck',null,'🃏','Deck',{g:'#B06BFF',badge:p.deck.length!==DECK?'!':null})+menuTile('howto',null,'❓','How to play',{g:'#1FB5C9'})
         +menuTile('view','settings','⚙️','Settings',{g:'#CFD6FF'})+menuTile('view','news',"📰","What's new",{g:'#FFC93D'})+menuTile('review',null,'⭐','Review',{g:'#FFC93D'})
         +menuTile('',null,'🔄','Get the latest',{g:'#22D39A',attr:'data-get-latest type="button"'})+menuTile('',null,'📲','Install',{g:'#3D7BFF',attr:'data-install type="button"'})
@@ -1286,12 +1306,14 @@ function renderTitle(){
         +`<div class="tiles" style="margin-top:12px">${menuTile('deck',null,'🃏','Deck editor',{g:'#B06BFF',sub:`${p.deck.length}/${DECK}`})}${menuTile('retire',null,'🕯️','Retire hero',{g:'#FF3D5A',sub:`Lv ${p.lvl} ${C.n}`})}</div>`;
     }else if(v==='settings'){
       h+=back()+'<h3>Settings</h3><div class="tiles">'+menuTile('setTog','sound',SET.sound?'🔊':'🔇','Sound',{g:'#1FB5C9',on:SET.sound,sub:SET.sound?'On':'Off'})+menuTile('setTog','shake','📳','Screen shake',{g:'#FF8A5C',on:SET.shake,sub:SET.shake?'On':'Off'})+menuTile('setTog','speed','⏩','Board speed',{g:'#22D39A',on:SET.speed==='fast',sub:SET.speed==='fast'?'Fast':'Normal'})+'</div>';
+    }else if(v==='arena'){h+=back()+arenaHTML(p);
     }else if(v==='news'){
       h+=back()+"<h3>What's new</h3>"+CHANGES.map(([vv,t])=>`<div class="news"><b>v${vv}</b><span>${t}</span></div>`).join('');
     }
   }
   h+=`<p style="text-align:center;font-size:11.5px;opacity:.7;margin-top:6px">v${GAME_VERSION} · hello@kralnugames.com</p>`;
   $('tbox').innerHTML=h;
+  if(v==='arena')document.querySelectorAll('#tbox [data-ac]').forEach(el=>el.addEventListener('change',()=>ACT.ac(el.dataset.ac+':'+el.value)));
   if(v==='custom'&&$('cpath'))$('cpath').addEventListener('input',e=>{G.cpath=e.target.value;$('cprev').innerHTML=boardSVG(G.cpath)||'<small>Not a valid loop yet</small>';});
 }
 let toastT=0;
@@ -1299,8 +1321,44 @@ function toast(m){const t=$('toast');t.textContent=m;t.style.opacity=1;clearTime
 function setScene(s){G.sel=null;G.targeting=null;
   G.scene=s;const sh=(id,on)=>$(id).classList.toggle('hidden',!on);
   sh('title',s==='title');sh('top',s!=='title');sh('info',s==='board');sh('bottom',s==='board');sh('plays',s==='board');sh('chud',s==='battle');
-  if(s==='title'){G.view='main';renderTitle();clearTimeout(toastT);$('toast').style.opacity=0;}
+  if(s==='title'){G.view=G.retView||'main';G.retView=null;renderTitle();clearTimeout(toastT);$('toast').style.opacity=0;}
 }
+
+/* ---------------- COLOSSEUM (practice fights: no rewards, nothing saved) ---------------- */
+const FOES={
+ easy:{n:'Easy group',g:'Groups',ico:'🌱',c:'#8dffb0',tier:'easy'},normal:{n:'Normal group',g:'Groups',ico:'⚔️',c:'#ffe45c',tier:'normal'},
+ hard:{n:'Hard group',g:'Groups',ico:'🔥',c:'#ff9a4a',tier:'hard'},deadly:{n:'Deadly group',g:'Groups',ico:'💀',c:'#ff5a6e',tier:'boss'},
+ warden:{n:'Warden',g:'Bosses',ico:'🛡️',c:'#e04a6a',comp:['gloop','warden','gloop']},gatekeeper:{n:'Gatekeeper',g:'Bosses',ico:'🗿',c:'#b9a27a',comp:['gatekeeper']},
+ hexarch:{n:'Storm Hexarch',g:'Bosses',ico:'⚡',c:'#b06bff',comp:['dart','hexarch','dart']},tyrant:{n:'Crystal Tyrant',g:'Bosses',ico:'💎',c:'#ff4f8a',comp:['tyrant']}};
+['gloop','wisp','dart','hexer','cinder','brute'].forEach(k=>FOES['d_'+k]={n:ENEMY[k].n,g:'Duels',ico:{gloop:'🟢',wisp:'👻',dart:'🪶',hexer:'🔮',cinder:'🔥',brute:'🪨'}[k],c:ENEMY[k].c,comp:[k]});
+FOES.gauntlet={n:'Brute pack',g:'Duels',ico:'🐗',c:'#d98a59',comp:['brute','brute','brute']};
+const ASAVE='crystal-circuit-arena';
+function arenaBest(){try{return JSON.parse(localStorage.getItem(ASAVE))||{};}catch(e){return{};}}
+function arenaCfg(p){if(!G.ac){const lv=p?p.lvl:5;G.ac={cls:p?p.cls:'warrior',lvl:lv,elvl:lv,weapon:'iron',armour:'leather',up:0,ws:['fire','elemental','cure'],as:['blizzard','elemental','vigor'],pot:2,eth:1,hipot:0,foe:'normal',biome:'any',diff:(p&&p.diff)||'normal'};}return G.ac;}
+function arenaHTML(p){const a=arenaCfg(p),C=CLASSES[a.cls];let h='<h3>Colosseum</h3><p class="note">Practice fights. Pick a class, level and gear, then choose a foe. Nothing you do here touches your heroes, and there are no rewards.</p>';
+  if(G.arenaLast){const r=G.arenaLast;h+=`<div class="ares ${r.win?'w':'l'}"><b>${r.win?'Victory':'Defeated'}</b> vs ${r.n}<br><small>${r.time} · ${r.dmg} damage dealt · ${r.taken} taken${r.best?' · new best time!':''}</small></div>`;}
+  h+=`<button class="gold big" data-act="arenaFight">Fight!<small>Lv ${a.lvl} ${C.n} vs Lv ${a.elvl} ${FOES[a.foe].n}</small></button>`;
+  const step=(k,label,val,sub)=>`<div class="ac-row"><div><b>${label}</b>${sub?`<small>${sub}</small>`:''}</div><div class="step"><button class="sm" data-act="ac" data-arg="${k}:-1">−</button><span>${val}</span><button class="sm" data-act="ac" data-arg="${k}:+1">+</button></div></div>`;
+  h+='<h3>Class</h3><div class="tiles">'+Object.keys(CLASSES).map(k=>menuTile('ac','cls:'+k,CLASS_GLYPH[k],CLASSES[k].n,{g:CLASSES[k].c,on:k===a.cls})).join('')+'</div>';
+  h+='<h3>Levels</h3>'+step('lvl','Your level',a.lvl)+step('elvl','Enemy level',a.elvl,a.elvl===a.lvl?'Even fight':a.elvl>a.lvl?`${a.elvl-a.lvl} above you`:`${a.lvl-a.elvl} below you`);
+  const wo=Object.keys(WEAPONS).map(k=>{const w=WEAPONS[k];return `<option value="${k}"${k===a.weapon?' selected':''}>${w.pre} ${C.wpn} · ATK ${w.atk} MAG ${w.mag}${w.el?' · '+w.el:''}${w.drain?' · drain':''}${w.crit?' · crit':''}${w.stag?' · stagger':''}${w.mphit?' · MP on hit':''}${w.limit?' · limit':''}</option>`;}).join('');
+  const ao=Object.keys(ARMOUR).map(k=>{const r=ARMOUR[k];return `<option value="${k}"${k===a.armour?' selected':''}>${r.n} · DEF ${r.def} HP +${r.hp}${r.res?' · resists '+r.res:''}${r.mp?' · MP +'+r.mp:''}${r.regen?' · regen':''}${r.thorns?' · thorns':''}${r.dodge?' · dodge':''}${r.guard?' · guard':''}</option>`;}).join('');
+  const socks=(where,L,arr)=>{let i=0,o='<div class="socks">';for(const g of L){o+=`<div class="sg${g===2?' link':''}">`;for(let j=0;j<g;j++){const cur=arr[i]||'';o+=(j?'<i>⟷</i>':'')+`<select data-ac="${where}${i}"><option value="">empty</option>${Object.keys(GEMS).map(k=>`<option value="${k}"${k===cur?' selected':''}>${GEMS[k].n}</option>`).join('')}</select>`;i++;}o+='</div>';}return o+'</div>';};
+  h+='<h3>Gear</h3>'+`<select data-ac="weapon">${wo}</select>`+socks('ws',WEAPONS[a.weapon].slots,a.ws)+`<select data-ac="armour">${ao}</select>`+socks('as',ARMOUR[a.armour].slots,a.as);
+  h+=step('up','Forge level','+'+a.up,'Upgrades both weapon and armour')+step('pot','Potions',a.pot)+step('hipot','Hi-Potions',a.hipot)+step('eth','Ethers',a.eth);
+  const best=arenaBest(),groups={};for(const k in FOES)(groups[FOES[k].g]=groups[FOES[k].g]||[]).push(k);
+  for(const g in groups)h+=`<h3>${g}</h3><div class="tiles">`+groups[g].map(k=>{const f=FOES[k],b=best[k];return menuTile('ac','foe:'+k,f.ico,f.n,{g:f.c,on:k===a.foe,sub:b?'Best '+fmtT(b):''});}).join('')+'</div>';
+  h+='<h3>Arena</h3><div class="tiles">'+menuTile('ac','biome:any','🎲','Random',{g:'#CFD6FF',on:a.biome==='any'})+BIOMES.map(b=>menuTile('ac','biome:'+b.id,{ember:'🔥',frost:'❄️',storm:'⚡',gale:'🌪️'}[b.id],b.n,{g:b.c,on:a.biome===b.id})).join('')+'</div>';
+  h+='<h3>Difficulty</h3><div class="tiles">'+[['story','🌙','#8dffb0'],['normal','⚔️','#FFC93D'],['hard','💀','#FF3D5A']].map(([k,ic,g])=>menuTile('ac','diff:'+k,ic,DIFF[k].n,{g,on:k===a.diff})).join('')+'</div>';
+  return h;}
+const fmtT=t=>{const m=Math.floor(t/60),x=Math.floor(t%60);return m+':'+String(x).padStart(2,'0');};
+function arenaHero(){const a=G.ac,p=newPlayer(a.cls);Object.assign(p,{lvl:a.lvl,exp:0,gil:0,limit:0,weapon:a.weapon,armour:a.armour,weapons:[a.weapon],armours:[a.armour],potion:a.pot,ether:a.eth,hipot:a.hipot,elixir:0,diff:a.diff,tips:1});
+  p.up={[a.weapon]:a.up,[a.armour]:a.up};const ns=WEAPONS[a.weapon].slots.reduce((x,y)=>x+y,0),na=ARMOUR[a.armour].slots.reduce((x,y)=>x+y,0);
+  p.ws=Array.from({length:ns},(_,i)=>a.ws[i]||null);p.as=Array.from({length:na},(_,i)=>a.as[i]||null);p.gems=[...new Set(p.ws.concat(p.as).filter(Boolean))];return p;}
+function arenaDone(b,win){G.arena=false;$('bYield').classList.add('hidden');$('top').classList.remove('arena');
+  const k=G.ac.foe,best=arenaBest(),t=b.t;let nb=false;if(win&&(!best[k]||t<best[k])){best[k]=t;nb=!!1;try{localStorage.setItem(ASAVE,JSON.stringify(best));}catch(e){}}
+  G.arenaLast={win,n:FOES[k].n,time:fmtT(t),dmg:Math.round(b.en.reduce((s,e)=>s+(e.maxhp-Math.max(0,e.hp)),0)),taken:Math.round(b.taken||0),best:nb&&win};
+  G.retView='arena';setScene('title');document.getElementById('title').scrollTop=0;}
 
 /* input wiring */
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t&&!t.disabled&&ACT[t.dataset.act])ACT[t.dataset.act](t.dataset.arg);});
