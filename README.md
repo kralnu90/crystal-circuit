@@ -23,6 +23,16 @@ Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.
 
 ## Changelog
 
+### 1.0.0 · 17 November 2026
+- **The Fantasy Crystals overhaul.** A new look from top to bottom:
+  - **The board** floats in a cosmic void: a nebula tinted for the region you're in, stars, a faint crystal grid with a light sweep, and a turning sigil in the middle showing the round (it pulses purple on boss rounds).
+  - **Gem tiles:** Ruby fire, Sapphire frost, Citrine storm and Emerald wind, with a Diamond Sanctuary and Amethyst merchants. Each has its rune etched in, glints run across them, and a glowing circuit trace with beads of light links them up.
+  - **Crystal pieces:** glass miniatures on rune discs, with a little figure of their class inside. They bob, turn in the light, squash on landing and leave light trails (red when reversed). Warp turns your piece into a beam of light.
+  - **Status at a glance:** Ward and Mirror shields, frosted Skipped pieces, Slowed drips, Reversed arrows, a Curse eye, buffs orbiting overhead, and each rival's deck symbol on their disc.
+  - **Glass top bar:** class portrait with a level badge, HP and MP bars that show what you just lost, a Limit ring that turns into a spinning prism, and gil that rolls up with a floating "+120".
+  - **Tarot cards:** your hand fans out as full-art cards with type-coloured borders and rarity stars. Tap one to lift it and read it, then Play or Discard. Hostile cards now light up the rivals you can target: tap one on the board. Played cards fly to their target and burst into gem shards.
+- New fonts (Cinzel and Inter), saved for offline play too.
+- The title screen now always shows the right version number.
 ### 0.9.0 · 17 November 2026
 - **The graphical overhaul.** Everything is redrawn, still all in code:
   - **Board:** raised stone tiles with icons for each region, a glowing circuit path, hills on the horizon, drifting embers, snow, rain or leaves, and proper game pieces for you and your rivals.

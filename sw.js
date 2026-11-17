@@ -1,7 +1,7 @@
-// Crystal Circuit offline support.
+// Crystal Circuit offline support (the game, its icons and the Google Fonts it uses).
 // The game page is fetched fresh whenever there's signal, so updates show up on their own;
 // the saved copy is only used offline. Bump VERSION if icons or the manifest change.
-const VERSION='cc-v1';
+const VERSION='cc-v2';
 const CORE=['./','index.html','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-touch-icon.png','icons/favicon.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('cc-')&&k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
@@ -14,7 +14,7 @@ self.addEventListener('fetch',e=>{
     e.respondWith(fetch(req,{cache:'no-cache'}).then(r=>{const copy=r.clone();caches.open(VERSION).then(c=>c.put('index.html',copy));return r}).catch(()=>caches.match('index.html')));
     return;
   }
-  if(url.origin===location.origin){
+  if(url.origin===location.origin||url.host.endsWith('fonts.googleapis.com')||url.host.endsWith('fonts.gstatic.com')){
     e.respondWith(caches.match(req).then(hit=>hit||fetch(req).then(r=>{const copy=r.clone();caches.open(VERSION).then(c=>c.put(req,copy));return r})));
   }
 });
