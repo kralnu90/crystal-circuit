@@ -24,6 +24,10 @@ Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.
 
 ## Changelog
 
+### 1.5.1 · 17 November 2026
+- **Ranger rebalance.** Arrows deal about 20% less damage, and 30% less again at point-blank range (the bow can't be drawn fully, shown by greyer arrows), so staying at range is how Ranger is meant to play.
+- **Volley** arrows deal about 40% less each: still great against a group, no longer a single-target nuke up close.
+
 ### 1.5.0 · 17 November 2026
 - **Rival aggression setting.** Choose Calm, Normal or Ruthless rivals when you start a circuit. Calm rivals play hostile cards and traps far less and pick on each other more than on you; Ruthless rivals gang up on the leader.
 - **Gear to aim for.** Merchants only sell weapons and armour up to your level. Higher-level gear still shows in stock, marked with the level you need, so you can see what's coming.

@@ -277,7 +277,7 @@ const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const rf=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const GAME_VERSION='1.5.0';window.kgBuild=GAME_VERSION; // the update notice reads this, so it always matches the game version
+const GAME_VERSION='1.5.1';window.kgBuild=GAME_VERSION; // the update notice reads this, so it always matches the game version
 // Design tokens from the visual overhaul spec.
 const THEME = {
   void: { abyss: '#05061A', night: '#120E3A', violet: '#6B2FD6', teal: '#1FB5C9' },
@@ -337,8 +337,8 @@ const CLASSES={
    hp:1,mp:.8,str:1,mag:.7,def:.9,spd:1.15,     atk:{type:'arc',reach:62,cos:.1,cd:.17,dmg:.62,hits:5},  skill:{id:'chi',n:'CHI DASH',cd:5}},
  mage:    {n:'Mage',    wpn:'Staff',    c:'#c78bff',d:'Fragile. Fires magic bolts from range, big MP pool that slowly refills, stronger spells. Skill: Meteor.',
    hp:.8,mp:1.6,str:.6,mag:1.35,def:.8,spd:1,   atk:{type:'shot',stat:'mag',cd:.42,dmg:1,sp:480},        skill:{id:'meteor',n:'METEOR',cd:10},mpRegen:1,spell:1.2},
- ranger:  {n:'Ranger',  wpn:'Bow',      c:'#8dffb0',d:'Fast arrows from a distance, light armour. Skill: Volley fires a fan of seven arrows.',
-   hp:.9,mp:1,str:1.05,mag:.9,def:.85,spd:1.1,  atk:{type:'shot',stat:'str',cd:.36,dmg:.8,sp:640},       skill:{id:'volley',n:'VOLLEY',cd:6}},
+ ranger:  {n:'Ranger',  wpn:'Bow',      c:'#8dffb0',d:'Fast arrows from a distance, light armour. Arrows lose power at point-blank range, so keep your distance. Skill: Volley fires a fan of seven arrows.',
+   hp:.9,mp:1,str:1.05,mag:.9,def:.85,spd:1.1,  atk:{type:'shot',stat:'str',cd:.36,dmg:.64,sp:640,close:.7},       skill:{id:'volley',n:'VOLLEY',cd:6}},
  lancer:  {n:'Lancer',  wpn:'Lance',    c:'#7fe3e3',d:'Long, narrow thrusts that need good aim. Skill: Jump leaps untouchable, then crashes down.',
    hp:1,mp:.9,str:1.15,mag:.8,def:1,spd:1,      atk:{type:'arc',reach:128,cos:.82,cd:.42,dmg:1.25,hits:3},skill:{id:'jump',n:'JUMP',cd:8}},
  guardian:{n:'Guardian',wpn:'Mace',     c:'#ffd66d',d:'Slow, heavy 2-hit swings and the best guard: blocks 88% and hits attackers back. Skill: Shield Bash.',
@@ -964,7 +964,7 @@ function skill(){
   else if(id==='chi'){p.dx=dx;p.dy=dy;p.dodgeT=.3;p.inv=.4;p.chi=new Set();p.atkT=0;p.lungeT=0;p.atkHit=true;}
   else if(id==='meteor'){if(!e)return;B.zn.push({x:e.x,y:e.y,r:120,t:.7,T:.7,dmg:st.mag*4.5,from:'p',el:'fire'});
     if(st.sig){const o=B.en.filter(q=>q.hp>0&&q!==e);for(let i=0;i<2;i++){const q=o[i],a=rf(0,6.28);B.zn.push({x:q?q.x:e.x+Math.cos(a)*120,y:q?q.y:e.y+Math.sin(a)*120,r:85,t:.9+i*.15,T:.9+i*.15,dmg:st.mag*2.6,from:'p',el:'fire'});}}}
-  else if(id==='volley'){for(let i=-3;i<=3;i++){const a=Math.atan2(dy,dx)+i*.14;B.pr.push({x:p.x,y:p.y,vx:Math.cos(a)*640,vy:Math.sin(a)*640,r:6,from:'p',el:null,c:st.sig?'#ffd66d':C.c,dmg:st.str*.95,life:1.2,pierce:st.sig});}}
+  else if(id==='volley'){for(let i=-3;i<=3;i++){const a=Math.atan2(dy,dx)+i*.14;B.pr.push({x:p.x,y:p.y,vx:Math.cos(a)*640,vy:Math.sin(a)*640,r:6,from:'p',el:null,c:st.sig?'#ffd66d':C.c,dmg:st.str*.57,life:1.2,pierce:st.sig});}}
   else if(id==='jump'){p.jumpT=.7;p.jx=e?e.x:p.x;p.jy=e?e.y:p.y;p.atkT=0;p.lungeT=0;p.atkHit=true;}
   else if(id==='bash'){for(const q of B.en){const ex=q.x-p.x,ey=q.y-p.y,d=Math.hypot(ex,ey)||1;if(d<100+q.r&&(ex*dx+ey*dy)/d>0)hitEnemy(q,st.str*1.8,null,60,700,dx,dy);}
     B.fx.push({k:'arc',x:p.x,y:p.y,a:Math.atan2(dy,dx),r:100,w:1.5,t:.2,T:.2,fin:true});const h=Math.round(st.maxhp*.08);G.p.hp=Math.min(st.maxhp,G.p.hp+h);floater(p.x,p.y-30,'+'+h,'#8dffb0');B.shake=6;if(st.sig){B.reflT=2;floater(p.x,p.y-48,'REFLECT','#ffe9a8',true);}}
@@ -1036,7 +1036,8 @@ function upPlayer(dt){
   if(inp.atk&&p.atkCd<=0&&p.dodgeT<=0&&!p.guard){
     const e=nearest(),shot=A.type==='shot';
     if(e){const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy)||1;if(shot||d<270){p.fx=dx/d;p.fy=dy/d;if(!shot&&d>e.r+A.reach-16)p.lungeT=Math.min(.16,(d-e.r-A.reach+26)/520);}}
-    if(shot){B.pr.push({x:p.x+p.fx*14,y:p.y+p.fy*14,vx:p.fx*A.sp,vy:p.fy*A.sp,r:6,from:'p',el:st.wEl,c:st.wEl?EL[st.wEl].c:st.cls.c,dmg:st[A.stat]*A.dmg*rf(.9,1.1),life:1.3,basic:true});p.atkT=.12;p.atkHit=true;p.atkCd=A.cd;}
+    if(shot){const pb=A.close&&e&&Math.hypot(e.x-p.x,e.y-p.y)<e.r+70; // point-blank: the bow can't be drawn fully
+      B.pr.push({x:p.x+p.fx*14,y:p.y+p.fy*14,vx:p.fx*A.sp,vy:p.fy*A.sp,r:pb?5:6,from:'p',el:st.wEl,c:pb?'#9aa3c7':st.wEl?EL[st.wEl].c:st.cls.c,dmg:st[A.stat]*A.dmg*(pb?A.close:1)*rf(.9,1.1),life:1.3,basic:true});p.atkT=.12;p.atkHit=true;p.atkCd=A.cd;}
     else{if(p.comboT<=0)p.combo=0;p.combo=p.combo%A.hits+1;p.atkT=.2;p.atkHit=false;p.atkCd=p.combo===A.hits?A.cd*1.6:A.cd;p.comboT=A.cd+.5;}
   }
   if(!p.atkHit&&p.atkT<.12&&p.lungeT<=0){p.atkHit=true;swingHit();}
@@ -1383,7 +1384,7 @@ function drawReview(){
   $('card').classList.remove('hidden');
 }
 // ---- Main menu: tile grids with gem icons (Tight Lines style), each opening its own sub-menu
-const CHANGES=[['1.5.0','Rival aggression setting (Calm, Normal, Ruthless). Shops only sell gear up to your level, and top-tier gear costs much more'],['1.4.0','Gauntlet mode: ten duels against hero classes with an objective in each fight. Bank class essences, craft your class signature item'],['1.3.0','Colosseum Cups: tournaments for your real hero between circuits. Spend a ticket (earned by finishing circuits), win round after round, cash out or push on for the cup and its prizes'],['1.2.0','The Colosseum: practice fights against any foe, with the class, level and gear you choose. No rewards, no risk'],['1.1.0','A main menu of gem pads, and the same pads for the in-game menu'],['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
+const CHANGES=[['1.5.1','Ranger rebalance: arrows hit a little softer, lose power at point-blank range, and Volley is a crowd skill rather than a single-target nuke'],['1.5.0','Rival aggression setting (Calm, Normal, Ruthless). Shops only sell gear up to your level, and top-tier gear costs much more'],['1.4.0','Gauntlet mode: ten duels against hero classes with an objective in each fight. Bank class essences, craft your class signature item'],['1.3.0','Colosseum Cups: tournaments for your real hero between circuits. Spend a ticket (earned by finishing circuits), win round after round, cash out or push on for the cup and its prizes'],['1.2.0','The Colosseum: practice fights against any foe, with the class, level and gear you choose. No rewards, no risk'],['1.1.0','A main menu of gem pads, and the same pads for the in-game menu'],['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
 const menuTile=(act,arg,ico,label,o={})=>`<button class="tile${o.on?' on':''}${o.cls?' '+o.cls:''}" ${act?`data-act="${act}"`:''} ${arg!=null?`data-arg="${arg}"`:''} ${o.attr||''} style="--g:${o.g||'#6FD3FF'}"><span class="ti">${ico}</span><span class="tl">${label}</span>${o.badge!=null?`<span class="tb">${o.badge}</span>`:''}${o.sub?`<small>${o.sub}</small>`:''}</button>`;
 function boardSVG(path){const r=parsePath(path);if(r.error)return '';const xs=r.pts.map(p=>p[0]),ys=r.pts.map(p=>p[1]),mx=Math.min(...xs),my=Math.min(...ys),w=Math.max(...xs)-mx+1,h=Math.max(...ys)-my+1,c=Math.min(46/w,46/h),n=r.pts.length,cols=['#FF3D5A','#3D7BFF','#FFC93D','#22D39A'];
   return `<svg viewBox="0 0 48 48" width="44" height="44">${r.pts.map((p,i)=>`<rect x="${(1+(p[0]-mx)*c+(46-w*c)/2).toFixed(1)}" y="${(1+(p[1]-my)*c+(46-h*c)/2).toFixed(1)}" width="${(c*.82).toFixed(1)}" height="${(c*.82).toFixed(1)}" rx="${(c*.2).toFixed(1)}" fill="${i===0?'#F4F7FF':cols.at(Math.floor(i/(n/4))%4)}"/>`).join('')}</svg>`;}
