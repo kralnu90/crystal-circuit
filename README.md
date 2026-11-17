@@ -11,7 +11,7 @@ A board game and an action RPG in one, from Kralnu Games. Race three AI rivals r
 - **Six classes.** Warrior, Monk, Mage, Ranger, Lancer and Guardian, each with its own attack and skill. Make as many heroes as you like.
 - **Three rivals with their own decks.** Everyone holds a hand of five cards and can play two a turn: hostile cards, hidden traps, Ward and Mirror to defend, and Pass the Buck to hand someone else your fight. Rivals hold grudges against whoever hurts them.
 - **Something to aim for.** Bosses on rounds 10, 20 and 30, and prizes for the top three in distance travelled and in damage dealt.
-- **The Colosseum.** Practice any fight with any class, level and gear, or take your hero into cup tournaments between circuits for cards, gems and gil.
+- **The Colosseum.** Practice any fight with any class, level and gear, take your hero into cup tournaments between circuits, or run the Gauntlet for essences to craft your class's signature item.
 - **Gear that matters.** Weapons and armour with traits and linked gem sockets, merchants whose stock changes every visit, and a 15-card deck you build from cards you win.
 
 Works offline once installed. Saves stay on your device.
@@ -23,6 +23,13 @@ This is an early build. Things will change, and saves may reset between versions
 Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.
 
 ## Changelog
+
+### 1.4.0 · 17 November 2026
+- **Gauntlet mode.** Ten duels in the Colosseum against heroes of the other classes, who guard, dodge, close the gap and use their class skills. The last two fights are two against one. Costs 1 ticket; unlocks after a Silver Cup win.
+- **Objectives.** Every Gauntlet fight has a random objective (first strike, no damage, stagger, Limit finish, no items, under 45 seconds, skill x3, weakness x3, guard x3). Complete it and win to bank that class's essence.
+- **Cash out or fall.** Cash out after any win to keep your essences. Fall once and the run is wiped. Clear all ten for a Gauntlet Seal.
+- **Crafting.** A new Crafting menu on the main menu, in the in-game hub and in the Colosseum. Craft your class's signature item from essences, a Boss Core (boss rounds), Bronze and Silver Laurels (cup wins) and a Gauntlet Seal.
+- **Signature items** sit in their own slot and change your class skill: Whirlwind pulls enemies in, Chi Dash chains, Meteor splits, Volley pierces, Jump staggers, Shield Bash reflects projectiles.
 
 ### 1.3.0 · 17 November 2026
 - **Colosseum Cups.** Tournaments for your real hero, fought between circuits. Spend a ticket and pay the entry fee, then win round after round. After each win, take the purse and leave or push on. Lose and you keep half; win the final for the cup prize.
