@@ -48,6 +48,7 @@ button.sm{padding:6px 10px;font-size:13px}
 #tbox .herocard .pg{width:46px;height:52px}
 #tbox .herocard b{display:block;font:700 16px Cinzel,Georgia,serif}
 #tbox .herocard small{opacity:.8;font-size:12px}
+#menuIn .row.locked{opacity:.6}
 #tbox .note{font-size:12px;opacity:.75}
 #tbox .warn{font-size:12.5px;color:#FFC93D;margin:0}
 #tbox .news{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;line-height:1.4}
@@ -276,7 +277,7 @@ const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const rf=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const GAME_VERSION='1.4.0';window.kgBuild=GAME_VERSION; // the update notice reads this, so it always matches the game version
+const GAME_VERSION='1.5.0';window.kgBuild=GAME_VERSION; // the update notice reads this, so it always matches the game version
 // Design tokens from the visual overhaul spec.
 const THEME = {
   void: { abyss: '#05061A', night: '#120E3A', violet: '#6B2FD6', teal: '#1FB5C9' },
@@ -420,6 +421,8 @@ const ARMOUR={
  mythril:{n:'Mythril Plate', def:14,hp:80, slots:[2,2],  price:800, lvl:10},
  bastion:{n:'Bastion Plate', def:17,hp:100,slots:[2,1],  price:1100,lvl:12,guard:1},
  dscale: {n:'Dragon Scale',  def:18,hp:110,slots:[2,2,1],price:1400,lvl:14,mp:20}};
+// Gear prices climb steeply with level, so top-tier kit is a goal across several circuits.
+for(const T of [WEAPONS,ARMOUR])for(const k in T){const g=T[k];if(g.price>0)g.price=Math.round(g.price*(1+.16*Math.max(0,g.lvl-1))/10)*10;}
 const ITEMS={ // bought at merchants
  potion: {n:'Potion',      price:40, d:'Restores 35% HP. Usable in fights.'},
  ether:  {n:'Ether',       price:60, d:'Restores 50% MP. Usable in fights.'},
@@ -469,6 +472,10 @@ const RDECKS={ // rival decks: theme + how they pick targets
  trapper:  {n:'Trapper',  pers:'Wildcard',   cards:['sticky','sticky','snare','snare','ambush','ambush','ward','ward','haste','haste','slow','slow','barrier','barrier','fate']},
  speedster:{n:'Speedster',pers:'Opportunist',cards:['haste','haste','sprint','sprint','pace','pace','warp','warp','ward','ward','reverse','reverse','surge','barrier','buck']},
  saboteur: {n:'Saboteur', pers:'Vengeful',   cards:['skip','skip','reverse','reverse','slow','slow','curse','curse','sap','sap','pickpocket','pickpocket','ward','ward','buck']}};
+const AGG={calm:{n:'Calm',ico:'🕊️',c:'#8dffb0',hostile:.22,all:.25,trap:.25,buck:.3,d:'Rivals play hostile cards and traps far less often, and pick on each other more than on you. Good for learning the game.'},
+ normal:{n:'Normal',ico:'⚔️',c:'#FFC93D',hostile:.45,all:.5,trap:.5,buck:.6,d:'Rivals play to win, using hostile cards, traps and Pass the Buck.'},
+ ruthless:{n:'Ruthless',ico:'🔥',c:'#FF3D5A',hostile:.65,all:.7,trap:.7,buck:.8,d:'Rivals are relentless and gang up on whoever is leading.'}};
+const AGx=()=>AGG[(G.m&&G.m.agg)||'normal'];
 const PERS={Wildcard:'targets anyone at random',Opportunist:'goes after whoever is leading',Vengeful:'goes after whoever has hurt it most'};
 const copyMax=id=>CARDS[id].r==='L'?1:2;
 const counts=a=>a.reduce((o,k)=>(o[k]=(o[k]||0)+1,o),{});
@@ -555,7 +562,7 @@ function newMatch(def){
   const b=buildBoard(def);if(!b){toast('That board path is not valid');return;}
   if(G.p.deck.length!==DECK){toast(`Your deck needs exactly ${DECK} cards`);openDeck();return;}
   const names=RIVALS.slice().sort(()=>Math.random()-.5),cls=Object.keys(CLASSES).sort(()=>Math.random()-.5);
-  G.m={def,diff:G.p.diff||'normal',round:1,pos:0,dist:0,dmg:0,traps:[],log:[],
+  G.m={def,diff:G.p.diff||'normal',agg:G.p.agg||'normal',round:1,pos:0,dist:0,dmg:0,traps:[],log:[],
     riv:[0,1,2].map(i=>({n:names[i],cls:cls[i],col:RCOL[i],lvl:G.p.lvl,exp:0,hpf:1,pos:0,dist:0,dmg:0,wins:0}))};
   initCards(G.m);
   const st=S();G.p.hp=st.maxhp;G.p.mp=st.maxmp;G.p.limit=0; // fresh at the start of a match only
@@ -698,7 +705,7 @@ async function aiLand(r,k){
   if(f.t==='fight'){
     let tier=f.tier,cursed='';if(ps.curse){tier=TIERUP[tier];ps.curse=false;cursed=' (cursed!)';}
     const T=TIERS[tier],comp=pick(T.comps),bk=ps.hand.find(c=>c.id==='buck');
-    if((tier==='hard'||tier==='boss')&&bk&&ps.plays<PLAYMAX&&Math.random()<.6){
+    if((tier==='hard'||tier==='boss')&&bk&&ps.plays<PLAYMAX&&Math.random()<AGx().buck){
       const tgt=chooseTarget(k,RDECKS[r.arch].pers);
       if(tgt!==null){ps.hand.splice(ps.hand.indexOf(bk),1);if(!bk.t)ps.disc.push(bk);ps.plays++;return await passBuck(k,tgt,comp,T,tile);}
     }
@@ -782,7 +789,9 @@ function fateRoll(ps){ // the D12 with Fate Shift / Safe Passage / Call the Hunt
   ps.fate=0;ps.safe=false;ps.hunt=false;return{n,notes};
 }
 function chooseTarget(k,pers){ // who a rival aims a hostile card at
-  const m=G.m,L=leaderKey(),c=['me',0,1,2].filter(t=>t!==k&&AG(t).ps.wary!==m.round);if(!c.length)return null;
+  const m=G.m,L=leaderKey();let c=['me',0,1,2].filter(t=>t!==k&&AG(t).ps.wary!==m.round);if(!c.length)return null;
+  const ag=m.agg||'normal';if(ag==='calm'&&c.length>1&&c.includes('me')&&Math.random()<.6)c=c.filter(t=>t!=='me');
+  if(ag==='ruthless'&&c.includes(L)&&Math.random()<.5)return L;
   if(pers==='Wildcard')return pick(c);
   if(pers==='Opportunist')return c.includes(L)?L:c.sort((a,b)=>distOf(b)-distOf(a))[0];
   const g=AG(k).ps.grudge;let best=null,bv=-1;for(const t of c){const v=(g[t]||0)+(t===L?1:0)+Math.random()*.6;if(v>bv){bv=v;best=t;}}return best;
@@ -833,9 +842,9 @@ async function aiCards(r,k){ // a rival decides what to play this turn (max 2)
     else if(c.id==='rest')play=r.hpf<.6;else if(c.id==='windfall')play=false;
     else if(C.k==='buff')play=!ps.buf[c.id]&&Math.random()<.5;
     else if(C.k==='def')play=!ps.ward&&!ps.mirror&&Math.random()<.6;
-    else if(C.k==='hostile'){if(m.round>1&&Math.random()<.45){tgt=chooseTarget(k,pers);play=tgt!==null;}}
-    else if(C.k==='hostile-all')play=m.round>3&&Math.random()<.5;
-    else if(C.k==='trap')play=canTrap(r.pos)&&Math.random()<.5;
+    else if(C.k==='hostile'){if(m.round>1&&Math.random()<AGx().hostile){tgt=chooseTarget(k,pers);play=tgt!==null;}}
+    else if(C.k==='hostile-all')play=m.round>3&&Math.random()<AGx().all;
+    else if(C.k==='trap')play=canTrap(r.pos)&&Math.random()<AGx().trap;
     if(play)await playCard(k,c,tgt,ch);
   }
   if(ps.plays===0&&ps.hand.length>=HAND&&!ps.discUsed)discardDraw(ps,pick(ps.hand));
@@ -1231,13 +1240,13 @@ function renderMenu(){
     const buy=(k,price)=>btn(price+' gil','buy',k,p.gil<price);
     h+=`<h3>Your gil: <span class="gilc">${p.gil}</span></h3>`;
     const SK=G.stock||rollStock();G.stock=SK;
-    h+='<div class="row"><small>Stock changes every visit, and better gear turns up as you level.</small></div><h3>Items</h3>'+SK.items.map(k=>`<div class="row"><div class="g">${ITEMS[k].n} <small>You have ${p[k]||0} · ${ITEMS[k].d}</small></div>${buy('item:'+k,ITEMS[k].price)}</div>`).join('');
+    h+='<div class="row"><small>Stock changes every visit. Gear above your level is shown so you know what to aim for, and you can buy it once you reach that level.</small></div><h3>Items</h3>'+SK.items.map(k=>`<div class="row"><div class="g">${ITEMS[k].n} <small>You have ${p[k]||0} · ${ITEMS[k].d}</small></div>${buy('item:'+k,ITEMS[k].price)}</div>`).join('');
     const ps=m.ps,dsz=ps.deck.length+ps.disc.length+ps.hand.length;
     h+=`<h3>Cards - temporary, this circuit only</h3><div class="row"><small>Shuffled into your deck. Your circuit deck has ${dsz} cards: every extra card makes the one you want less likely to turn up.</small></div>`;
     h+=SK.cards.map(id=>`<div class="row"><div class="g"><b style="color:${RAR[CARDS[id].r].c}">${CARDS[id].n}</b> <small>${RAR[CARDS[id].r].n} · ${CARDS[id].d}</small></div>${buy('card:'+id,RAR[CARDS[id].r].price)}</div>`).join('');
     const tl=[...ps.deck.map((c,i)=>({c,w:'deck',i})),...ps.disc.map((c,i)=>({c,w:'disc',i}))].filter(x=>x.c.t);
     if(tl.length)h+='<h3>Trim - remove a temporary card (40 gil)</h3>'+tl.map(x=>`<div class="row"><div class="g">${CARDS[x.c.id].n}<small>in your ${x.w==='deck'?'deck':'discard pile'}</small></div>${btn('40 gil','trim',x.w+':'+x.i,p.gil<40)}</div>`).join('');
-    const sec=(title,list,tbl,kind,name,desc,own)=>{const ids=list.filter(k=>!own.includes(k));return `<h3>${title}</h3>`+(ids.length?ids.map(id=>`<div class="row"><div class="g">${name(id)}<small>${desc(id)}</small></div>${buy(kind+':'+id,tbl[id].price)}</div>`).join(''):'<div class="row"><small>Sold out - check the next merchant.</small></div>');};
+    const sec=(title,list,tbl,kind,name,desc,own)=>{const ids=list.filter(k=>!own.includes(k)),lock=id=>(kind==='weapon'||kind==='armour')&&tbl[id].lvl>p.lvl;return `<h3>${title}</h3>`+(ids.length?ids.map(id=>`<div class="row${lock(id)?' locked':''}"><div class="g">${name(id)}<small>${lock(id)?`<b style="color:#FFC93D">Requires Lv ${tbl[id].lvl}</b> · ${tbl[id].price} gil · `:''}${desc(id)}</small></div>${lock(id)?btn('Lv '+tbl[id].lvl,'buy','',true):buy(kind+':'+id,tbl[id].price)}</div>`).join(''):'<div class="row"><small>Sold out - check the next merchant.</small></div>');};
     h+=sec('Weapons',SK.weapons,WEAPONS,'weapon',wName,wDesc,p.weapons)+sec('Armour',SK.armour,ARMOUR,'armour',id=>ARMOUR[id].n,aDesc,p.armours)+sec('Gems',SK.gems,GEMS,'gem',id=>GEMS[id].n,id=>GEMS[id].d,p.gems)+sec('Accessories',SK.accs,ACC,'acc',id=>ACC[id].n,id=>ACC[id].d,p.accs);
   }else if(T==='forge'){
     const wu=p.up[p.weapon]||0,au=p.up[p.armour]||0,wc=60*(wu+1),ac=60*(au+1);
@@ -1263,7 +1272,7 @@ const ACT={
     if(k==='item'){if(p.gil<ITEMS[id].price)return;p.gil-=ITEMS[id].price;p[id]=(p[id]||0)+1;toast('Bought '+ITEMS[id].n);}
     else if(k==='card'){const pr=RAR[CARDS[id].r].price;if(p.gil<pr)return;p.gil-=pr;const ps=G.m.ps;ps.deck.splice(rnd(0,ps.deck.length),0,{id,t:true});toast(`${CARDS[id].n} shuffled into your deck`);}
     else{const tbl={weapon:WEAPONS,armour:ARMOUR,acc:ACC,gem:GEMS}[k],own={weapon:p.weapons,armour:p.armours,acc:p.accs,gem:p.gems}[k];
-      if(p.gil<tbl[id].price||own.includes(id))return;p.gil-=tbl[id].price;own.push(id);toast('Bought '+(k==='weapon'?wName(id):tbl[id].n));}
+      if(p.gil<tbl[id].price||own.includes(id))return;if((k==='weapon'||k==='armour')&&tbl[id].lvl>p.lvl){toast('Requires Lv '+tbl[id].lvl);return;}p.gil-=tbl[id].price;own.push(id);toast('Bought '+(k==='weapon'?wName(id):tbl[id].n));}
     renderMenu();},
   forge(k){const p=G.p;
     if(k==='bore'){if(p.gil<PRICES.bore||p.bore[p.weapon])return;p.gil-=PRICES.bore;p.bore[p.weapon]=1;}
@@ -1338,6 +1347,7 @@ const ACT={
   board(i){newMatch(BOARDS[+i]);},
   custom(){const v=$('cpath').value.trim(),r=parsePath(v);if(r.error){toast(r.error);return;}newMatch({id:'custom',n:'Custom Board',path:v});},
   diff(k){G.p.diff=k;save();renderTitle();},
+  agg(k){G.p.agg=k;save();const y=document.getElementById('title').scrollTop;renderTitle();document.getElementById('title').scrollTop=y;},
   howto(){card('How to play',`<div class="help">
 <p><b>The goal.</b> A circuit is ${ROUNDS} rounds against three AI rivals. At the end, prizes go to the top three for <b>distance travelled</b> and for <b>damage dealt</b>. Bosses arrive on rounds 10, 20 and 30.</p>
 <p><b>Your turn.</b> Play up to 2 cards from your hand, then roll 2d6 and move. Doubles roll again. Land on a normal tile and the 12-sided Fate Die decides what happens: 1, 4, 8 and 12 are fights (1 easiest, 12 hardest).</p>
@@ -1373,7 +1383,7 @@ function drawReview(){
   $('card').classList.remove('hidden');
 }
 // ---- Main menu: tile grids with gem icons (Tight Lines style), each opening its own sub-menu
-const CHANGES=[['1.4.0','Gauntlet mode: ten duels against hero classes with an objective in each fight. Bank class essences, craft your class signature item'],['1.3.0','Colosseum Cups: tournaments for your real hero between circuits. Spend a ticket (earned by finishing circuits), win round after round, cash out or push on for the cup and its prizes'],['1.2.0','The Colosseum: practice fights against any foe, with the class, level and gear you choose. No rewards, no risk'],['1.1.0','A main menu of gem pads, and the same pads for the in-game menu'],['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
+const CHANGES=[['1.5.0','Rival aggression setting (Calm, Normal, Ruthless). Shops only sell gear up to your level, and top-tier gear costs much more'],['1.4.0','Gauntlet mode: ten duels against hero classes with an objective in each fight. Bank class essences, craft your class signature item'],['1.3.0','Colosseum Cups: tournaments for your real hero between circuits. Spend a ticket (earned by finishing circuits), win round after round, cash out or push on for the cup and its prizes'],['1.2.0','The Colosseum: practice fights against any foe, with the class, level and gear you choose. No rewards, no risk'],['1.1.0','A main menu of gem pads, and the same pads for the in-game menu'],['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
 const menuTile=(act,arg,ico,label,o={})=>`<button class="tile${o.on?' on':''}${o.cls?' '+o.cls:''}" ${act?`data-act="${act}"`:''} ${arg!=null?`data-arg="${arg}"`:''} ${o.attr||''} style="--g:${o.g||'#6FD3FF'}"><span class="ti">${ico}</span><span class="tl">${label}</span>${o.badge!=null?`<span class="tb">${o.badge}</span>`:''}${o.sub?`<small>${o.sub}</small>`:''}</button>`;
 function boardSVG(path){const r=parsePath(path);if(r.error)return '';const xs=r.pts.map(p=>p[0]),ys=r.pts.map(p=>p[1]),mx=Math.min(...xs),my=Math.min(...ys),w=Math.max(...xs)-mx+1,h=Math.max(...ys)-my+1,c=Math.min(46/w,46/h),n=r.pts.length,cols=['#FF3D5A','#3D7BFF','#FFC93D','#22D39A'];
   return `<svg viewBox="0 0 48 48" width="44" height="44">${r.pts.map((p,i)=>`<rect x="${(1+(p[0]-mx)*c+(46-w*c)/2).toFixed(1)}" y="${(1+(p[1]-my)*c+(46-h*c)/2).toFixed(1)}" width="${(c*.82).toFixed(1)}" height="${(c*.82).toFixed(1)}" rx="${(c*.2).toFixed(1)}" fill="${i===0?'#F4F7FF':cols.at(Math.floor(i/(n/4))%4)}"/>`).join('')}</svg>`;}
@@ -1387,7 +1397,7 @@ function renderTitle(){
     if(!G.cup&&!G.gaunt){G.p=s.p;G.m=s.m;}const p=(G.cup||G.gaunt)?G.p:s.p,C=CLASSES[p.cls];
     if(v==='main'){
       h+=`<div class="herocard"><div class="pg" style="--cc:${C.c}"><span>${CLASS_GLYPH[p.cls]}</span></div><div><b>Lv ${p.lvl} ${C.n}</b><small>${p.gil} gil · ${p.golds} podium golds · ${p.crowns} Tyrants slain</small></div></div>`;
-      if(s.m)h+=`<button class="gold big" data-act="cont">Continue<small>Round ${s.m.round} of ${ROUNDS} · ${s.m.def.n} · ${DIFF[s.m.diff||'normal'].n}</small></button>`;
+      if(s.m)h+=`<button class="gold big" data-act="cont">Continue<small>Round ${s.m.round} of ${ROUNDS} · ${s.m.def.n} · ${DIFF[s.m.diff||'normal'].n} · ${AGG[s.m.agg||'normal'].n} rivals</small></button>`;
       h+=`<button class="${s.m?'':'gold '}big" data-act="view" data-arg="circuit">${s.m?'New circuit':'Start a circuit'}<small>${ROUNDS} rounds against three rivals</small></button>`;
       h+=`<button class="big" data-act="view" data-arg="arena">Colosseum<small>Practice fights and cup tournaments</small></button>`;
       h+='<div class="tiles">'+menuTile('view','heroes','🛡️','Heroes',{g:C.c,badge:a.slots.length})+menuTile('deck',null,'🃏','Deck',{g:'#B06BFF',badge:p.deck.length!==DECK?'!':null})+menuTile('howto',null,'❓','How to play',{g:'#1FB5C9'})
@@ -1398,6 +1408,7 @@ function renderTitle(){
       h+=back();if(s.m)h+=`<p class="warn">Starting a new circuit abandons the one in progress (round ${s.m.round} on ${s.m.def.n}).</p>`;
       const cd=p.diff||'normal';
       h+='<h3>Difficulty</h3><div class="tiles">'+[['story','🌙','#8dffb0'],['normal','⚔️','#FFC93D'],['hard','💀','#FF3D5A']].map(([k,ic,g])=>menuTile('diff',k,ic,DIFF[k].n,{g,on:k===cd})).join('')+`</div><p class="note">${DIFF[cd].d}</p>`;
+      const ca=p.agg||'normal';h+='<h3>Rivals</h3><div class="tiles">'+Object.keys(AGG).map(k=>menuTile('agg',k,AGG[k].ico,AGG[k].n,{g:AGG[k].c,on:k===ca})).join('')+`</div><p class="note">${AGG[ca].d}</p>`;
       h+='<h3>Choose a board</h3><div class="tiles two">'+BOARDS.map((b,i)=>{const n=parsePath(b.path).pts.length;return menuTile('board',i,boardSVG(b.path),b.n,{g:'#6FD3FF',sub:`${n} tiles${n>=48?' · long':''}`,cls:'brd'});}).join('')
         +menuTile('view','custom','✏️','Custom board',{g:'#B06BFF',sub:'Draw your own path',cls:'brd'})+'</div>';
     }else if(v==='custom'){

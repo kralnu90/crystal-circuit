@@ -24,6 +24,12 @@ Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.
 
 ## Changelog
 
+### 1.5.0 · 17 November 2026
+- **Rival aggression setting.** Choose Calm, Normal or Ruthless rivals when you start a circuit. Calm rivals play hostile cards and traps far less and pick on each other more than on you; Ruthless rivals gang up on the leader.
+- **Gear to aim for.** Merchants only sell weapons and armour up to your level. Higher-level gear still shows in stock, marked with the level you need, so you can see what's coming.
+- **Steeper prices at the top.** Early gear costs about the same, but top-tier kit now costs far more (Crystal around 2,000 gil, Dragonbone and Dragon Scale over 4,000), so it's a goal across several circuits.
+- Fixed the update notice repeating after updating.
+
 ### 1.4.0 · 17 November 2026
 - **Gauntlet mode.** Ten duels in the Colosseum against heroes of the other classes, who guard, dodge, close the gap and use their class skills. The last two fights are two against one. Costs 1 ticket; unlocks after a Silver Cup win.
 - **Objectives.** Every Gauntlet fight has a random objective (first strike, no damage, stagger, Limit finish, no items, under 45 seconds, skill x3, weakness x3, guard x3). Complete it and win to bank that class's essence.
