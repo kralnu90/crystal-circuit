@@ -11,7 +11,7 @@ A board game and an action RPG in one, from Kralnu Games. Race three AI rivals r
 - **Six classes.** Warrior, Monk, Mage, Ranger, Lancer and Guardian, each with its own attack and skill. Make as many heroes as you like.
 - **Three rivals with their own decks.** Everyone holds a hand of five cards and can play two a turn: hostile cards, hidden traps, Ward and Mirror to defend, and Pass the Buck to hand someone else your fight. Rivals hold grudges against whoever hurts them.
 - **Something to aim for.** Bosses on rounds 10, 20 and 30, and prizes for the top three in distance travelled and in damage dealt.
-- **The Colosseum.** Practice any fight with any class, level and gear. No rewards, no risk.
+- **The Colosseum.** Practice any fight with any class, level and gear, or take your hero into cup tournaments between circuits for cards, gems and gil.
 - **Gear that matters.** Weapons and armour with traits and linked gem sockets, merchants whose stock changes every visit, and a 15-card deck you build from cards you win.
 
 Works offline once installed. Saves stay on your device.
@@ -23,6 +23,13 @@ This is an early build. Things will change, and saves may reset between versions
 Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.
 
 ## Changelog
+
+### 1.3.0 · 17 November 2026
+- **Colosseum Cups.** Tournaments for your real hero, fought between circuits. Spend a ticket and pay the entry fee, then win round after round. After each win, take the purse and leave or push on. Lose and you keep half; win the final for the cup prize.
+- **Three cups:** Bronze (5 rounds, Warden final), Silver (6 rounds, Gatekeeper final, Lv 5 or a Bronze win) and Crystal (7 rounds, Crystal Tyrant final, Lv 10 or a Silver win; costs two tickets).
+- **Tickets:** earn one for every circuit you finish and another for topping a podium. Hold up to three.
+- **Balanced against the board:** HP carries between rounds, used potions are gone, purses pay at most normal fight gil, EXP is capped, and cups are locked while a circuit is in progress.
+- Prizes go straight to your hero: gil, EXP, new cards for your deck, gems and rare finds.
 
 ### 1.2.0 · 17 November 2026
 - **The Colosseum.** Practice fights from the main menu. Pick any class, your level (1 to 40), any weapon and armour, the gems in every socket, a forge level and how many potions and ethers to bring.

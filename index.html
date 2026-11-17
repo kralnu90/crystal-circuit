@@ -65,6 +65,8 @@ button.sm{padding:6px 10px;font-size:13px}
 #tbox .socks{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}#tbox .sg{display:flex;gap:4px;align-items:center;padding:4px;border-radius:10px;border:1px dashed rgba(255,255,255,.25);flex:1 1 140px}
 #tbox .sg.link{border:1px solid #6FD3FF;box-shadow:0 0 8px rgba(111,211,255,.35)}#tbox .sg select{appearance:none;-webkit-appearance:none;text-align:center;text-align-last:center;padding:7px 2px;font-size:12px;min-width:0;flex:1}#tbox .sg i{font-style:normal;color:#6FD3FF}
 #tbox .ares{padding:10px 12px;border-radius:12px;margin:8px 0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2)}#tbox .ares.w{border-color:#22D39A}#tbox .ares.l{border-color:#FF3D5A}
+#tbox .cupdots{display:flex;gap:6px;justify-content:center;margin:8px 0}#tbox .cupdots i{font-style:normal;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 13px Cinzel,Georgia,serif;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.05)}
+#tbox .cupdots i.d{background:#22D39A;color:#04140c;border-color:#22D39A}#tbox .cupdots i.n{border:2px solid #FFC93D;box-shadow:0 0 10px #FFC93D88}#tbox .cupdots i.f{color:#FFC93D}
 #tbox h3{font-family:Cinzel,Georgia,serif;margin:6px 0 2px;font-size:13px;text-transform:uppercase;letter-spacing:1px;opacity:.8}
 #tbox p{margin:0;font-size:13px;line-height:1.4;opacity:.9}
 #tbox textarea,#cardIn input,#cardIn textarea{font:inherit;width:100%;padding:8px;border-radius:8px;border:1.5px solid #cdd6ff;background:#060a2a;color:#fff;-webkit-user-select:text;user-select:text;margin:4px 0}
@@ -264,7 +266,7 @@ const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const rf=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const GAME_VERSION='1.2.0';
+const GAME_VERSION='1.3.0';
 // Design tokens from the visual overhaul spec.
 const THEME = {
   void: { abyss: '#05061A', night: '#120E3A', violet: '#6B2FD6', teal: '#1FB5C9' },
@@ -515,7 +517,7 @@ function loadAll(){
   a.slots=(a.slots||[]).filter(x=>x&&x.p&&x.p.cls);a.slots.forEach(x=>migrate(x.p));if(!(a.cur<a.slots.length))a.cur=0;return a;
 }
 function storeAll(a){try{localStorage.setItem(HSAVE,JSON.stringify(a));}catch(e){}}
-function save(){if(!G.p||G.arena)return;const a=loadAll();if(G.slot==null||G.slot>a.slots.length)G.slot=a.slots.length;a.slots[G.slot]={p:G.p,m:G.m};a.cur=G.slot;storeAll(a);}
+function save(){if(!G.p||G.arena===true)return;const a=loadAll();if(G.slot==null||G.slot>a.slots.length)G.slot=a.slots.length;a.slots[G.slot]={p:G.p,m:G.m};a.cur=G.slot;storeAll(a);}
 function load(){const a=loadAll(),s=a.slots[a.cur];G.slot=s?a.cur:null;return s||null;}
 
 /* ---------------- 3. BOARD & MATCH FLOW ---------------- */
@@ -609,8 +611,8 @@ async function finishMatch(){
   const pod=(list,unit)=>'<div class="pod">'+list.map((e,i)=>{let pr='-';if(i<3){const g=Math.round(PRIZE[i]*k/10)*10;pr=g+' gil'+(i===0?' + treasure':'');if(e.me){gil+=g;if(i===0){extra.push(giveRare(),giveCard(true));p.golds++;}else if(Math.random()<.5)extra.push(giveCard(false));}}
     return `<div class="${e.me?'me':''}"><span>${i+1}. ${e.n} <small>(${fmt(e.v)} ${unit})</small></span><span>${pr}</span></div>`;}).join('')+'</div>';
   const h=`<p><b>Race</b> - furthest travelled</p>${pod(race,'tiles')}<p><b>Might</b> - most damage dealt</p>${pod(dmg,'dmg')}`;
-  p.gil+=gil;p.matches++;
-  await card('The Circuit Ends',h+`<p>Your winnings: <b class="gilc">${gil} gil</b>${extra.length?' + '+extra.join(', '):''}</p>`,[['Continue','ok','gold']]);
+  p.gil+=gil;p.matches++;const tx0=p.tix==null?1:p.tix,earn=1+(race[0].me||dmg[0].me?1:0);p.tix=Math.min(TIXMAX,tx0+earn);const txg=p.tix-tx0;
+  await card('The Circuit Ends',h+`<p>Your winnings: <b class="gilc">${gil} gil</b>${extra.length?' + '+extra.join(', '):''}</p>${txg?`<p>🎟️ +${txg} Colosseum ticket${txg>1?'s':''} (${p.tix}/${TIXMAX})</p>`:`<p>🎟️ Colosseum tickets full (${TIXMAX}/${TIXMAX})</p>`}`,[['Continue','ok','gold']]);
   if(race[0].me||dmg[0].me){ // Triple Triad nod: beat them and take one of their cards
     const offer=shuffle([...new Set(G.m.riv.flatMap(r=>RDECKS[r.arch].cards))]).slice(0,3);
     const c=await card('Claim a Rival Card',`<p>You topped a podium. Take one card from your rivals' decks for your collection.</p>`,offer.map(id=>[`${CARDS[id].n} (${RAR[CARDS[id].r].n})`,id]));
@@ -1227,7 +1229,20 @@ const ACT={
   arenaFight(){const a=G.ac,f=FOES[a.foe];G.arena=true;G.p=arenaHero();G.m=null;const st=S();G.p.hp=st.maxhp;G.p.mp=st.maxmp;
     const comp=f.comp||pick(TIERS[f.tier].comps),biome=a.biome==='any'?pick(BIOMES):BIOMES.find(b=>b.id===a.biome);
     $('top').classList.add('arena');battle({n:'Colosseum: '+f.n,comp,off:a.elvl-a.lvl},{biome},{});$('bYield').classList.remove('hidden');},
-  yieldFight(){if(B&&!B.over&&G.arena)endBattle(false);},
+  aTab(t){G.aTab=t;ACT.view('arena');},
+  cupLocked(k){const c=CUPS[k];toast(`Reach Lv ${c.lvl} or win the ${CUPS[c.need].n} to enter`);},
+  async cupPick(k){const c=CUPS[k],p=G.p;if(G.m){toast('Finish your circuit before entering a cup');return;}
+    const r=await card(`${c.ico} ${c.n}`,`<p>${c.rounds.length} rounds, ending with <b>${FOES[c.rounds[c.rounds.length-1][0]].n}</b>. Foes are your level ${c.rounds[0][1]<0?'minus 1':''} up to <b>+${Math.max(...c.rounds.map(x=>x[1]))}</b>.</p><p>Entry: ${c.tix} 🎟️ ticket${c.tix>1?'s':''} (you have ${tixOf(p)}) and <b class="gilc">${c.fee} gil</b> (you have ${p.gil}).<br>Between rounds you heal ${Math.round(c.heal*100)}% HP and MP.<br>Purse: ${Math.round(c.pay*100)}% of normal fight rewards. Lose and you keep half.<br>EXP is capped at ${Math.round(c.xcap*100)}% of a level (${Math.round(need(p.lvl)*c.xcap)} EXP).<br>Cup prize: ${c.prize}.</p>`,tixOf(p)<c.tix?[['Not enough tickets','no']]:p.gil>=c.fee?[['Enter','go','gold'],['Not yet','no']]:[['Not enough gil','no']]);
+    if(r!=='go')return;p.tix=tixOf(p)-c.tix;p.gil-=c.fee;const st=S();
+    G.cup={id:k,round:0,gil:0,exp:0,xmax:Math.round(need(p.lvl)*c.xcap),m:G.m,keep:{hp:p.hp,mp:p.mp,limit:p.limit,maxhp:st.maxhp}};
+    p.hp=st.maxhp;p.mp=st.maxmp;p.limit=0;G.m=null;G.arena='cup';
+    const a=loadAll();a.slots[G.slot].p=JSON.parse(JSON.stringify(p));a.slots[G.slot].p.hp=G.cup.keep.hp;a.slots[G.slot].p.mp=G.cup.keep.mp;a.slots[G.slot].p.limit=G.cup.keep.limit;storeAll(a); // the fee is paid even if you close the game
+    G.view='cup';renderTitle();document.getElementById('title').scrollTop=0;},
+  cupItem(k){useItem(k);renderTitle();},
+  cupNext(){const C=G.cup,c=CUPS[C.id],[fk,off]=c.rounds[C.round],f=FOES[fk];
+    $('top').classList.add('arena');battle({n:`${c.n} · Round ${C.round+1}: ${f.n}`,comp:f.comp||pick(TIERS[f.tier].comps),off},{biome:pick(BIOMES)},{});$('bYield').classList.remove('hidden');},
+  async cupCash(){const C=G.cup;if(!C)return;if(C.round===0){const r=await card('Walk away?','<p>You lose the entry fee.</p>',[['Walk away','go'],['Stay','no']]);if(r!=='go')return;}cupEnd('cash');},
+  yieldFight(){if(B&&!B.over&&G.arena){if(G.arena==='cup'){card('Give up?','<p>Leaving counts as a defeat: you keep half the purse.</p>',[['Give up','go'],['Keep fighting','no']]).then(r=>{if(r==='go'&&B&&!B.over)endBattle(false);});return;}endBattle(false);}},
   view(v){G.view=v;G.picking=false;renderTitle();document.getElementById('title').scrollTop=0;},
   setTog(k){if(k==='sound')SET.sound=!SET.sound;else if(k==='shake')SET.shake=!SET.shake;else SET.speed=SET.speed==='fast'?'normal':'fast';applySet();if(!$('menu').classList.contains('hidden'))renderMenu();else renderTitle();},
   cancelpick(){G.picking=false;G.view='heroes';renderTitle();},
@@ -1271,23 +1286,23 @@ function drawReview(){
   $('card').classList.remove('hidden');
 }
 // ---- Main menu: tile grids with gem icons (Tight Lines style), each opening its own sub-menu
-const CHANGES=[['1.2.0','The Colosseum: practice fights against any foe, with the class, level and gear you choose. No rewards, no risk'],['1.1.0','A main menu of gem pads, and the same pads for the in-game menu'],['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
+const CHANGES=[['1.3.0','Colosseum Cups: tournaments for your real hero between circuits. Spend a ticket (earned by finishing circuits), win round after round, cash out or push on for the cup and its prizes'],['1.2.0','The Colosseum: practice fights against any foe, with the class, level and gear you choose. No rewards, no risk'],['1.1.0','A main menu of gem pads, and the same pads for the in-game menu'],['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
 const menuTile=(act,arg,ico,label,o={})=>`<button class="tile${o.on?' on':''}${o.cls?' '+o.cls:''}" ${act?`data-act="${act}"`:''} ${arg!=null?`data-arg="${arg}"`:''} ${o.attr||''} style="--g:${o.g||'#6FD3FF'}"><span class="ti">${ico}</span><span class="tl">${label}</span>${o.badge!=null?`<span class="tb">${o.badge}</span>`:''}${o.sub?`<small>${o.sub}</small>`:''}</button>`;
 function boardSVG(path){const r=parsePath(path);if(r.error)return '';const xs=r.pts.map(p=>p[0]),ys=r.pts.map(p=>p[1]),mx=Math.min(...xs),my=Math.min(...ys),w=Math.max(...xs)-mx+1,h=Math.max(...ys)-my+1,c=Math.min(46/w,46/h),n=r.pts.length,cols=['#FF3D5A','#3D7BFF','#FFC93D','#22D39A'];
   return `<svg viewBox="0 0 48 48" width="44" height="44">${r.pts.map((p,i)=>`<rect x="${(1+(p[0]-mx)*c+(46-w*c)/2).toFixed(1)}" y="${(1+(p[1]-my)*c+(46-h*c)/2).toFixed(1)}" width="${(c*.82).toFixed(1)}" height="${(c*.82).toFixed(1)}" rx="${(c*.2).toFixed(1)}" fill="${i===0?'#F4F7FF':cols.at(Math.floor(i/(n/4))%4)}"/>`).join('')}</svg>`;}
 function renderTitle(){
-  const a=loadAll(),s=a.slots[a.cur]||null,v=G.view||'main';let h='';G.slot=s?a.cur:null;
+  const a=loadAll(),s=a.slots[a.cur]||null;let v=G.view||'main';if(G.cup)v=G.view='cup';let h='';G.slot=s?a.cur:null;
   const back=(to,label)=>`<button class="sm back" data-act="view" data-arg="${to||'main'}">← ${label||'Main menu'}</button>`;
   if(!s||G.picking){ // pick a class
     if(s)h+=back('heroes','Your heroes');
     h+=`<h3>${s?'Choose a class for your new hero':'Choose your class'}</h3><p>Each hero keeps their own level, gear and deck, so you can try them all.</p><div class="tiles two">`+Object.keys(CLASSES).map(k=>{const C=CLASSES[k];return menuTile('cls',k,CLASS_GLYPH[k],C.n,{g:C.c,sub:C.d,cls:'wide'});}).join('')+'</div>';
   }else{
-    G.p=s.p;G.m=s.m;const C=CLASSES[s.p.cls],p=s.p;
+    if(!G.cup){G.p=s.p;G.m=s.m;}const p=G.cup?G.p:s.p,C=CLASSES[p.cls];
     if(v==='main'){
       h+=`<div class="herocard"><div class="pg" style="--cc:${C.c}"><span>${CLASS_GLYPH[p.cls]}</span></div><div><b>Lv ${p.lvl} ${C.n}</b><small>${p.gil} gil · ${p.golds} podium golds · ${p.crowns} Tyrants slain</small></div></div>`;
       if(s.m)h+=`<button class="gold big" data-act="cont">Continue<small>Round ${s.m.round} of ${ROUNDS} · ${s.m.def.n} · ${DIFF[s.m.diff||'normal'].n}</small></button>`;
       h+=`<button class="${s.m?'':'gold '}big" data-act="view" data-arg="circuit">${s.m?'New circuit':'Start a circuit'}<small>${ROUNDS} rounds against three rivals</small></button>`;
-      h+=`<button class="big" data-act="view" data-arg="arena">Colosseum<small>Practice fights · pick your foe, level and gear</small></button>`;
+      h+=`<button class="big" data-act="view" data-arg="arena">Colosseum<small>Practice fights and cup tournaments</small></button>`;
       h+='<div class="tiles">'+menuTile('view','heroes','🛡️','Heroes',{g:C.c,badge:a.slots.length})+menuTile('deck',null,'🃏','Deck',{g:'#B06BFF',badge:p.deck.length!==DECK?'!':null})+menuTile('howto',null,'❓','How to play',{g:'#1FB5C9'})
         +menuTile('view','settings','⚙️','Settings',{g:'#CFD6FF'})+menuTile('view','news',"📰","What's new",{g:'#FFC93D'})+menuTile('review',null,'⭐','Review',{g:'#FFC93D'})
         +menuTile('',null,'🔄','Get the latest',{g:'#22D39A',attr:'data-get-latest type="button"'})+menuTile('',null,'📲','Install',{g:'#3D7BFF',attr:'data-install type="button"'})
@@ -1306,7 +1321,8 @@ function renderTitle(){
         +`<div class="tiles" style="margin-top:12px">${menuTile('deck',null,'🃏','Deck editor',{g:'#B06BFF',sub:`${p.deck.length}/${DECK}`})}${menuTile('retire',null,'🕯️','Retire hero',{g:'#FF3D5A',sub:`Lv ${p.lvl} ${C.n}`})}</div>`;
     }else if(v==='settings'){
       h+=back()+'<h3>Settings</h3><div class="tiles">'+menuTile('setTog','sound',SET.sound?'🔊':'🔇','Sound',{g:'#1FB5C9',on:SET.sound,sub:SET.sound?'On':'Off'})+menuTile('setTog','shake','📳','Screen shake',{g:'#FF8A5C',on:SET.shake,sub:SET.shake?'On':'Off'})+menuTile('setTog','speed','⏩','Board speed',{g:'#22D39A',on:SET.speed==='fast',sub:SET.speed==='fast'?'Fast':'Normal'})+'</div>';
-    }else if(v==='arena'){h+=back()+arenaHTML(p);
+    }else if(v==='arena'){h+=back()+`<div class="tiles two">${menuTile('aTab','practice','🎯','Practice',{g:'#6FD3FF',on:G.aTab!=='cups',sub:'Any build, no rewards'})}${menuTile('aTab','cups','🏆','Cups',{g:'#FFC93D',on:G.aTab==='cups',sub:'Your hero, real prizes'})}</div>`+(G.aTab==='cups'?cupsHTML(p):arenaHTML(p));
+    }else if(v==='cup'){h+=cupRoundHTML(p);
     }else if(v==='news'){
       h+=back()+"<h3>What's new</h3>"+CHANGES.map(([vv,t])=>`<div class="news"><b>v${vv}</b><span>${t}</span></div>`).join('');
     }
@@ -1335,7 +1351,7 @@ FOES.gauntlet={n:'Brute pack',g:'Duels',ico:'🐗',c:'#d98a59',comp:['brute','br
 const ASAVE='crystal-circuit-arena';
 function arenaBest(){try{return JSON.parse(localStorage.getItem(ASAVE))||{};}catch(e){return{};}}
 function arenaCfg(p){if(!G.ac){const lv=p?p.lvl:5;G.ac={cls:p?p.cls:'warrior',lvl:lv,elvl:lv,weapon:'iron',armour:'leather',up:0,ws:['fire','elemental','cure'],as:['blizzard','elemental','vigor'],pot:2,eth:1,hipot:0,foe:'normal',biome:'any',diff:(p&&p.diff)||'normal'};}return G.ac;}
-function arenaHTML(p){const a=arenaCfg(p),C=CLASSES[a.cls];let h='<h3>Colosseum</h3><p class="note">Practice fights. Pick a class, level and gear, then choose a foe. Nothing you do here touches your heroes, and there are no rewards.</p>';
+function arenaHTML(p){const a=arenaCfg(p),C=CLASSES[a.cls];let h='<p class="note">Practice fights. Pick a class, level and gear, then choose a foe. Nothing you do here touches your heroes, and there are no rewards.</p>';
   if(G.arenaLast){const r=G.arenaLast;h+=`<div class="ares ${r.win?'w':'l'}"><b>${r.win?'Victory':'Defeated'}</b> vs ${r.n}<br><small>${r.time} · ${r.dmg} damage dealt · ${r.taken} taken${r.best?' · new best time!':''}</small></div>`;}
   h+=`<button class="gold big" data-act="arenaFight">Fight!<small>Lv ${a.lvl} ${C.n} vs Lv ${a.elvl} ${FOES[a.foe].n}</small></button>`;
   const step=(k,label,val,sub)=>`<div class="ac-row"><div><b>${label}</b>${sub?`<small>${sub}</small>`:''}</div><div class="step"><button class="sm" data-act="ac" data-arg="${k}:-1">−</button><span>${val}</span><button class="sm" data-act="ac" data-arg="${k}:+1">+</button></div></div>`;
@@ -1355,10 +1371,60 @@ const fmtT=t=>{const m=Math.floor(t/60),x=Math.floor(t%60);return m+':'+String(x
 function arenaHero(){const a=G.ac,p=newPlayer(a.cls);Object.assign(p,{lvl:a.lvl,exp:0,gil:0,limit:0,weapon:a.weapon,armour:a.armour,weapons:[a.weapon],armours:[a.armour],potion:a.pot,ether:a.eth,hipot:a.hipot,elixir:0,diff:a.diff,tips:1});
   p.up={[a.weapon]:a.up,[a.armour]:a.up};const ns=WEAPONS[a.weapon].slots.reduce((x,y)=>x+y,0),na=ARMOUR[a.armour].slots.reduce((x,y)=>x+y,0);
   p.ws=Array.from({length:ns},(_,i)=>a.ws[i]||null);p.as=Array.from({length:na},(_,i)=>a.as[i]||null);p.gems=[...new Set(p.ws.concat(p.as).filter(Boolean))];return p;}
-function arenaDone(b,win){G.arena=false;$('bYield').classList.add('hidden');$('top').classList.remove('arena');
+function arenaDone(b,win){if(G.arena==='cup'){cupFought(b,win);return;}G.arena=false;$('bYield').classList.add('hidden');$('top').classList.remove('arena');
   const k=G.ac.foe,best=arenaBest(),t=b.t;let nb=false;if(win&&(!best[k]||t<best[k])){best[k]=t;nb=!!1;try{localStorage.setItem(ASAVE,JSON.stringify(best));}catch(e){}}
   G.arenaLast={win,n:FOES[k].n,time:fmtT(t),dmg:Math.round(b.en.reduce((s,e)=>s+(e.maxhp-Math.max(0,e.hp)),0)),taken:Math.round(b.taken||0),best:nb&&win};
   G.retView='arena';setScene('title');document.getElementById('title').scrollTop=0;}
+
+/* ---------------- COLOSSEUM CUPS (your real hero, real rewards) ---------------- */
+// rounds: [foe key in FOES, enemy level offset]. HP and MP carry between rounds (small heal), items used are gone for good.
+const TIXMAX=3;
+const CUPS={
+ bronze: {n:'Bronze Cup', ico:'🥉',c:'#d9925a',fee:60, tix:1,lvl:1, need:null,    pay:.75,xcap:.5,heal:.3,
+   rounds:[['easy',-1],['normal',0],['normal',0],['hard',0],['warden',1]],prize:'A card, a new gem and 100 gil'},
+ silver: {n:'Silver Cup', ico:'🥈',c:'#cfd6ff',fee:180,tix:1,lvl:5, need:'bronze',pay:.85,xcap:.8,heal:.25,
+   rounds:[['normal',0],['hard',0],['hard',1],['deadly',1],['hard',2],['gatekeeper',2]],prize:'A card (better odds of a rare), a rare find and 250 gil'},
+ crystal:{n:'Crystal Cup',ico:'💎',c:'#6FD3FF',fee:450,tix:2,lvl:10,need:'silver',pay:1,xcap:1.2,heal:.2,
+   rounds:[['hard',1],['deadly',1],['hard',2],['deadly',2],['hexarch',2],['deadly',3],['tyrant',3]],prize:'Two cards (better odds of a rare), a rare find and 500 gil'}};
+const CUPGIL={bronze:100,silver:250,crystal:500};
+const tixOf=p=>p.tix==null?1:p.tix;
+function cupOpen(p,k){const c=CUPS[k];return p.lvl>=c.lvl||(c.need&&(p.cups||{})[c.need]);}
+function cupsHTML(p){let h=`<p class="note">Take your real hero through a run of fights. Spend a 🎟️ ticket and pay the entry fee, then after each win choose: take the purse and leave, or push on. Lose and you keep only half the purse. Win the final for the cup prize. HP carries between rounds, and any potions you use are gone for good.</p><p class="note">🎟️ You earn a ticket for every circuit you finish, and a second one for topping a podium. You can hold ${TIXMAX}. Cups are fought between circuits, so your winnings go into the next one.</p>`;
+  if(G.m)h+=`<p class="warn">You have a circuit in progress (round ${G.m.round} on ${G.m.def.n}). Finish it, or start a new one, before entering a cup.</p>`;
+  if(G.cupLast){const r=G.cupLast;h+=`<div class="ares ${r.win?'w':'l'}"><b>${r.title}</b><br><small>${r.lines.join(' · ')}</small></div>`;}
+  h+=`<div class="ac-row"><div><b>Lv ${p.lvl} ${CLASSES[p.cls].n}</b><small>🎟️ ${tixOf(p)}/${TIXMAX} tickets · ${p.gil} gil · ${p.potion} Potions · ${p.ether} Ethers${p.hipot?` · ${p.hipot} Hi-Potions`:''}</small></div></div>`;
+  h+='<div class="tiles two">'+Object.keys(CUPS).map(k=>{const c=CUPS[k],open=cupOpen(p,k),won=(p.cups||{})[k]||0;
+    return menuTile(open?'cupPick':'cupLocked',k,c.ico,c.n,{g:c.c,cls:'wide',badge:won?'×'+won:null,sub:open?`${c.rounds.length} rounds · ${'🎟️'.repeat(c.tix)} + ${c.fee} gil`:`Reach Lv ${c.lvl} or win the ${CUPS[c.need].n}`});}).join('')+'</div>';
+  return h;}
+function cupFoe(k,lvl){const f=FOES[k];return{n:f.n,comp:f.comp||pick(TIERS[f.tier].comps),lvl:Math.max(1,lvl)};}
+function cupRoundHTML(p){const C=G.cup,c=CUPS[C.id],st=S(),n=c.rounds.length,nx=c.rounds[C.round];
+  let h=`<h3>${c.ico} ${c.n}</h3><div class="cupdots">${c.rounds.map((r,i)=>`<i class="${i<C.round?'d':i===C.round?'n':''}${i===n-1?' f':''}">${i===n-1?'★':i+1}</i>`).join('')}</div>`;
+  h+=`<div class="ac-row"><div><b>HP ${Math.ceil(p.hp)} / ${st.maxhp}</b><small>MP ${Math.floor(p.mp)} / ${st.maxmp} · Limit ${Math.round(p.limit)}%</small></div><div><b class="gilc">${C.gil} gil</b><small>${C.exp}${C.exp>=C.xmax?' (max)':''} EXP in the purse</small></div></div>`;
+  h+=`<div class="tiles">${menuTile('cupItem','potion','🧪','Potion',{g:'#22D39A',sub:'x'+p.potion})}${menuTile('cupItem','hipot','⚗️','Hi-Potion',{g:'#22D39A',sub:'x'+(p.hipot||0)})}${menuTile('cupItem','ether','🔷','Ether',{g:'#3D7BFF',sub:'x'+p.ether})}</div>`;
+  h+=`<button class="gold big" data-act="cupNext">${C.round===n-1?'Fight the final':'Next fight'}<small>Round ${C.round+1}: ${FOES[nx[0]].n} · Lv ${Math.max(1,p.lvl+nx[1])}</small></button>`;
+  if(C.round>0)h+=`<button class="big" data-act="cupCash">Take the purse and leave<small>${C.gil} gil and ${C.exp} EXP</small></button>`;
+  else h+=`<button class="big" data-act="cupCash">Walk away<small>The ${c.fee} gil entry fee is not refunded</small></button>`;
+  return h;}
+function cupFought(b,win){const C=G.cup,c=CUPS[C.id],p=G.p,st=S();$('bYield').classList.add('hidden');$('top').classList.remove('arena');
+  if(win){let exp=0,gil=0;b.en.forEach(e=>{exp+=Math.round(e.b.exp*(1+.3*(e.lvl-1)));gil+=Math.round(e.b.gil*(1+.12*(e.lvl-1)));});
+    C.exp=Math.min(C.xmax,C.exp+Math.round(exp*c.pay*.4*DF().rw));C.gil+=Math.round(gil*c.pay*DF().rw);C.round++;
+    if(C.round>=c.rounds.length){cupEnd('won');return;}
+    p.hp=Math.min(st.maxhp,p.hp+st.maxhp*c.heal);p.mp=Math.min(st.maxmp,p.mp+st.maxmp*c.heal);
+    G.arena='cup';G.retView='cup';setScene('title');toast(`Round ${C.round} won! +${Math.round(c.heal*100)}% HP and MP`);}
+  else cupEnd('lost');}
+function cupEnd(how){const C=G.cup,c=CUPS[C.id],p=G.p;let gil=C.gil,exp=C.exp;const lines=[];
+  if(how==='lost'){gil=Math.floor(gil/2);exp=Math.floor(exp/2);}
+  const pre=p.lvl;p.gil+=gil;const ups=gainExp(exp);
+  if(gil||exp)lines.push(`+${gil} gil`,`+${exp} EXP`);
+  if(how==='won'){p.cups=p.cups||{};p.cups[C.id]=(p.cups[C.id]||0)+1;p.gil+=CUPGIL[C.id];lines.push(`+${CUPGIL[C.id]} gil prize`);
+    const rich=C.id!=='bronze';lines.push('New '+giveCard(rich));if(C.id==='crystal')lines.push('New '+giveCard(true));
+    lines.push(C.id==='bronze'?(giveGem()||giveRare()):giveRare());}
+  if(ups)lines.push(`Level up! Lv ${pre} → ${p.lvl}`);
+  // put the hero back as they were before the cup (no free heal mid-circuit), keeping any level-up gains
+  const st=S(),k=C.keep;p.hp=clamp(k.hp+(ups?st.maxhp-k.maxhp:0),1,st.maxhp);p.mp=clamp(k.mp,0,st.maxmp);p.limit=k.limit;
+  G.cupLast={win:how==='won',title:how==='won'?`${c.ico} ${c.n} champion!`:how==='lost'?`Knocked out in round ${C.round+1} of the ${c.n}`:`Left the ${c.n} after ${C.round} round${C.round===1?'':'s'}`,lines:lines.length?lines:['No winnings']};
+  G.m=C.m;G.arena=false;G.cup=null;save();G.aTab='cups';G.retView='arena';setScene('title');document.getElementById('title').scrollTop=0;
+  if(how==='won')SFX.win();}
 
 /* input wiring */
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t&&!t.disabled&&ACT[t.dataset.act])ACT[t.dataset.act](t.dataset.arg);});
