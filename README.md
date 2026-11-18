@@ -6,6 +6,7 @@ A board game and an action RPG in one, from Kralnu Games. Race three AI rivals r
 
 ## [▶ Play the work in progress](https://kralnugames.com/crystal-circuit/)
 
+- **Story mode.** The Prologue, *Felix's Journal*: eight short chapters set in the world of Aldmere that teach the game one system at a time. You enter Varek Voss's Emberglass Circuit in place of your sick older brother, guided by his journal.
 - **Two fronts.** Roll 2d6 to move round the board (doubles roll again). Land on a tile and a 12-sided Fate Die decides what happens: a 1, 4, 8 or 12 is a fight, from easy to deadly.
 - **Real-time fights.** Move, attack, guard, dodge, use your class skill and cast spells on the move. Tap Guard just before a hit for a perfect guard. Hit weaknesses to stagger enemies.
 - **Six classes.** Warrior, Monk, Mage, Ranger, Lancer and Guardian, each with its own attack and skill. Make as many heroes as you like.
@@ -23,6 +24,14 @@ This is an early build. Things will change, and saves may reset between versions
 Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.
 
 ## Changelog
+
+### 1.7.0 · 18 November 2026
+- **Story mode: the Prologue, Felix's Journal.** A new Story button on the main menu. Eight short chapters, each opening with a page from Felix Galloway's journal and teaching one part of the game: moving and doubles, the Fate Die, fighting, guarding and dodging, magic, gem links, cards and rivals, and the Colosseum.
+- New story foes: the **Lock Warden** (slow, honest wind-ups, and it counters button-mashers) and **Mire Shells** (shrug off steel, weak to your spells).
+- **Sable Rook**, Felix's old training partner, is your first rival in the Emberford Qualifier.
+- Progress and rewards are per hero. Rewards are modest and paid once per chapter. You can replay any chapter, reread the journal, or skip the prologue and still collect the starter rewards.
+- A circuit you already have in progress is kept safe while you play a chapter.
+- New heroes start on the Story screen.
 
 ### 1.6.0 · 17 November 2026
 - **Pixel-art heroes.** All six classes now have proper sprites in battle, with idle, walking (front, back and side), attacks, hurt and skill animations. Gauntlet opponents use them too, so you can tell a Lancer from a Monk at a glance.

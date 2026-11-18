@@ -17,6 +17,7 @@ Single-file game: everything lives in `index.html` (plain JS + canvas, no build 
 5. **BATTLE** – real-time arena: `startBattle`, `hitEnemy`, `hurtPlayer`, enemy AI in `upEnemies`.
 6. **MENUS / SHOP / FORGE** – `renderMenu`, `rollStock`, `ACT` (all button actions), `renderTitle`.
 7. **RENDER & LOOP**.
+8. **STORY MODE** (just before the input wiring) – `STORY` holds the eight Prologue chapters: journal text, board path, goal, fate overrides (`fmap`), enemy groups (`comps`), scripted fights (`script`). Chapters reuse the normal match engine; `G.m.story` marks a story match, `r.out` hides unused rivals, `RND(m)` gives the chapter's round count. Chapter 8 (`hallStart`/`storyBout`) runs Colosseum-style with `G.arena='story'`. Hero progress: `p.story` (chapters done) and `p.storyR` (chapters rewarded). A circuit in progress is parked in `G.m.story.keep` and restored at the end.
 
 ## Design rules agreed so far
 - Defeat: back to the Sanctuary, −25% gil, −20% distance. No auto-revive items.

@@ -215,6 +215,18 @@ button.sm{padding:6px 10px;font-size:13px}
 #items .cb{width:48px;height:48px}
 #khelp{position:fixed;left:10px;bottom:8px;font-size:11px;opacity:.5;pointer-events:none}
 @media (pointer:coarse){#khelp{display:none}}
+/* Story mode: Felix's journal pages */
+#cardIn .parch{background:linear-gradient(180deg,#f6ebcf,#e8d5a8);color:#3a2812;font-family:Georgia,'Times New Roman',serif;font-style:italic;text-align:left;padding:14px 16px;border-radius:6px 12px 8px 14px;box-shadow:0 6px 18px rgba(0,0,0,.45),inset 0 0 34px rgba(120,80,30,.28);transform:rotate(-.6deg);margin:8px 2px 10px;font-size:14.5px;line-height:1.5}
+#cardIn .parch .sig{display:block;text-align:right;margin-top:6px;font-weight:700;font-style:italic}
+#cardIn .beat{font-style:italic;opacity:.92}
+#cardIn .how{font-size:13px;text-align:left;line-height:1.45;background:rgba(111,211,255,.08);border:1px solid rgba(111,211,255,.32);border-radius:10px;padding:8px 10px;margin:8px 0}
+#cardIn .teach{font-size:12.5px;opacity:.8}
+#cardIn .note{font-size:12px;opacity:.75}
+#cardIn .jlist{max-height:56vh;overflow-y:auto;padding:0 4px}
+#cardIn .jlist h4{margin:14px 0 2px;font-family:Cinzel,Georgia,serif;text-align:left;font-size:14px}
+#tbox .jhead{display:flex;gap:12px;align-items:center;padding:10px 12px;margin:6px 0;border-radius:14px;background:linear-gradient(180deg,rgba(246,235,207,.16),rgba(232,213,168,.08));border:1px solid rgba(244,217,160,.45)}
+#tbox .jhead>span{font-size:30px}#tbox .jhead b{font-family:Cinzel,Georgia,serif;font-size:18px;display:block}#tbox .jhead small{opacity:.8}
+#tbox button.storyb{border-color:rgba(244,217,160,.7)}
 </style>
 </head>
 <body>
@@ -277,7 +289,7 @@ const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const rf=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const GAME_VERSION='1.6.0';window.kgBuild=GAME_VERSION; // the update notice reads this, so it always matches the game version
+const GAME_VERSION='1.7.0';window.kgBuild=GAME_VERSION; // the update notice reads this, so it always matches the game version
 // Design tokens from the visual overhaul spec.
 const THEME = {
   void: { abyss: '#05061A', night: '#120E3A', violet: '#6B2FD6', teal: '#1FB5C9' },
@@ -312,6 +324,7 @@ const fmt=n=>n>=10000?(n/1000).toFixed(0)+'k':n>=1000?(n/1000).toFixed(1)+'k':''
 
 /* ---------------- 1. DATA ---------------- */
 const ROUNDS=30;
+const RND=m=>(m&&m.rounds)||ROUNDS; // story chapters are shorter
 const EL={fire:{n:'Fire',c:'#ff7b3a'},ice:{n:'Ice',c:'#7fd8ff'},bolt:{n:'Bolt',c:'#ffe45c'},wind:{n:'Wind',c:'#8dffb0'}};
 const BIOMES=[
  {id:'ember',n:'Ember Reach',el:'fire',opp:'ice', c:'#a8442a',f:'#2b1410',g:'#4a2118'},
@@ -371,6 +384,8 @@ const ENEMY={
  warden:    {phys:.7,n:'Warden',        hp:300,atk:14,def:4,spd:70,r:40,c:'#e04a6a',exp:90, gil:55, boss:true,moves:['slam','ring']},
  gatekeeper:{phys:.5,n:'Gatekeeper',    hp:420,atk:13,def:5,spd:75,r:42,c:'#b9a27a',exp:130,gil:90, boss:true,moves:['slam','charge']},
  hexarch:   {phys:.55,el:'bolt',n:'Storm Hexarch', hp:500,atk:13,def:3,spd:80,r:36,c:'#b06bff',exp:170,gil:120,boss:true,moves:['rain','ring','summon']},
+ lockwarden:{phys:.8,n:'Lock Warden',  hp:160,atk:9, def:2,spd:60,r:36,c:'#7a9bb0',exp:60, gil:40, boss:true,moves:['slam']}, // story ch.4: slow, honest wind-ups
+ mireshell: {phys:.3,n:'Mire Shell',   hp:55, atk:7, def:2,spd:70,r:20,c:'#5f8f7e',exp:18, gil:10}, // story ch.5: shrugs off steel
  tyrant:    {phys:.6,n:'Crystal Tyrant',hp:900,atk:14,def:5,spd:80,r:46,c:'#ff4f8a',exp:320,gil:250,boss:true,moves:['slam','ring','charge','rain','summon']}};
 
 // Hero opponents for the Gauntlet: one per class, built from the class stats.
@@ -537,7 +552,7 @@ function loadAll(){
   a.slots=(a.slots||[]).filter(x=>x&&x.p&&x.p.cls);a.slots.forEach(x=>migrate(x.p));if(!(a.cur<a.slots.length))a.cur=0;return a;
 }
 function storeAll(a){try{localStorage.setItem(HSAVE,JSON.stringify(a));}catch(e){}}
-function save(){if(!G.p||G.arena===true)return;const a=loadAll();if(G.slot==null||G.slot>a.slots.length)G.slot=a.slots.length;a.slots[G.slot]={p:G.p,m:G.m};a.cur=G.slot;storeAll(a);}
+function save(){if(!G.p||G.arena===true||G.arena==='story')return;const a=loadAll();if(G.slot==null||G.slot>a.slots.length)G.slot=a.slots.length;a.slots[G.slot]={p:G.p,m:G.m};a.cur=G.slot;storeAll(a);}
 function load(){const a=loadAll(),s=a.slots[a.cur];G.slot=s?a.cur:null;return s||null;}
 
 /* ---------------- 3. BOARD & MATCH FLOW ---------------- */
@@ -553,18 +568,20 @@ function parsePath(str){
 function buildBoard(def){
   const r=parsePath(def.path);if(r.error)return null;const n=r.pts.length;
   const tiles=r.pts.map((p,i)=>({x:p[0],y:p[1],kind:'wild',biome:BIOMES[Math.floor(i/(n/4))%4]}));
-  tiles[0].kind='start';const shops=Math.max(2,Math.round(n/14));
+  tiles[0].kind='start';const shops=def.noShop?0:Math.max(2,Math.round(n/14));
   for(let k=0;k<shops;k++)tiles[Math.round((k+.6)*n/shops)%n].kind='shop';tiles[0].kind='start';
   const xs=tiles.map(t=>t.x),ys=tiles.map(t=>t.y);const minx=Math.min(...xs),miny=Math.min(...ys);
   return{def,tiles,n,minx,miny,cols:Math.max(...xs)-minx+1,rows:Math.max(...ys)-miny+1};
 }
-function newMatch(def){
+function newMatch(def,story){
   const b=buildBoard(def);if(!b){toast('That board path is not valid');return;}
-  if(G.p.deck.length!==DECK){toast(`Your deck needs exactly ${DECK} cards`);openDeck();return;}
+  if(!story&&G.p.deck.length!==DECK){toast(`Your deck needs exactly ${DECK} cards`);openDeck();return;}
   const names=RIVALS.slice().sort(()=>Math.random()-.5),cls=Object.keys(CLASSES).sort(()=>Math.random()-.5);
   G.m={def,diff:G.p.diff||'normal',agg:G.p.agg||'normal',round:1,pos:0,dist:0,dmg:0,traps:[],log:[],
     riv:[0,1,2].map(i=>({n:names[i],cls:cls[i],col:RCOL[i],lvl:G.p.lvl,exp:0,hpf:1,pos:0,dist:0,dmg:0,wins:0}))};
+  if(story)storySetup(G.m,story);
   initCards(G.m);
+  if(story)storyCards(G.m);
   const st=S();G.p.hp=st.maxhp;G.p.mp=st.maxmp;G.p.limit=0; // fresh at the start of a match only
   enterMatch(b);
 }
@@ -572,7 +589,7 @@ function enterMatch(b){
   G.board=b||buildBoard(G.m.def);G.busy=false;G.doubles=false;fixVitals();
   if(!G.m.ps)initCards(G.m);G.m.ps.plays=0;G.m.ps.discUsed=false;drawUp(G.m.ps);
   G.toks=[0,1,2,3].map(i=>{const t=G.board.tiles[posOf(i)];return{x:t.x,y:t.y};});
-  save();setScene('board');toast(`Round ${G.m.round} of ${ROUNDS} - your turn`);
+  save();setScene('board');toast(G.m.story?`${STORY[G.m.story.ch].place} - ${storyGoal(G.m)}`:`Round ${G.m.round} of ${ROUNDS} - your turn`);
 }
 const posOf=i=>i===0?G.m.pos:G.m.riv[i-1].pos;
 const DIE=n=>String.fromCharCode(9855+n);
@@ -588,14 +605,14 @@ async function moveTok(i,steps,dir,delay,warp){
   return null;
   }finally{if(warp){G.beam[i]=0;const p=G.tokPos[i];if(p)burst(p[0],p[1],THEME.gem.amethyst.core,18);}setTimeout(()=>{if(G.dir[i]===dir)G.dir[i]=1;},700);}
 }
-function lapBonus(i){
+function lapBonus(i){const s=G.m.story;if(s){if(i===0)s.laps++;else G.m.riv[i-1].laps=(G.m.riv[i-1].laps||0)+1;}
   if(i===0){const p=G.p,g=40+p.lvl*8;p.gil+=g;heal(.25);toast(`Circuit complete! +${g} gil, a little rest`);}
   else{const r=G.m.riv[i-1];r.hpf=Math.min(1,r.hpf+.25);}
 }
 async function rollDice(){let a,b;SFX.dice();for(let i=0;i<9;i++){a=rnd(1,6);b=rnd(1,6);$('d1').textContent=DIE(a);$('d2').textContent=DIE(b);await sleep(55);}return[a,b];}
 async function doRoll(){
   if(G.busy||G.scene!=='board')return;G.busy=true;$('rollBtn').disabled=true;const m=G.m,ps=m.ps;
-  const[a,b]=await rollDice();G.doubles=a===b;let steps=a+b,dir=1;const notes=[],warp=ps.warp;
+  let[a,b]=await rollDice();if(m.story&&STORY[m.story.ch].dbl&&!m.story.dbl){m.story.dbl=1;a=b=3;$('d1').textContent=DIE(3);$('d2').textContent=DIE(3);}G.doubles=a===b;let steps=a+b,dir=1;const notes=[],warp=ps.warp;
   if(ps.warp){steps=toShop(m.pos);notes.push('Warp to the Merchant');}
   else{if(ps.mod)notes.push(`${ps.mod>0?'+':''}${ps.mod}`);if(ps.slow)notes.push(`slowed -${ps.slow}`);steps=Math.max(1,steps+ps.mod-ps.slow);if(ps.rev){dir=-1;notes.push('REVERSED');}}
   ps.mod=0;ps.slow=0;ps.rev=false;ps.warp=false;
@@ -605,8 +622,9 @@ async function doRoll(){
   if(am){await card('Ambush!','<p>A hidden Ambush springs on you! A Hard fight.</p>',[['Fight!','ok','gold']]);const T=TIERS.hard;await playerFight({n:'Ambush',comp:pick(T.comps),off:T.off,drops:'hard',c:T.c},tile,1);}
   else if(tile.kind==='start'){heal(.5);await card('Sanctuary',"<p>You rest in the crystal's light. 50% HP and MP restored.</p>",[['Continue','ok']]);}
   else if(tile.kind==='shop'){if(await card("Merchant's Rest",'<p>A trader has made camp here, anvil and all.</p>',[['Shop & Forge','shop','gold'],['Leave','ok']])==='shop')await shopVisit();}
-  else await fate(tile);
+  else if(!(m.story&&await storyLand(tile)))await fate(tile);
   fixVitals();save();
+  if(G.m&&G.m.story&&await storyCheck())return;
   if(G.doubles){G.busy=false;$('rollBtn').disabled=false;$('rollBtn').textContent='ROLL AGAIN';toast('Doubles - roll again!');return;}
   await restOfRound();
 }
@@ -614,8 +632,9 @@ async function restOfRound(){
   const m=G.m;$('rollBtn').textContent='RIVALS...';
   while(true){
     for(const r of m.riv)await aiTurn(r);
-    if(BOSSR[m.round])await bossRound(BOSSR[m.round]);
-    if(m.round>=ROUNDS){await finishMatch();return;}
+    if(m.story&&await storyCheck())return;
+    if(BOSSR[m.round]&&!m.story)await bossRound(BOSSR[m.round]);
+    if(m.round>=RND(m)){await finishMatch();return;}
     m.round++;m.traps=m.traps.filter(t=>m.round-t.round<=TRAPLIFE);
     const L=leaderKey();for(const k of['me',0,1,2])if(k!==L){const g=AG(k).ps.grudge;g[L]=(g[L]||0)+.5;} // the leader slowly draws everyone's attention
     m.ps.plays=0;m.ps.discUsed=false;drawUp(m.ps);
@@ -623,10 +642,10 @@ async function restOfRound(){
     break;
   }
   fixVitals();save();G.busy=false;$('rollBtn').disabled=false;$('rollBtn').textContent='ROLL';
-  const fx=activeFx(m.ps).filter(x=>/Reversed|Slowed/.test(x));toast(`Round ${m.round} of ${ROUNDS} - your turn${fx.length?' ('+fx.join(', ')+')':''}`);
+  const fx=activeFx(m.ps).filter(x=>/Reversed|Slowed/.test(x));toast(`Round ${m.round} of ${RND(m)} - your turn${fx.length?' ('+fx.join(', ')+')':''}`);
 }
-function standings(key){const m=G.m;return[{n:'You',me:true,v:m[key]},...m.riv.map(r=>({n:r.n,r,v:r[key]}))].sort((a,b)=>b.v-a.v);}
-async function finishMatch(){
+function standings(key){const m=G.m;return[{n:'You',me:true,v:m[key]},...m.riv.filter(r=>!r.out).map(r=>({n:r.n,r,v:r[key]}))].sort((a,b)=>b.v-a.v);}
+async function finishMatch(){if(G.m.story)return storyEnd(null);
   const p=G.p,race=standings('dist'),dmg=standings('dmg'),k=1+p.lvl*.05;let gil=0,extra=[];
   const pod=(list,unit)=>'<div class="pod">'+list.map((e,i)=>{let pr='-';if(i<3){const g=Math.round(PRIZE[i]*k/10)*10;pr=g+' gil'+(i===0?' + treasure':'');if(e.me){gil+=g;if(i===0){extra.push(giveRare(),giveCard(true));p.golds++;}else if(Math.random()<.5)extra.push(giveCard(false));}}
     return `<div class="${e.me?'me':''}"><span>${i+1}. ${e.n} <small>(${fmt(e.v)} ${unit})</small></span><span>${pr}</span></div>`;}).join('')+'</div>';
@@ -656,11 +675,11 @@ async function playerFight(spec,tile,mult){
   const res=await battle(spec,tile,buf);
   if(res.win){
     let exp=0,gil=0;res.en.forEach(e=>{const k=1+0.3*(e.lvl-1);exp+=Math.round(e.b.exp*k);gil+=Math.round(e.b.gil*(1+.12*(e.lvl-1))*rf(.8,1.2));});exp=Math.round(exp*mult*DF().rw);gil=Math.round(gil*mult*DF().rw);
-    const drops=rollDrops(spec.drops),cd=cardDrop(spec.drops);if(spec.drops==='bossround'){addMat(p,'core');drops.push('🔮 Boss Core');}if(cd)drops.push('New '+cd);p.gil+=gil;p.wins++;if(spec.final)p.crowns++;const ups=gainExp(exp);
+    const drops=rollDrops(spec.drops),cd=cardDrop(spec.drops);if(spec.drops==='bossround'){addMat(p,'core');drops.push('🔮 Boss Core');}if(cd)drops.push('New '+cd);p.gil+=gil;p.wins++;if(G.m&&G.m.story){G.m.story.wins++;if(spec.script)G.m.story.done=true;}if(spec.final)p.crowns++;const ups=gainExp(exp);
     await card(spec.final?'The Tyrant Falls!':'Victory!',`<div class="rw"><span>EXP${mult>1?' (x2)':''}</span><b>+${exp}</b><span>Gil${mult>1?' (x2)':''}</span><b class="gilc">+${gil}</b>${drops.map(d=>`<span>Found</span><b>${d}</b>`).join('')}</div>${ups?`<p><b style="color:#ffd66d">Level up! Now Lv ${p.lvl}</b></p>`:''}`,OK);
   }else{
-    const lost=Math.floor(p.gil*0.25);p.gil-=lost;const st=S();p.hp=Math.round(st.maxhp*.5);p.mp=Math.max(p.mp,Math.round(st.maxmp*.25));G.m.pos=0;G.doubles=false;const lt=wipeDist(G.m);
-    await card('Defeated...',`<p>You wake at the Sanctuary at half health, ${lost} gil lighter.</p><p>You lose <b style="color:#ff7b7b">${lt} tiles</b> of travel distance.</p>`,OK);
+    const lost=G.m.story?0:Math.floor(p.gil*0.25);p.gil-=lost;const st=S();p.hp=Math.round(st.maxhp*.5);p.mp=Math.max(p.mp,Math.round(st.maxmp*.25));G.m.pos=0;G.doubles=false;const lt=wipeDist(G.m);
+    await card('Defeated...',`<p>You wake at the Sanctuary at half health${lost?`, ${lost} gil lighter`:''}.</p><p>You lose <b style="color:#ff7b7b">${lt} tiles</b> of travel distance.</p>`,OK);
   }
   return res.win;
 }
@@ -678,9 +697,11 @@ function rivExp(r,x){r.exp+=x;while(r.exp>=need(r.lvl)){r.exp-=need(r.lvl);r.lvl
 function leader(){const s=standings('dist')[0];return s.me?'me':s.r;}
 async function aiTurn(r){
   const m=G.m,k=m.riv.indexOf(r),i=k+1,ps=r.ps;
+  if(r.out)return; // story chapters can run with fewer rivals
   r.lvl=Math.max(r.lvl,G.p.lvl-1); // rivals keep pace with you
   ps.plays=0;ps.discUsed=false;drawUp(ps);
   if(ps.skip){ps.skip=false;toast(`${r.n} is skipped this turn`);await sleep(1000);return;}
+  if(m.story)await storyAI(r,k);
   await aiCards(r,k);
   let again=true,g=0;
   while(again&&g++<3){
@@ -729,15 +750,16 @@ async function fate(tile){
   $('cardIn').innerHTML=`<h2>Fate Die</h2><div class="d12" id="d12">?</div><p>${tile.biome.n}</p>`;$('card').classList.remove('hidden');
   for(let i=0;i<11;i++){$('d12').textContent=rnd(1,12);await sleep(60);}
   const fr=fateRoll(G.m.ps),n=fr.n;
-  const f=FATE[n],p=G.p,m=G.m,st=S();const die=`<div class="d12 ${f.t==='fight'?'fight':''}">${n}</div>${fr.notes.length?`<p><small>${fr.notes.join(' · ')}</small></p>`:''}`;
+  const f=storyF(n)||FATE[n],p=G.p,m=G.m,st=S();const die=`<div class="d12 ${f.t==='fight'?'fight':''}">${n}</div>${fr.notes.length?`<p><small>${fr.notes.join(' · ')}</small></p>`:''}`;
   if(f.t==='fight'){
     let tier=f.tier,cursed='';if(m.ps.curse){tier=TIERUP[tier];m.ps.curse=false;cursed='<p><b style="color:#ff5a6e">Cursed! This fight is one tier harder.</b></p>';}
-    const T=TIERS[tier],lvl=Math.max(1,p.lvl+T.off),comp=pick(T.comps),bk=m.ps.hand.find(c=>c.id==='buck');
+    const T=storyTier(tier)||TIERS[tier],lvl=Math.max(1,p.lvl+T.off),comp=pick(T.comps),bk=m.ps.hand.find(c=>c.id==='buck');
+    if(m.story&&await storyPreview(T,lvl,comp,die))return;
     const btns=[['Fight!','ok','gold']];if(bk&&m.ps.plays<PLAYMAX)btns.push(['Pass the Buck','buck']);
     const c=await card('Encounter!',`${die}${cursed}<p><span class="tag" style="background:${T.c}">${T.n}</span> &nbsp;Enemy Lv ${lvl}</p><p><small>${foeNames(comp)}</small></p><p><small>Attacks: ${[...new Set(comp.map(k=>ENEMY[k].el||tile.biome.el))].map(x=>`<b style="color:${EL[x].c}">${EL[x].n}</b>`).join(', ')}</small></p>`,btns);
     let passed=false;
     if(c==='buck'){
-      const w=await card('Pass the Buck','<p>Who gets this fight? They earn double rewards if they win. Wary rivals can\'t be targeted this round.</p>',[...m.riv.map((r,i)=>[`${r.n} (${Math.round(r.hpf*100)}% HP)${r.ps.wary===m.round?' - wary':''}`,''+i]).filter((x,i)=>m.riv[i].ps.wary!==m.round),['Keep it','x']]);
+      const w=await card('Pass the Buck','<p>Who gets this fight? They earn double rewards if they win. Wary rivals can\'t be targeted this round.</p>',[...m.riv.map((r,i)=>[`${r.n} (${Math.round(r.hpf*100)}% HP)${r.ps.wary===m.round?' - wary':''}`,''+i]).filter((x,i)=>m.riv[i].ps.wary!==m.round&&!m.riv[i].out),['Keep it','x']]);
       if(w!=='x'){m.ps.hand.splice(m.ps.hand.indexOf(bk),1);if(!bk.t)m.ps.disc.push(bk);m.ps.plays++;passed=true;await passBuck('me',+w,comp,T,tile);}
     }
     if(!passed)await playerFight({n:T.n,comp,off:T.off,drops:tier,c:T.c},tile,1);
@@ -749,6 +771,7 @@ async function fate(tile){
   else if(f.t==='merchant'){if(await card('Wandering Merchant',`${die}<p>A pedlar waves you over.</p>`,[['Shop & Forge','shop','gold'],['Leave','ok']])==='shop')await shopVisit();}
   else if(f.t==='exp'){const x=Math.round(need(p.lvl)*.25),ups=gainExp(x);await card("Hero's Echo",`${die}<p>A memory of an old battle: <b>+${x} EXP</b>.</p>${ups?`<p><b style="color:#ffd66d">Level up! Now Lv ${p.lvl}</b></p>`:''}`,OK);}
   else if(f.t==='rare'){const g=giveRare();await card('Hidden Cache',`${die}<p>Behind a loose stone: <b>${g}</b>.</p>`,OK);}
+  if(m.story)storyLesson(f.t);
 }
 function giveGem(){const un=Object.keys(GEMS).filter(k=>!G.p.gems.includes(k));if(!un.length)return null;const k=pick(un);G.p.gems.push(k);return GEMS[k].n+' Gem';}
 function giveAcc(){const un=Object.keys(ACC).filter(k=>!G.p.accs.includes(k));if(!un.length)return null;const k=pick(un);G.p.accs.push(k);return ACC[k].n;}
@@ -789,7 +812,7 @@ function fateRoll(ps){ // the D12 with Fate Shift / Safe Passage / Call the Hunt
   ps.fate=0;ps.safe=false;ps.hunt=false;return{n,notes};
 }
 function chooseTarget(k,pers){ // who a rival aims a hostile card at
-  const m=G.m,L=leaderKey();let c=['me',0,1,2].filter(t=>t!==k&&AG(t).ps.wary!==m.round);if(!c.length)return null;
+  const m=G.m,L=leaderKey();let c=['me',0,1,2].filter(t=>t!==k&&AG(t).ps.wary!==m.round&&(t==='me'||!m.riv[t].out));if(!c.length)return null;
   const ag=m.agg||'normal';if(ag==='calm'&&c.length>1&&c.includes('me')&&Math.random()<.6)c=c.filter(t=>t!=='me');
   if(ag==='ruthless'&&c.includes(L)&&Math.random()<.5)return L;
   if(pers==='Wildcard')return pick(c);
@@ -826,7 +849,7 @@ async function playCard(key,c,tgt,choice){
   else if(C.k==='def'){ps[c.id]=true;msg=`${who} ${ply} ${C.n}`;}
   else if(C.k==='trap'){m.traps.push({pos:me?m.pos:A.r.pos,id:c.id,owner:key,round:m.round});msg=me?`${C.n} hidden on this tile`:'';} // rivals' traps are secret
   else if(C.k==='hostile'){msg=hostile(key,tgt,c.id);atMe=tgt==='me';}
-  else if(C.k==='hostile-all'){const ts=['me',0,1,2].filter(t=>t!==key&&AG(t).ps.wary!==m.round);atMe=ts.includes('me');msg=`${who} ${ply} TIME STOP! `+ts.map(t=>hostile(key,t,'skip','Time Stop')).join(' ');}
+  else if(C.k==='hostile-all'){const ts=['me',0,1,2].filter(t=>t!==key&&AG(t).ps.wary!==m.round&&(t==='me'||!m.riv[t].out));atMe=ts.includes('me');msg=`${who} ${ply} TIME STOP! `+ts.map(t=>hostile(key,t,'skip','Time Stop')).join(' ');}
   if(me){if(msg)toast(msg);}
   else if(atMe)await card(`${A.n} plays ${C.n}!`,`<p>${msg}</p>`,[['Grr...','ok']]);
   else if(msg){toast(msg);await sleep(1100);}
@@ -893,18 +916,18 @@ function startBattle(spec,tile,buf){
   const lvl=Math.max(1,G.p.lvl+spec.off);fixVitals();
   B={spec,biome:tile.biome,R:430,t:0,over:false,win:false,endT:0,lvl,st:S(),cam:{x:0,y:150},shake:0,
     pl:{x:0,y:150,fx:0,fy:-1,atkT:0,atkCd:0,combo:0,comboT:0,atkHit:true,dodgeT:0,dodgeCd:0,inv:0,dx:0,dy:0,lungeT:0,hurt:0,cds:{},gcd:0,guard:false,gStart:-9,skCd:0,jumpT:0,jx:0,jy:0,chi:null},
-    en:[],pr:[],fx:[],fl:[],zn:[],spells:G.p.ws.concat(G.p.as).filter(g=>g&&GEMS[g].kind==='spell').slice(0,4)};
+    en:[],pr:[],fx:[],fl:[],zn:[],spells:(spec.extra||[]).concat(G.p.ws,G.p.as).filter(g=>g&&GEMS[g].kind==='spell').slice(0,4)};
   spec.comp.forEach((type,i)=>{const a=-Math.PI/2+(i-(spec.comp.length-1)/2)*0.55;B.en.push(mkEnemy(type,lvl,Math.cos(a)*240,Math.sin(a)*240+30,tile.biome));});
   if(spec.labels)B.en.forEach((e,i)=>{e.label=spec.labels[i];e.react=spec.react||.3;});
   B.shield=buf.barrier?Math.round(B.st.maxhp*.3):0;if(buf.surge)G.p.limit=Math.max(G.p.limit,50);B.dmgMul=buf.berserk?1.3:1;B.takeMul=buf.berserk?1.2:1;if(buf.opening)B.en.forEach(e=>e.stag=50);
   B.cardFx=Object.keys(buf).filter(k=>buf[k]).map(k=>CARDS[k].n);
   $('spells').innerHTML='<button class="cb" id="bLimit" data-lim="1">LIMIT</button>'+B.spells.map((g,i)=>`<button class="cb" data-sp="${i}" style="border-color:${GEMS[g].el?EL[GEMS[g].el].c:'#9dffb5'}">${GEMS[g].n}${B.st.spread.includes(g)?'+':''}<small>${Math.round(GEMS[g].mp*(B.st.spread.includes(g)?1.5:1))} MP</small></button>`).join('');
   $('bSkill').textContent=B.st.cls.skill.n;hc.lr=undefined;if(!G.p.tips){G.p.tips=1;setTimeout(()=>toast('Tip: grey numbers = resisted, use magic. Tap Guard just before a hit for a PERFECT guard.'),2200/SPD);}
-  inp.atk=inp.guard=inp.dodgeP=false;inp.joy=null;B.obj=null;$('obj').classList.add('hidden');
+  inp.atk=inp.guard=inp.dodgeP=false;inp.joy=null;B.obj=null;$('obj').classList.add('hidden');storyBattle(spec);
   setScene('battle');toast(`${spec.n} - ${tile.biome.n}${B.cardFx.length?' · '+B.cardFx.join(', '):''}`);
 }
 function endBattle(win){if(!B||B.over)return;if(win)objWin();B.over=true;B.win=win;(win?SFX.win:SFX.lose)();
-  setTimeout(()=>{const b=B;B=null;if(G.arena){arenaDone(b,win);return;}setScene('board');b.resolve({win,en:b.en});},(win?1100:1500)/SPD);}
+  setTimeout(()=>{const b=B;B=null;if(G.arena){arenaDone(b,win);return;}$('obj').classList.add('hidden');setScene('board');b.resolve({win,en:b.en});},(win?1100:1500)/SPD);}
 // Gauntlet objectives: one per fight, shown as a banner. Complete it and win to earn essence.
 const OBJ={first:{n:'Land the first strike'},nohit:{n:"Don't take any damage"},stagger:{n:'Stagger an opponent'},limit:{n:'Finish with a Limit Break'},
  noitem:{n:'Win without using items'},fast:{n:'Win in under 45 seconds'},skill:{n:'Use your class skill 3 times',need:3},weak:{n:'Hit a weakness 3 times',need:3},guard:{n:'Guard 3 attacks',need:3}};
@@ -926,7 +949,7 @@ function hitEnemy(e,raw,el,stag,kb,kx,ky,wep){ // wep = a weapon strike (element
   if(e.hp<=0)return;let d=Math.max(1,raw-e.def*0.5);const st=B.st;let crit=false;
   if(e.b.hero){if(e.airT>0)return;if(e.dgT>0){floater(e.x,e.y-e.r-10,'MISS','#cfd6ff');return;}stag*=.55;if(e.gT>0&&e.stagT<=0){d*=.3;stag*=.35;e.t=Math.min(e.t,.15);floater(e.x,e.y-e.r-24,'GUARD','#9fd0ff');}}
   if(wep){if(st.crit&&Math.random()<.15){d*=2;crit=true;}stag*=st.stagB;}const weak=!!el&&el===e.weak,res=(!el||wep)&&!weak&&e.stagT<=0&&e.b.phys<1;
-  if(res){d*=e.b.phys;stag*=.6;}if(weak){d*=wep?1.5:2;stag*=wep?2.5:4;}if(e.stagT>0)d*=2;d=Math.round(d*(B.dmgMul||1));if(crit)floater(e.x,e.y-e.r-30,'CRIT','#ffd84a',true);if(wep&&st.drain&&G.p.hp>0){G.p.hp=Math.min(st.maxhp,G.p.hp+Math.max(1,Math.round(d*.06)));}if(G.m)G.m.dmg+=Math.min(d,e.hp);objEv('hit');if(weak)objEv('weak');e.hp-=d;e.hurt=.12;
+  if(res){d*=e.b.phys;stag*=.6;}if(weak){d*=wep?1.5:2;stag*=wep?2.5:4;}if(e.stagT>0)d*=2;d=Math.round(d*(B.dmgMul||1));if(crit)floater(e.x,e.y-e.r-30,'CRIT','#ffd84a',true);if(wep&&st.drain&&G.p.hp>0){G.p.hp=Math.min(st.maxhp,G.p.hp+Math.max(1,Math.round(d*.06)));}if(G.m)G.m.dmg+=Math.min(d,e.hp);objEv('hit');if(weak)objEv('weak');e.hp-=d;e.hurt=.12;if(e.type==='lockwarden')wardenMash(e);
   if(kb&&!e.b.boss){const f=e.b.hero?.25:1;e.kx+=kx*kb*f;e.ky+=ky*kb*f;}
   SFX.hit(weak||crit);floater(e.x,e.y-e.r-10,d,weak?'#ffd84a':res?'#8a93b8':el?EL[el].c:'#fff',weak);spark(e.x,e.y,el?EL[el].c:'#fff',5,160);
   if(e.stagT<=0&&e.hp>0){e.stag+=stag;if(e.stag>=100){e.stag=0;e.stagT=e.b.boss?3:(e.b.hero?2.5:4);e.st='chase';e.t=1;e.gT=0;objEv('stagger');floater(e.x,e.y-e.r-28,'STAGGER','#ff9df0',true);}}
@@ -1005,7 +1028,7 @@ function readInput(){
   const l=Math.hypot(mx,my);if(l>1){mx/=l;my/=l;}inp.mx=mx;inp.my=my;
 }
 function upBattle(dt){
-  B.t+=dt;if(B.obj&&B.obj.st==='live'&&B.obj.id==='fast'){if(B.t>45){B.obj.st='fail';objDraw();}else if(Math.floor(B.t)!==B.obj.ls){B.obj.ls=Math.floor(B.t);objDraw();}}B.shake=Math.max(0,B.shake-dt*30);ambient(dt);
+  B.t+=dt;if(B.tq&&B.tq.length&&B.t>=B.tq[0][0])toast(B.tq.shift()[1],3800);if(B.obj&&B.obj.st==='live'&&B.obj.id==='fast'){if(B.t>45){B.obj.st='fail';objDraw();}else if(Math.floor(B.t)!==B.obj.ls){B.obj.ls=Math.floor(B.t);objDraw();}}B.shake=Math.max(0,B.shake-dt*30);ambient(dt);
   if(!B.over){upPlayer(dt);upEnemies(dt);}
   upProjectiles(dt);
   for(const z of B.zn){z.t-=dt;if(z.t<=0){B.fx.push({k:'ring',x:z.x,y:z.y,r:z.r,t:.25,T:.25,c:z.from==='p'?EL.fire.c:'#ff5a5a'});
@@ -1120,7 +1143,7 @@ function upEnemies(dt){
           const alive=B.en.filter(q=>q.hp>0).length;
           const ok=e.b.moves.concat(e.type==='gatekeeper'||e.type==='tyrant'?['flurry']:[]).filter(m=>m==='slam'||m==='flurry'?d<e.r+100:m==='summon'?(alive<4&&e.sums<2):m==='charge'?d>120:true);
           const m=ok.length?pick(ok):null;
-          if(m==='slam')windup(e,'slam',1.0,155,1.6,1.1);
+          if(m==='slam')windup(e,'slam',e.type==='lockwarden'?1.35:1.0,155,e.type==='lockwarden'?1.3:1.6,1.1);
           else if(m==='flurry'){windup(e,'flurry',.7,125,.8,1.1);e.fq=4;}
           else if(m==='ring')windup(e,'ring',.7,0,1,.9);
           else if(m==='charge'){windup(e,'charge',.8,0,1.7,1.0);e.cx=ux;e.cy=uy;e.dsp=600;e.dur=.5;}
@@ -1187,7 +1210,7 @@ function renderMenu(){
   const T=G.menuTab,up=id=>p.up[id]?' +'+p.up[id]:'';
   if(T==='hub'){
     const used=p.ws.concat(p.as).filter(Boolean).length,shopT=G.shop?menuTile('tab','shop','🛒','Shop',{g:'#FFC93D',sub:`${p.gil} gil`})+menuTile('tab','forge','⚒️','Forge',{g:'#FF8A5C',sub:'Temper and bore'}):'';
-    h+=`<div class="herocard"><div class="pg" style="--cc:${st.cls.c}"><span>${CLASS_GLYPH[p.cls]}</span></div><div><b>Lv ${p.lvl} ${st.cls.n}</b><small>${m.def.n} · round ${m.round} of ${ROUNDS} · ${Math.ceil(p.hp)}/${st.maxhp} HP</small></div></div>`;
+    h+=`<div class="herocard"><div class="pg" style="--cc:${st.cls.c}"><span>${CLASS_GLYPH[p.cls]}</span></div><div><b>Lv ${p.lvl} ${st.cls.n}</b><small>${m.def.n} · round ${m.round} of ${RND(m)} · ${Math.ceil(p.hp)}/${st.maxhp} HP</small></div></div>`;
     h+='<div class="tiles">'+shopT+menuTile('tab','status','📜','Status',{g:st.cls.c})+menuTile('tab','cards','🃏','Cards',{g:'#B06BFF',badge:m.ps.hand.length})+menuTile('tab','rivals','👥','Rivals',{g:'#FF8A5C'})
       +menuTile('tab','equip','🗡️','Equip',{g:'#CFD6FF'})+menuTile('tab','gems','💎','Gems',{g:'#6FD3FF',badge:used})+menuTile('tab','craft','🔨','Crafting',{g:'#FFC93D',badge:p.sig?'✓':null})+menuTile('tab','settings','⚙️','Settings',{g:'#1FB5C9'})
       +menuTile('howto',null,'❓','How to play',{g:'#22D39A'})+(G.shop?'':menuTile('toTitle',null,'🏠','Save & quit',{g:'#FF3D5A'}))+'</div>';
@@ -1199,7 +1222,7 @@ function renderMenu(){
     h+=`<p style="font-size:12.5px;opacity:.8;margin:8px 0 0">${st.cls.d}</p>`;
     h+=`<h3>Items</h3><div class="row"><div class="g">Potion x${p.potion}<small>Restores 35% HP</small></div>${btn('Use','use','potion',p.potion<1||p.hp>=st.maxhp)}</div><div class="row"><div class="g">Ether x${p.ether}<small>Restores 50% MP</small></div>${btn('Use','use','ether',p.ether<1||p.mp>=st.maxmp)}</div>`;
     h+=`<div class="row"><div class="g">Hi-Potion x${p.hipot||0}<small>Restores 70% HP</small></div>${btn('Use','use','hipot',!(p.hipot>0)||p.hp>=st.maxhp)}</div><div class="row"><div class="g">Elixir x${p.elixir||0}<small>Full HP and MP</small></div>${btn('Use','use','elixir',!(p.elixir>0))}</div>`;
-    h+=`<h3>Match</h3><div class="row"><div class="g">${m.def.n} - round ${m.round} of ${ROUNDS}<small>${G.board.n} tiles · bosses on rounds 10, 20 and 30</small></div>${G.shop?'':btn('Save & quit','toTitle','')}</div>`;
+    h+=`<h3>Match</h3><div class="row"><div class="g">${m.def.n} - round ${m.round} of ${RND(m)}<small>${G.board.n} tiles · ${m.story?storyGoal(m):'bosses on rounds 10, 20 and 30'}</small></div>${G.shop?'':btn('Save & quit','toTitle','')}</div>`;
   }else if(T==='cards'){
     const ps=m.ps,fx=activeFx(ps),tmp=[...ps.deck,...ps.disc,...ps.hand].filter(c=>c.t).length;
     h+=`<h3>Hand - ${ps.plays}/${PLAYMAX} plays used${ps.discUsed?' · discard used':''}</h3>`+ps.hand.map(c=>cardRow(c.id,c.t)).join('');
@@ -1213,8 +1236,8 @@ function renderMenu(){
     h+=own.sort((a,b)=>ord.indexOf(CARDS[a].r)-ord.indexOf(CARDS[b].r)||CARDS[a].n.localeCompare(CARDS[b].n)).map(id=>{const n=inD[id]||0,o=p.coll[id],lim=Math.min(o,copyMax(id));
       return `<div class="row"><div class="g"><b style="color:${RAR[CARDS[id].r].c}">${CARDS[id].n}</b> <small>${RAR[CARDS[id].r].n} · owned ${o} · ${CARDS[id].d}</small></div>${btn('−','dk','-:'+id,n<1)}<b style="min-width:18px;text-align:center">${n}</b>${btn('+','dk','+:'+id,n>=lim||p.deck.length>=DECK)}</div>`;}).join('');
   }else if(T==='rivals'){
-    h+=`<h3>Round ${m.round} of ${ROUNDS}</h3><div class="row"><div class="g"><b style="color:#bfe9ff">You</b> - Lv ${p.lvl} ${st.cls.n}<small>${m.dist} tiles travelled · ${fmt(m.dmg)} damage · ${Math.round(p.hp/st.maxhp*100)}% HP</small></div></div>`;
-    h+=m.riv.map(r=>`<div class="row"><div class="g"><b style="color:${r.col}">${r.n}</b> - Lv ${r.lvl} ${CLASSES[r.cls].n}<small>${RDECKS[r.arch].n} · ${RDECKS[r.arch].pers} (${PERS[RDECKS[r.arch].pers]}) · grudge vs you ${'●'.repeat(Math.min(5,Math.round((r.ps.grudge.me||0)/2)))||'none'}</small><small>${r.dist} tiles travelled · ${fmt(r.dmg)} damage · ${Math.round(r.hpf*100)}% HP · ${r.wins} wins · ${r.ps.hand.length} cards in hand${activeFx(r.ps).length?' · '+activeFx(r.ps).join(', '):''}</small></div></div>`).join('');
+    h+=`<h3>Round ${m.round} of ${RND(m)}</h3><div class="row"><div class="g"><b style="color:#bfe9ff">You</b> - Lv ${p.lvl} ${st.cls.n}<small>${m.dist} tiles travelled · ${fmt(m.dmg)} damage · ${Math.round(p.hp/st.maxhp*100)}% HP</small></div></div>`;
+    h+=m.riv.filter(r=>!r.out).map(r=>`<div class="row"><div class="g"><b style="color:${r.col}">${r.n}</b> - Lv ${r.lvl} ${CLASSES[r.cls].n}<small>${RDECKS[r.arch].n} · ${RDECKS[r.arch].pers} (${PERS[RDECKS[r.arch].pers]}) · grudge vs you ${'●'.repeat(Math.min(5,Math.round((r.ps.grudge.me||0)/2)))||'none'}</small><small>${r.dist} tiles travelled · ${fmt(r.dmg)} damage · ${Math.round(r.hpf*100)}% HP · ${r.wins} wins · ${r.ps.hand.length} cards in hand${activeFx(r.ps).length?' · '+activeFx(r.ps).join(', '):''}</small></div></div>`).join('');
     h+='<h3>Card log</h3>'+(m.log.length?m.log.slice(-14).reverse().map(t=>`<div class="row"><small>${t}</small></div>`).join(''):'<div class="row"><small>No cards played at anyone yet.</small></div>');
     h+='<div class="row"><small>Prizes at the end of round 30 for 1st, 2nd and 3rd in two races: furthest travelled, and most damage dealt. Rivals fight behind the scenes and can lose.</small></div>';
   }else if(T==='equip'){
@@ -1286,7 +1309,7 @@ const ACT={
   cardDisc(){const ps=G.m.ps,c=ps.hand[G.sel];if(!c||ps.discUsed)return;const n=discardDraw(ps,c);toast(`Discarded ${CARDS[c.id].n}${n?`, drew ${CARDS[n.id].n}`:''}`);G.sel=null;hc.pl=null;save();},
   async cardPlay(){
     const m=G.m,ps=m.ps,i=G.sel,c=ps.hand[i];if(!c||G.busy)return;const C=CARDS[c.id];if(cardWhy(c))return;
-    if(C.k==='hostile'){G.targeting={i,c,cands:m.riv.map((r,k)=>k).filter(k=>m.riv[k].ps.wary!==m.round)};G.busy=true;hc.pl=null;return;}
+    if(C.k==='hostile'){G.targeting={i,c,cands:m.riv.map((r,k)=>k).filter(k=>m.riv[k].ps.wary!==m.round&&!m.riv[k].out)};G.busy=true;hc.pl=null;return;}
     let ch=0;G.busy=true;
     if(C.k==='pace'||C.k==='fate'){const v=C.k==='pace'?2:1,x=await card(C.n,'<p>Lock it in now - you can\'t change it after you roll.</p>',[[`+${v}`,'+','gold'],[`-${v}`,'-','gold'],['Cancel','x']]);if(x==='x'){G.busy=false;return;}ch=x==='+'?v:-v;}
     const me=G.tokPos[0],to=C.k==='hostile-all'?[W/2,H*.42]:me?[me[0],me[1]]:[W/2,H/2];
@@ -1344,12 +1367,13 @@ const ACT={
   setTog(k){if(k==='sound')SET.sound=!SET.sound;else if(k==='shake')SET.shake=!SET.shake;else SET.speed=SET.speed==='fast'?'normal':'fast';applySet();if(!$('menu').classList.contains('hidden'))renderMenu();else renderTitle();},
   cancelpick(){G.picking=false;G.view='heroes';renderTitle();},
   async retire(){const a=loadAll(),s=a.slots[a.cur];if(!s)return;const C=CLASSES[s.p.cls];if(await card('Retire this hero?',`<p>Lv ${s.p.lvl} ${C.n} and everything they own (gear, gems, cards, any circuit in progress) will be gone for good.</p>`,[['Keep them','x','gold'],['Retire','yes']])!=='yes')return;a.slots.splice(a.cur,1);a.cur=0;storeAll(a);G.p=null;G.m=null;G.slot=null;renderTitle();toast('Hero retired');},
-  cls(k){G.p=newPlayer(k);G.m=null;G.slot=loadAll().slots.length;const st=S();G.p.hp=st.maxhp;G.p.mp=st.maxmp;save();G.picking=false;G.view='main';renderTitle();toast('A new '+CLASSES[k].n+' joins your roster');},
+  cls(k){G.p=newPlayer(k);G.m=null;G.slot=loadAll().slots.length;const st=S();G.p.hp=st.maxhp;G.p.mp=st.maxmp;save();G.picking=false;G.view=loadAll().slots.length===1?'story':'main';renderTitle();toast('A new '+CLASSES[k].n+' joins your roster');},
   board(i){newMatch(BOARDS[+i]);},
   custom(){const v=$('cpath').value.trim(),r=parsePath(v);if(r.error){toast(r.error);return;}newMatch({id:'custom',n:'Custom Board',path:v});},
   diff(k){G.p.diff=k;save();renderTitle();},
   agg(k){G.p.agg=k;save();const y=document.getElementById('title').scrollTop;renderTitle();document.getElementById('title').scrollTop=y;},
   howto(){card('How to play',`<div class="help">
+<p><b>New here?</b> Play <b>Story · Felix's Journal</b> from the main menu. Eight short chapters teach everything below, one piece at a time.</p>
 <p><b>The goal.</b> A circuit is ${ROUNDS} rounds against three AI rivals. At the end, prizes go to the top three for <b>distance travelled</b> and for <b>damage dealt</b>. Bosses arrive on rounds 10, 20 and 30.</p>
 <p><b>Your turn.</b> Play up to 2 cards from your hand, then roll 2d6 and move. Doubles roll again. Land on a normal tile and the 12-sided Fate Die decides what happens: 1, 4, 8 and 12 are fights (1 easiest, 12 hardest).</p>
 <p><b>Fights.</b> Drag anywhere to move. Attack, Guard, Dodge, your class Skill and spells are on the right. Tap Guard just before a hit for a PERFECT guard. Grey damage numbers mean the enemy resists your weapon: use magic, or hit its weakness (the coloured dot by its health bar).</p>
@@ -1384,7 +1408,7 @@ function drawReview(){
   $('card').classList.remove('hidden');
 }
 // ---- Main menu: tile grids with gem icons (Tight Lines style), each opening its own sub-menu
-const CHANGES=[['1.6.0','Pixel-art sprites for all six classes in battle, for your hero and for Gauntlet opponents'],['1.5.1','Ranger rebalance: arrows hit a little softer, lose power at point-blank range, and Volley is a crowd skill rather than a single-target nuke'],['1.5.0','Rival aggression setting (Calm, Normal, Ruthless). Shops only sell gear up to your level, and top-tier gear costs much more'],['1.4.0','Gauntlet mode: ten duels against hero classes with an objective in each fight. Bank class essences, craft your class signature item'],['1.3.0','Colosseum Cups: tournaments for your real hero between circuits. Spend a ticket (earned by finishing circuits), win round after round, cash out or push on for the cup and its prizes'],['1.2.0','The Colosseum: practice fights against any foe, with the class, level and gear you choose. No rewards, no risk'],['1.1.0','A main menu of gem pads, and the same pads for the in-game menu'],['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
+const CHANGES=[['1.7.0',"Story mode: the Prologue, Felix's Journal. Eight short chapters that teach the game one system at a time, set in Aldmere"],['1.6.0','Pixel-art sprites for all six classes in battle, for your hero and for Gauntlet opponents'],['1.5.1','Ranger rebalance: arrows hit a little softer, lose power at point-blank range, and Volley is a crowd skill rather than a single-target nuke'],['1.5.0','Rival aggression setting (Calm, Normal, Ruthless). Shops only sell gear up to your level, and top-tier gear costs much more'],['1.4.0','Gauntlet mode: ten duels against hero classes with an objective in each fight. Bank class essences, craft your class signature item'],['1.3.0','Colosseum Cups: tournaments for your real hero between circuits. Spend a ticket (earned by finishing circuits), win round after round, cash out or push on for the cup and its prizes'],['1.2.0','The Colosseum: practice fights against any foe, with the class, level and gear you choose. No rewards, no risk'],['1.1.0','A main menu of gem pads, and the same pads for the in-game menu'],['1.0.0','The Fantasy Crystals overhaul: gem board, crystal pieces, glass HUD, tarot cards you aim at rivals'],['0.9.0','Graphical overhaul of the arenas, heroes and enemies'],['0.8.0','A roster of heroes, menus, sound, offline play'],['0.7','Rotating merchants, 29 weapons and armours with traits'],['0.6','Card decks, rival grudges, hidden traps, deck editor'],['0.4','Linked gem sockets and the Elemental gem']];
 const menuTile=(act,arg,ico,label,o={})=>`<button class="tile${o.on?' on':''}${o.cls?' '+o.cls:''}" ${act?`data-act="${act}"`:''} ${arg!=null?`data-arg="${arg}"`:''} ${o.attr||''} style="--g:${o.g||'#6FD3FF'}"><span class="ti">${ico}</span><span class="tl">${label}</span>${o.badge!=null?`<span class="tb">${o.badge}</span>`:''}${o.sub?`<small>${o.sub}</small>`:''}</button>`;
 function boardSVG(path){const r=parsePath(path);if(r.error)return '';const xs=r.pts.map(p=>p[0]),ys=r.pts.map(p=>p[1]),mx=Math.min(...xs),my=Math.min(...ys),w=Math.max(...xs)-mx+1,h=Math.max(...ys)-my+1,c=Math.min(46/w,46/h),n=r.pts.length,cols=['#FF3D5A','#3D7BFF','#FFC93D','#22D39A'];
   return `<svg viewBox="0 0 48 48" width="44" height="44">${r.pts.map((p,i)=>`<rect x="${(1+(p[0]-mx)*c+(46-w*c)/2).toFixed(1)}" y="${(1+(p[1]-my)*c+(46-h*c)/2).toFixed(1)}" width="${(c*.82).toFixed(1)}" height="${(c*.82).toFixed(1)}" rx="${(c*.2).toFixed(1)}" fill="${i===0?'#F4F7FF':cols.at(Math.floor(i/(n/4))%4)}"/>`).join('')}</svg>`;}
@@ -1395,11 +1419,12 @@ function renderTitle(){
     if(s)h+=back('heroes','Your heroes');
     h+=`<h3>${s?'Choose a class for your new hero':'Choose your class'}</h3><p>Each hero keeps their own level, gear and deck, so you can try them all.</p><div class="tiles two">`+Object.keys(CLASSES).map(k=>{const C=CLASSES[k];return menuTile('cls',k,CLASS_GLYPH[k],C.n,{g:C.c,sub:C.d,cls:'wide'});}).join('')+'</div>';
   }else{
-    if(!G.cup&&!G.gaunt){G.p=s.p;G.m=s.m;}const p=(G.cup||G.gaunt)?G.p:s.p,C=CLASSES[p.cls];
+    if(!G.cup&&!G.gaunt&&!G.hallR){G.p=s.p;G.m=s.m;}const p=(G.cup||G.gaunt||G.hallR)?G.p:s.p,C=CLASSES[p.cls];
     if(v==='main'){
       h+=`<div class="herocard"><div class="pg" style="--cc:${C.c}"><span>${CLASS_GLYPH[p.cls]}</span></div><div><b>Lv ${p.lvl} ${C.n}</b><small>${p.gil} gil · ${p.golds} podium golds · ${p.crowns} Tyrants slain</small></div></div>`;
-      if(s.m)h+=`<button class="gold big" data-act="cont">Continue<small>Round ${s.m.round} of ${ROUNDS} · ${s.m.def.n} · ${DIFF[s.m.diff||'normal'].n} · ${AGG[s.m.agg||'normal'].n} rivals</small></button>`;
+      if(s.m)h+=`<button class="gold big" data-act="cont">Continue<small>${s.m.story?`Story · Chapter ${s.m.story.ch+1}: ${STORY[s.m.story.ch].t}`:`Round ${s.m.round} of ${ROUNDS} · ${s.m.def.n} · ${DIFF[s.m.diff||'normal'].n} · ${AGG[s.m.agg||'normal'].n} rivals`}</small></button>`;
       h+=`<button class="${s.m?'':'gold '}big" data-act="view" data-arg="circuit">${s.m?'New circuit':'Start a circuit'}<small>${ROUNDS} rounds against three rivals</small></button>`;
+      h+=`<button class="big storyb" data-act="view" data-arg="story">📖 Story · Felix's Journal<small>${(p.story||0)>=STORY.length?'Prologue complete · reread or replay':`Prologue · Chapter ${(p.story||0)+1} of ${STORY.length}: ${STORY[p.story||0].t}`}</small></button>`;
       h+=`<button class="big" data-act="view" data-arg="arena">Colosseum<small>Practice fights and cup tournaments</small></button>`;
       h+='<div class="tiles">'+menuTile('view','heroes','🛡️','Heroes',{g:C.c,badge:a.slots.length})+menuTile('deck',null,'🃏','Deck',{g:'#B06BFF',badge:p.deck.length!==DECK?'!':null})+menuTile('howto',null,'❓','How to play',{g:'#1FB5C9'})
         +menuTile('craftOpen','main','🔨','Crafting',{g:'#FFC93D',badge:p.sig?'✓':null})+menuTile('view','settings','⚙️','Settings',{g:'#CFD6FF'})+menuTile('view','news',"📰","What's new",{g:'#FFC93D'})+menuTile('review',null,'⭐','Review',{g:'#FFC93D'})
@@ -1424,6 +1449,7 @@ function renderTitle(){
     }else if(v==='gaunt'){h+=gauntRoundHTML(p);
     }else if(v==='craft'){h+=back(G.craftBack||'main',G.craftBack==='arena'?'Colosseum':'Main menu')+'<h3>Crafting</h3>'+craftHTML(p);
     }else if(v==='cup'){h+=cupRoundHTML(p);
+    }else if(v==='story'){h+=back()+storyHTML(p);
     }else if(v==='news'){
       h+=back()+"<h3>What's new</h3>"+CHANGES.map(([vv,t])=>`<div class="news"><b>v${vv}</b><span>${t}</span></div>`).join('');
     }
@@ -1434,10 +1460,10 @@ function renderTitle(){
   if(v==='custom'&&$('cpath'))$('cpath').addEventListener('input',e=>{G.cpath=e.target.value;$('cprev').innerHTML=boardSVG(G.cpath)||'<small>Not a valid loop yet</small>';});
 }
 let toastT=0;
-function toast(m){const t=$('toast');t.textContent=m;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>{t.style.opacity=0;},2100);}
+function toast(m,ms){const t=$('toast');t.textContent=m;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>{t.style.opacity=0;},ms||2100);}
 function setScene(s){G.sel=null;G.targeting=null;
   G.scene=s;const sh=(id,on)=>$(id).classList.toggle('hidden',!on);
-  sh('title',s==='title');sh('top',s!=='title');sh('info',s==='board');sh('bottom',s==='board');sh('plays',s==='board');sh('chud',s==='battle');
+  sh('title',s==='title');sh('top',s!=='title');sh('info',s==='board');sh('bottom',s==='board');sh('plays',s==='board'&&!(G.m&&G.m.story&&!STORY[G.m.story.ch].cards));sh('chud',s==='battle');
   if(s==='title'){G.view=G.retView||'main';G.retView=null;renderTitle();clearTimeout(toastT);$('toast').style.opacity=0;}
 }
 
@@ -1472,7 +1498,7 @@ const fmtT=t=>{const m=Math.floor(t/60),x=Math.floor(t%60);return m+':'+String(x
 function arenaHero(){const a=G.ac,p=newPlayer(a.cls);Object.assign(p,{lvl:a.lvl,exp:0,gil:0,limit:0,weapon:a.weapon,armour:a.armour,weapons:[a.weapon],armours:[a.armour],potion:a.pot,ether:a.eth,hipot:a.hipot,elixir:0,diff:a.diff,tips:1});
   p.up={[a.weapon]:a.up,[a.armour]:a.up};const ns=WEAPONS[a.weapon].slots.reduce((x,y)=>x+y,0),na=ARMOUR[a.armour].slots.reduce((x,y)=>x+y,0);
   p.ws=Array.from({length:ns},(_,i)=>a.ws[i]||null);p.as=Array.from({length:na},(_,i)=>a.as[i]||null);p.gems=[...new Set(p.ws.concat(p.as).filter(Boolean))];return p;}
-function arenaDone(b,win){if(G.arena==='cup'){cupFought(b,win);return;}if(G.arena==='gaunt'){gauntFought(b,win);return;}G.arena=false;$('bYield').classList.add('hidden');$('top').classList.remove('arena');
+function arenaDone(b,win){if(G.arena==='story'){storyBout(b,win);return;}if(G.arena==='cup'){cupFought(b,win);return;}if(G.arena==='gaunt'){gauntFought(b,win);return;}G.arena=false;$('bYield').classList.add('hidden');$('top').classList.remove('arena');
   const k=G.ac.foe,best=arenaBest(),t=b.t;let nb=false;if(win&&(!best[k]||t<best[k])){best[k]=t;nb=!!1;try{localStorage.setItem(ASAVE,JSON.stringify(best));}catch(e){}}
   G.arenaLast={win,n:FOES[k].n,time:fmtT(t),dmg:Math.round(b.en.reduce((s,e)=>s+(e.maxhp-Math.max(0,e.hp)),0)),taken:Math.round(b.taken||0),best:nb&&win};
   G.retView='arena';setScene('title');document.getElementById('title').scrollTop=0;}
@@ -1579,6 +1605,221 @@ function gauntEnd(how){const R=G.gaunt,p=G.p,lines=[];
   const st=S(),k=R.keep;p.hp=clamp(k.hp,1,st.maxhp);p.mp=clamp(k.mp,0,st.maxmp);p.limit=k.limit;
   G.gauntLast={win:how==='clear',title:how==='clear'?'Gauntlet cleared!':how==='fall'?`Fell in fight ${R.round+1}. Everything banked is lost`:`Cashed out after ${R.round} fight${R.round===1?'':'s'}`,lines:lines.length?lines:['Nothing kept']};
   G.m=R.m;G.arena=false;G.gaunt=null;save();G.aTab='gaunt';G.retView='arena';setScene('title');document.getElementById('title').scrollTop=0;if(how==='clear')SFX.win();}
+
+/* ---------------- STORY MODE: the Prologue, "Felix's Journal" ----------------
+   Eight short chapters that teach one system each, framed by Felix Galloway's journal.
+   Each chapter is a small board using the normal match engine with a few overrides
+   (fate table, enemy groups, scripted fights, fewer rivals), except chapter 8 (the Proving Hall).
+   Progress lives on the hero: p.story = chapters finished, p.storyR = chapters already rewarded. */
+const FELIX=t=>`<div class="parch">${t}<span class="sig">— F.</span></div>`;
+const LESSON={gil:'Gil buys gear, gems and cards from merchants.',item:'Potions heal HP and Ethers restore MP. Use them in battle.',spring:'Healing springs top you up between fights.',
+ trap:'Fate traps sting, but they never finish you off.',merchant:'Merchants sell gear, gems and cards. Their stock changes every visit.',exp:"A Hero's Echo is free EXP towards your next level.",
+ rare:'Hidden caches hold gems and accessories.',fight:'Encounters: 1 is easy, 4 normal, 8 hard, 12 deadly. The higher, the bigger the reward.',card:'Cards you find are temporary: they last until the board ends.'};
+const SABLE_DECK=['sticky','snare','skip','reverse','slow','slow','ward','haste','haste','curse','sap','reverse','sticky','snare','ward'];
+const HALLN=['Wren','Corvin','Hask'];
+const STORY=[
+ {t:'First Steps',ico:'👣',place:'The Galloway Yard',path:'R5 D3 L5 U3',rounds:10,noShop:1,noFate:1,dbl:1,goal:{laps:2},
+  teach:'Rolling the dice, doubles, the Sanctuary',learn:'Board movement',
+  j:"Little one,<br>If you're reading this, you've nicked my journal again. Fine. Keep it. Lesson one: the dice don't care how badly you want it. Roll, move, breathe. Don't chase doubles. They'll come when they come, and when they do, go again before the board notices.",
+  intro:"Chalk tiles loop around the yard behind the forge cottage. Felix watches from a chair by the door, wrapped in a blanket. \"Two laps. Try not to trip over your own feet.\"",
+  how:'Tap <b>ROLL</b>. The two dice move you that many tiles. Roll a <b>double</b> and you roll again. Passing the <b>Sanctuary</b> (the white start tile) pays a little gil and heals you.',
+  outro:"As you finish your lap of honour, Felix coughs into his sleeve. Behind him the Hearthstone in the hearth flickers a sickly amber. He waves it off. \"Lap of honour. Go on.\"",reward:{gil:50}},
+ {t:'Reading the Ley',ico:'🎲',place:'The Old Towpath',path:'R6 D3 L6 U3',rounds:10,noShop:1,preview:1,lessons:1,goal:{laps:2},fmap:{3:{t:'gil'}},
+  teach:'The Fate Die and what each roll means',learn:'Tile outcomes and encounter previews',
+  j:"Every tile hums. Put your hand on one and you'll feel it. The D12 is just the Circuit's way of asking what the ley wants to give you today. Low is gentle, high is trouble. 1, 4, 8, 12, those are the ones that bite. Twelve once took two of my teeth.",
+  intro:'The canal-side towpath is paved with the village\'s first public ley-tiles. They thrum softly underfoot.',
+  how:'Landing on a tile rolls the <b>Fate Die</b> (a D12): gil, supplies, healing springs, traps, merchants and more. Rolls of <b>1, 4, 8 and 12</b> are encounters, easiest to deadliest. For now you\'ll only see what you would face.',
+  outro:'At the end of the towpath one tile flickers the same sickly amber as the Hearthstone at home. You crouch to look. Nobody else walking past seems to notice it at all.',reward:{potion:1}},
+ {t:'Steel First',ico:'⚔️',place:'The Old Towpath',path:'R6 D3 L6 U3',rounds:14,noShop:1,goal:{wins:3},off:-1,
+  fmap:{2:{t:'fight',tier:'easy'},3:{t:'gil'},5:{t:'fight',tier:'normal'},8:{t:'fight',tier:'easy'},12:{t:'fight',tier:'normal'}},
+  comps:{easy:[['wisp']],normal:[['wisp','wisp'],['gloop','wisp']]},
+  firstTips:[[.6,'Move: drag anywhere on the screen (or WASD)'],[4.5,'Hold ATTACK to swing at the nearest enemy'],[9,'Keep swinging: the last hit of a combo hits hardest'],[14,'Wins give EXP and gil. Level up to grow stronger']],
+  teach:'Moving, attacking and combos in the arena',learn:'Combat, EXP and levelling',
+  j:"When the ley pulls you in, you'll be somewhere else. Small, closed off, just you and whatever crawled out of the crack. Move first, then hit. Don't stand there swinging at air like you did at the harvest fair. Everyone saw.",
+  intro:'Back on the towpath, and this time the ley-wisps are real. Felix\'s notes are scrawled in the margin: <i>"They\'re weak. You\'re not. Probably."</i>',
+  how:'Encounters pull you into an arena. Move, then hold <b>ATTACK</b>. Three hits in a row make a combo. Win fights for EXP and gil.',
+  outro:'The last wisp bursts into glittering dust. It isn\'t ash. It\'s fine grains of amber glass, warm to the touch. You pinch some into a twist of paper and pocket it.',reward:{ether:1,gil:60}},
+ {t:'Stand Your Ground',ico:'🛡️',place:'Millbrook Lock',path:'R5 D3 L5 U3',rounds:12,noShop:1,goal:{script:1},
+  fmap:{1:{t:'spring'},3:{t:'gil'},4:{t:'item'},8:{t:'exp'},12:{t:'gil'}},
+  script:{title:'The Lock Warden',n:'The Lock Warden',comp:['lockwarden'],off:0,drops:'normal',c:'#7a9bb0',obj:'guard',
+   d:'The lock gates grind open and a construct of iron and old stone lurches onto the platform. Its shoulders creak as it winds up. It telegraphs everything.',
+   tips:[[.6,'Red ring = a wind-up. Hold GUARD as it lands'],[5,'Tap GUARD just before the hit for a PERFECT guard'],[10,'Or DODGE through the attack'],[16,'Mash ATTACK and it will counter you. Hit, then get ready']]},
+  teach:'Guarding, dodging and reading wind-ups',learn:'Guard, dodge and the wipe penalty',
+  j:"Here's the bit nobody teaches: you win by not getting hit. Watch the shoulders. Everything telegraphs. Guard the heavy ones, roll the fast ones. If you get greedy, the Circuit will make you pay in distance, and distance is the only thing that matters out there.",
+  intro:'Millbrook Lock sits on a raised stone platform above the water. Something heavy is moving behind the gates.',
+  how:'Watch for the <b>red ring</b> of a wind-up. Hold <b>GUARD</b> as it lands (tap it just before for a <b>PERFECT</b> guard), or <b>DODGE</b> through it. Mash attack and the Warden will punish you. If you\'re beaten you lose travel distance, but you can try again.',
+  outro:'A letter waits at the lock-keeper\'s hut, in Felix\'s hand. It\'s a touch looser than in the journal. <i>"Entry ledger closes in three days. No pressure. (Lots of pressure.)"</i>',reward:{potion:2}},
+ {t:'The Learnt Art',ico:'✨',place:'Heronmere Shallows',path:'R6 D4 L6 U4',rounds:14,noShop:1,goal:{wins:3},fmap:{3:{t:'gil'},12:{t:'fight',tier:'normal'}},
+  script:{title:'Mire Shells',n:'Mire Shells',comp:['mireshell','mireshell'],off:0,drops:'normal',c:'#5f8f7e',obj:'weak',spellWeak:1,
+   d:'Two armoured shells crawl out of the reeds. Steel skids off their backs. Felix\'s margin note: <i>"Use your head. Or your hands. Magic, I mean."</i>',
+   tips:[[.6,'Your spell buttons are above the action buttons'],[5,'Grey numbers = resisted. Big yellow numbers = a weakness'],[10,'Keep moving while you cast']]},
+  teach:'Casting spells while moving, elemental weaknesses',learn:'Magic, MP and elemental damage',
+  j:"Magic's just practice and patience, same as smithing. You've got more of a knack than you think. I've seen you light the forge with a flick when you thought nobody was looking. Cast on the move. Standing still to cast is how heroes become stories.",
+  intro:'Reeds ring the lake edge, and mountains stand behind it. The water is very still.',
+  how:'Spell gems in your gear appear as buttons in battle. They cost MP. Some enemies shrug off steel but crumble to the right element. Big yellow numbers mean you hit a weakness.',
+  outro:'A traveller from the desert tribes watches you dry off. She trades you a spell gem for a little news, then leans in. "The stones are hungrier lately." She is gone before you can ask what she means.',reward:{gem:1}},
+ {t:'Linked Light',ico:'💎',place:"Vale's Forge, Emberford",path:'R5 D4 L5 U4',rounds:12,goal:{script:1},forge:1,fmap:{3:{t:'gil'},8:{t:'fight',tier:'normal'},12:{t:'fight',tier:'normal'}},
+  script:{title:'Sparks on the Forge Road',n:'Fire spirits',comp:['cinder','cinder','cinder'],off:0,drops:'normal',c:'#ff7b3a',
+   d:'Up the forge road, fire spirits are sparking off a cracked ley-tile. Garrick shouts after you: "Elemental and Fire, linked on your armour!"',
+   tips:[[.6,'Cinders burst when they reach you. Guard or dodge the blast'],[5,'An Elemental + Fire link on your armour halves fire damage']]},
+  teach:'Equipment, gem slots and linked gems',learn:'Gear, gem slots, links and merchants',
+  j:"Find Garrick Vale in Emberford. Best smith in the county and the only one who won't rob you. Tell him you're my sibling and he'll pretend to be grumpy about it. Let him show you the gem links. I never got the hang of them, and I'd rather you didn't lose because of my bad habits.",
+  intro:'Emberford\'s market ring is loud with hammer-song. In the middle of it all is a forge with its doors thrown open.',
+  how:'Gems sit in slots on your weapon and armour. <b>[o]</b> is a single slot and <b>[o=o]</b> a linked pair. <b>Elemental</b> linked with a spell on your <b>weapon</b> adds that element to your strikes. On your <b>armour</b> it halves damage from that element.',
+  outro:'Garrick turns your twist of amber dust over in his fingers and goes quiet. "I\'ll keep a pinch of this. For curiosity." Maren brings tea. In the back room, baby Corin sleeps beside a warded Hearthstone. Garrick looks at it a moment too long.',reward:{gil:100}},
+ {t:'Rival Hands',ico:'🃏',place:'The Emberford Qualifier',path:'R6 D4 L6 U4',rounds:14,cards:1,race:1,goal:{race:2},fmap:{8:{t:'fight',tier:'normal'},12:{t:'fight',tier:'normal'}},
+  teach:'Cards, counters, traps and grudges',learn:'Cards, deck basics, rivals and grudges',
+  j:"You'll meet the others soon. Some are decent. Some are snakes. All of them will play cards on you. Keep a counter in hand, always. And if you see Sable Rook, be polite. We trained together. We didn't part well. That's my fault, not yours, but Sable won't see it that way.",
+  intro:'The qualifier board is laid out in the square, crowds leaning on the barriers. One other competitor is already waiting at the start.',
+  how:'Cards are for dealing with rivals. You hold 5, play up to <b>2</b> a turn and may <b>discard 1</b>. Hostile cards hit a rival, traps hide on your tile, and <b>Ward</b> cancels the next hostile card played on you. First to finish <b>2 laps</b> wins.',
+  outro:'Sable catches you by the barrier afterwards. "Felix should be here, not his understudy." Then, quieter: "...Tell him I asked after him." Sable walks off before you can answer.',
+  outroLose:'Sable crosses the line first and doesn\'t look back. Later, by the barrier: "Felix should be here, not his understudy." Then, quieter: "...Tell him I asked after him."',reward:{card:1}},
+ {t:'The Proving Hall',ico:'🏛️',place:'The Proving Hall',hall:1,
+  teach:'The Colosseum, objectives and essences',learn:'Colosseum, Cups, the Gauntlet and crafting',
+  j:"Last page. The Proving Hall is where Voss's people decide who's worth registering. They'll watch you fight. Don't show off, but don't hold back either. Whatever happens, I'm proud of you. I've never said that properly. There, it's written now, so you can't make me take it back.",
+  intro:'A glass dome lit by emberglass. Examiners in grey line the gallery with ledgers open. Three challengers wait for you, one after another.',
+  how:'Three bouts against heroes of other classes. Each bout has an <b>objective</b>. Complete it and win to earn that class\'s <b>essence</b>, used for crafting. If you fall, you can try the bout again.',
+  outro:'The registrar reads the ledger. "Galloway." The crowd stirs, expecting Felix. You step forward instead. From a balcony a tall man in dark red, <b>Varek Voss</b>, tilts his head and murmurs to an aide: "Keep an eye on that one." In your hand, Felix\'s crystal pawn glows for the first time.',reward:{tix:1,potion:1}}];
+
+const storyOn=()=>!!(G.m&&G.m.story);
+function storyGoal(m){const s=m.story,g=STORY[s.ch].goal;
+  if(g.race){const n=G.board?G.board.n:1,l=d=>Math.min(g.race,Math.max(0,Math.floor(d/n)));return `first to ${g.race} laps · you ${l(m.dist)}, Sable ${l(m.riv[0].dist)}`;}
+  if(g.laps)return `goal: ${g.laps} laps (${Math.min(s.laps,g.laps)}/${g.laps})`;
+  if(g.wins)return `goal: win ${g.wins} fights (${Math.min(s.wins,g.wins)}/${g.wins})`;
+  return `goal: ${STORY[s.ch].script.title}`;}
+function storySetup(m,st){const C=STORY[st.ch];
+  m.story={ch:st.ch,laps:0,wins:0,done:false,seen:{},keep:st.keep||null,keepV:st.keepV||null};m.rounds=C.rounds;m.agg='normal';
+  m.riv.forEach((r,i)=>{if(!(C.race&&i===0))r.out=true;});
+  if(C.race){const r=m.riv[0];r.n='Sable Rook';r.arch='saboteur';r.cls=pick(Object.keys(CLASSES).filter(k=>k!==G.p.cls));}}
+function storyCards(m){if(!STORY[m.story.ch].race)return;const r=m.riv[0];r.ps=newPS(SABLE_DECK);drawUp(r.ps);r.ps.grudge.me=4;
+  if(!m.ps.hand.some(c=>c.id==='ward'))m.ps.hand[0]={id:'ward',t:true};}
+function storyF(n){const s=G.m&&G.m.story;if(!s)return null;const C=STORY[s.ch];return(C.fmap&&C.fmap[n])||null;}
+function storyTier(tier){const s=G.m&&G.m.story;if(!s)return null;const C=STORY[s.ch];if(!C.comps||!C.comps[tier])return null;return Object.assign({},TIERS[tier],{comps:C.comps[tier],off:C.off!=null?C.off:TIERS[tier].off});}
+function storyLesson(t){const s=G.m&&G.m.story;if(!s||!STORY[s.ch].lessons||s.seen[t]||!LESSON[t])return;s.seen[t]=1;toast(LESSON[t],4200);}
+async function storyPreview(T,lvl,comp,die){const s=G.m.story;if(!STORY[s.ch].preview)return false;
+  await card('Encounter!',`${die}<p><span class="tag" style="background:${T.c}">${T.n}</span> &nbsp;Enemy Lv ${lvl}</p><p><small>${foeNames(comp)}</small></p>${FELIX('Not yet. Learn to swing first.')}`,[['Step back','ok']]);
+  storyLesson('fight');return true;}
+// Landing on a plain tile in a story chapter: quiet tiles, or the chapter's scripted fight.
+async function storyLand(tile){const s=G.m.story,C=STORY[s.ch];
+  if(C.noFate){toast(pick(['The chalk tile hums under your feet','Felix: "Keep going!"','A crow watches you from the fence','Felix: "Faster, I\'m getting old here"','The tile glows faintly as you pass']));return true;}
+  if(C.script&&!s.done){const sc=C.script;await card(sc.title,`<p class="beat">${sc.d}</p>`,[['Fight!','ok','gold']]);
+    const spec={n:sc.n,comp:sc.comp.slice(),off:sc.off||0,drops:sc.drops||'normal',c:sc.c,script:1,obj:sc.obj,tips:sc.tips};
+    if(sc.spellWeak){const el=G.p.ws.concat(G.p.as).map(g=>g&&GEMS[g]).find(g=>g&&g.kind==='spell'&&g.el);if(el)spec.weak=el.el;else{spec.weak='fire';spec.extra=['fire'];}}
+    await playerFight(spec,tile,1);return true;}
+  if(C.firstTips&&!s.tipped){s.tipped=1;s.nextTips=1;} // tips ride along with the first real fight
+  return false;}
+// Extra battle setup for story fights (objective banner, timed tips, weaknesses, softer foes).
+function storyBattle(spec){
+  if(spec.hpMul)B.en.forEach(e=>{e.hp=e.maxhp=Math.round(e.maxhp*spec.hpMul);});
+  if(spec.atkMul)B.en.forEach(e=>{e.atk*=spec.atkMul;});
+  if(spec.weak)B.en.forEach(e=>{e.weak=spec.weak;});
+  if(spec.obj){B.obj={id:spec.obj,st:'live',n:0};objDraw();}
+  let tips=spec.tips;const s=G.m&&G.m.story;if(!tips&&s&&s.nextTips){s.nextTips=0;tips=STORY[s.ch].firstTips;}
+  if(tips)B.tq=tips.map(x=>x.slice());}
+// The Lock Warden punishes button-mashing: four hits in quick succession and it counter-slams.
+function wardenMash(e){if(e.hp<=0||e.stagT>0||e.st==='wind')return;const now=B.t;e.mash=(e.mash||[]).filter(t=>now-t<1.4);e.mash.push(now);
+  if(e.mash.length>=4){e.mash=[];windup(e,'slam',.45,150,1.3,1);floater(e.x,e.y-e.r-26,'COUNTER!','#ff5a5a',true);}}
+// Sable opens the qualifier by playing Skip on you, to show what a Ward is for.
+async function storyAI(r,k){const s=G.m.story;if(!STORY[s.ch].race||s.opened)return;s.opened=1;
+  const c={id:'skip',t:true};r.ps.hand.push(c);await playCard(k,c,'me',0);
+  toast(G.m.ps.skip?'Felix\'s journal: "Should\'ve kept that counter ready..."':'Felix\'s journal: "Told you. Keep a counter in hand."',4000);}
+async function storyCheck(){const m=G.m,s=m&&m.story;if(!s)return false;const g=STORY[s.ch].goal;
+  if(g.race){const need=g.race*G.board.n;if(m.dist>=need){await storyEnd(true);return true;}if(m.riv[0].dist>=need){await storyEnd(false);return true;}return false;} // distance, so Reverse cards can't fake a lap
+  if((g.laps&&s.laps>=g.laps)||(g.wins&&s.wins>=g.wins)||(g.script&&s.done)){await storyEnd(true);return true;}
+  return false;}
+function storyReward(rw,half){const p=G.p,out=[];if(!rw)return out;
+  if(rw.gil){const g=Math.round(rw.gil*(half?.5:1));p.gil+=g;out.push(`<span>Gil</span><b class="gilc">+${g}</b>`);}
+  if(rw.potion){p.potion+=rw.potion;out.push(`<span>Potion</span><b>+${rw.potion}</b>`);}
+  if(rw.ether){p.ether+=rw.ether;out.push(`<span>Ether</span><b>+${rw.ether}</b>`);}
+  if(rw.gem){const g=giveGem()||giveRare();out.push(`<span>Found</span><b>${g}</b>`);}
+  if(rw.card&&!half){out.push(`<span>Card</span><b>${giveCard(false)}</b>`);}
+  if(rw.tix){const t0=tixOf(p);p.tix=Math.min(TIXMAX,t0+rw.tix);out.push(`<span>Colosseum ticket</span><b>${p.tix>t0?'+'+(p.tix-t0):'full'}</b>`);}
+  return out;}
+// Mark a chapter finished and pay its reward the first time only.
+function storyComplete(ch,half){const p=G.p,C=STORY[ch];p.storyR=p.storyR||[];let lines=[];
+  if(!p.storyR.includes(ch)){lines=storyReward(C.reward,half);p.storyR.push(ch);}
+  const was=p.story||0;p.story=Math.max(was,ch+1);
+  return `${lines.length?`<div class="rw">${lines.join('')}</div>`:'<p class="note">Replays give no rewards, but the story is yours to relive.</p>'}<p>Learned: <b>${C.learn}</b></p>${p.story>was&&ch+1<STORY.length?`<p>Next: <b>Chapter ${ch+2} · ${STORY[ch+1].t}</b></p>`:''}`;}
+async function storyEnd(res){const m=G.m,s=m.story,C=STORY[s.ch],p=G.p;G.busy=true;
+  let won=res;if(res===null)won=C.goal.race?m.dist>=m.riv[0].dist:true;
+  if(C.goal.race)await card(won?'You beat Sable!':'Sable wins the qualifier',won?'<p>You cross the line first. The crowd cheers the name Galloway, a little uncertainly.</p>':'<p>Close, but Sable gets there first. You still qualify, just without the bragging rights.</p>',OK);
+  await card(C.t,`<p class="beat">${!won&&C.outroLose?C.outroLose:C.outro}</p>`,[['Continue','ok','gold']]);
+  const html=storyComplete(s.ch,C.goal.race&&!won);
+  await card(`Chapter ${s.ch+1} complete`,html,[['Back to the journal','ok','gold']]);
+  storyLeave(s.keep,s.keepV);}
+function storyLeave(keep,keepV){const p=G.p,st=S();G.m=keep||null;
+  if(keep&&keepV){p.hp=clamp(keepV.hp,1,st.maxhp);p.mp=clamp(keepV.mp,0,st.maxmp);p.limit=keepV.limit||0;}else{p.hp=st.maxhp;p.mp=st.maxmp;p.limit=0;}
+  G.busy=false;save();G.retView='story';setScene('title');document.getElementById('title').scrollTop=0;}
+async function storyStart(i){const C=STORY[i],p=G.p;
+  const r=await card(`Chapter ${i+1} · ${C.t}`,FELIX(C.j)+`<p class="teach">Teaches: ${C.teach}</p>`,[['Begin','go','gold'],['Back','no']]);if(r!=='go')return;
+  const keep=G.m?(G.m.story?G.m.story.keep:G.m):null,keepV=G.m&&G.m.story?G.m.story.keepV:{hp:p.hp,mp:p.mp,limit:p.limit};
+  if(C.hall){await hallStart(i,keep,keepV);return;}
+  await card(C.place,`<p class="beat">${C.intro}</p><div class="how">${C.how}</div><p class="teach">${storyGoalText(C)}</p>`,[["Let's go",'ok','gold']]);
+  G.m=null;newMatch({id:'story'+i,n:C.place,path:C.path,noShop:C.noShop},{ch:i,keep,keepV});
+  if(!G.m||!G.m.story)return;G.busy=true;$('rollBtn').disabled=true;
+  if(C.forge)await storyForge();
+  if(C.race)await storyRace();
+  G.busy=false;$('rollBtn').disabled=false;}
+const storyGoalText=C=>C.goal.race?`Goal: finish ${C.goal.race} laps before your rival`:C.goal.laps?`Goal: ${C.goal.laps} laps`:C.goal.wins?`Goal: win ${C.goal.wins} fights`:`Goal: ${C.script.title}`;
+async function storyForge(){
+  await card("Vale's Forge",'<p class="beat">A broad man with soot to the elbows looks you over. "Felix\'s sibling? Thought so. Same stubborn chin." This is <b>Garrick Vale</b>.</p><p class="beat">"Right. Gems. Pay attention, because your brother never did."</p>',[['Show me','ok','gold']]);
+  await card('Gem slots','<div class="how"><b>[o]</b> holds one gem. <b>[o=o]</b> is a linked pair: the two gems work together.<br><br><b>Elemental + a spell</b>, linked on your <b>weapon</b>: your strikes carry that element.<br><b>Elemental + a spell</b>, linked on your <b>armour</b>: you take half damage from that element.</div><p class="beat">"Fire spirits are sparking up the forge road. Put Elemental and Fire together on your armour, then go and see what happens."</p>',[['Open the forge','ok','gold']]);
+  G.stock=rollStock();G.shop=true;G.menuTab='gems';renderMenu();$('menu').classList.remove('hidden');await new Promise(r=>{menuClose=r;});}
+async function storyRace(){const r=G.m.riv[0];
+  await card('Sable Rook',`<p class="beat">A sharp-eyed ${CLASSES[r.cls].n} leans on the start post, deck already shuffled. "So you're the stand-in. Felix's little shadow."</p><p class="beat">"Let's see if you're any better at keeping your guard up than he was."</p>`,[['Ignore it','ok','gold']]);
+  await card('Keep a counter in hand',`${FELIX('Keep a counter in hand, always.')}<div class="how">You hold a <b>Ward</b>. Tap it in your hand, then <b>Play</b>, before you roll. It cancels the next hostile card someone plays on you.</div>`,[['Got it','ok','gold']]);}
+// ---- Chapter 8: the Proving Hall (three bouts against hero classes, Colosseum style)
+async function hallStart(i,keep,keepV){const C=STORY[i],p=G.p;
+  await card(C.place,`<p class="beat">${C.intro}</p><div class="how">${C.how}</div>`,[['Enter the Hall','ok','gold']]);
+  const others=shuffle(Object.keys(CLASSES).filter(k=>k!==p.cls)).slice(0,3);
+  G.hallR={ch:i,round:0,cls:others,objs:['first','guard','fast'],keep,keepV,bank:{}};
+  G.m=null;G.arena='story';const st=S();p.hp=st.maxhp;p.mp=st.maxmp;p.limit=0;hallFight();}
+function hallFight(){const R=G.hallR,k=R.cls[R.round],n=HALLN[R.round];$('top').classList.add('arena');
+  battle({n:`Proving Hall ${R.round+1}/3: ${n} the ${CLASSES[k].n}`,comp:['h_'+k],off:R.round===0?-1:0,labels:[n+' · '+CLASSES[k].n],react:.25+R.round*.08,hpMul:.35+R.round*.1,atkMul:.55+R.round*.1,obj:R.objs[R.round]},{biome:pick(BIOMES)},{});}
+async function storyBout(b,win){const R=G.hallR,p=G.p,k=R.cls[R.round];$('obj').classList.add('hidden');$('top').classList.remove('arena');
+  G.retView='story';setScene('title');
+  if(!win){const r=await card('Knocked down','<p>The examiners scribble in their ledgers. You can take that bout again.</p>',[['Try again','go','gold'],['Leave the Hall','no']]);
+    if(r==='go'){const st=S();p.hp=st.maxhp;p.mp=st.maxmp;hallFight();}else hallEnd(false);return;}
+  const done=b.obj&&b.obj.st==='done';if(done)R.bank['ess_'+k]=(R.bank['ess_'+k]||0)+1;
+  R.round++;if(R.round>=R.cls.length){hallEnd(true);return;}
+  await card(`Bout ${R.round} won`,`<p>${done?`Objective complete: <b>${MATS['ess_'+k].n}</b> earned.`:'You won, but missed the objective, so no essence this time.'}</p><p class="note">The examiners heal you for the next bout.</p>`,[['Next bout','ok','gold']]);
+  const st=S();p.hp=st.maxhp;p.mp=st.maxmp;p.limit=0;hallFight();}
+async function hallEnd(won){const R=G.hallR,C=STORY[R.ch],p=G.p;let html='';
+  if(won){const got=Object.entries(R.bank);for(const [k,n] of got)addMat(p,k,n);
+    await card('Registration',`<p class="beat">${C.outro}</p>`,[['Continue','ok','gold']]);
+    html=(got.length?`<p>Essences kept: ${got.map(([k,n])=>`${MATS[k].ico} ${n}× ${MATS[k].n}`).join(', ')}</p>`:'')+storyComplete(R.ch,false)
+      +'<p class="note">The Prologue is complete. Act 1 of the Emberglass Circuit is coming in a future update.</p>';
+    await card('Prologue complete',html,[['Back to the journal','ok','gold']]);}
+  G.arena=false;const keep=R.keep,keepV=R.keep?R.keepV:null;G.hallR=null;storyLeave(keep,keepV);}
+// ---- the Story view on the title screen
+function storyHTML(p){const done=p.story||0,N=STORY.length;
+  let h=`<div class="jhead"><span>📖</span><div><b>Felix's Journal</b><small>Prologue · ${Math.min(done,N)} of ${N} chapters</small></div></div>`;
+  h+=`<p class="note">Your older brother Felix trained for years to win Varek Voss's Emberglass Circuit, until the hearth-fade took hold. Now you're entering in his place, with his crystal pawn and his battered journal. Each chapter teaches one part of the game.</p>`;
+  if(G.m&&!G.m.story)h+=`<p class="note">Your circuit in progress (round ${G.m.round}) is kept safe while you play a chapter.</p>`;
+  if(G.m&&G.m.story)h+=`<button class="gold big" data-act="cont">Continue Chapter ${G.m.story.ch+1}<small>${STORY[G.m.story.ch].t} · ${storyGoal(G.m)}</small></button>`;
+  h+='<div class="tiles two">'+STORY.map((C,i)=>{const open=i<=done,fin=i<done;return menuTile(open?'storyCh':'storyLocked',i,fin?'✓':open?C.ico:'🔒',`${i+1}. ${C.t}`,{g:fin?'#22D39A':open?'#FFC93D':'#5a6290',on:i===done,cls:'wide',sub:open?C.teach:'Finish the chapter before this one'});}).join('')+'</div>';
+  h+=`<div class="tiles" style="margin-top:12px">${menuTile('storyJournal',null,'📜','Read the journal',{g:'#F4D9A0',sub:`${Math.min(done+1,N)} pages`})}${done<N?menuTile('storySkip',null,'⏭️','Skip prologue',{g:'#CFD6FF',sub:'Starter rewards'}):''}</div>`;
+  return h;}
+
+const STORY_ACT={
+  storyLocked(){toast('Finish the chapter before this one first');},
+  async storyCh(i){i=+i;const p=G.p,done=p.story||0,C=STORY[i];if(i>done)return;
+    if(G.m&&G.m.story){const cur=G.m.story.ch;
+      if(cur===i){const r=await card(`Chapter ${i+1} · ${C.t}`,'<p>You are partway through this chapter.</p>',[['Continue','c','gold'],['Start again','s'],['Back','x']]);if(r==='c')return ACT.cont();if(r!=='s')return;}
+      else{const r=await card('Leave your chapter?',`<p>Chapter ${cur+1} (${STORY[cur].t}) is in progress. Starting another chapter abandons it.</p>`,[['Start anyway','s'],['Back','x','gold']]);if(r!=='s')return;}}
+    else if(i<done){const r=await card(`Chapter ${i+1} · ${C.t}`,`<p class="teach">${C.teach}</p>`,[['Play again','p','gold'],['Read the page','r'],['Back','x']]);
+      if(r==='r'){await card(`${i+1}. ${C.t}`,FELIX(C.j),OK);return;}if(r!=='p')return;}
+    storyStart(i);},
+  storyJournal(){const n=Math.min((G.p.story||0)+1,STORY.length);
+    card("Felix's Journal",`<div class="jlist">${STORY.slice(0,n).map((C,i)=>`<h4>${i+1}. ${C.t}</h4>${FELIX(C.j)}`).join('')}</div>`+(n<STORY.length?'<p class="note">More pages unlock as you play.</p>':''),[['Close','ok']]);},
+  async storySkip(){const p=G.p;if((p.story||0)>=STORY.length)return;
+    if(await card('Skip the prologue?','<p>You keep the starter rewards from every chapter, and you can still play any chapter later (without rewards for ones you skipped).</p>',[['Skip it','go'],['Keep playing','x','gold']])!=='go')return;
+    p.storyR=p.storyR||[];let lines=[];STORY.forEach((C,i)=>{if(!p.storyR.includes(i)){lines=lines.concat(storyReward(C.reward,false));p.storyR.push(i);}});
+    const ek=pick(Object.keys(CLASSES).filter(k=>k!==p.cls));addMat(p,'ess_'+ek,1);lines.push(`<span>Essence</span><b>${MATS['ess_'+ek].n}</b>`);
+    p.story=STORY.length;save();renderTitle();
+    await card('Registered for the Circuit',`<p class="beat">${STORY[STORY.length-1].outro}</p><div class="rw">${lines.join('')}</div>`,[['Continue','ok','gold']]);}
+};
+Object.assign(ACT,STORY_ACT);
 
 /* input wiring */
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t&&!t.disabled&&ACT[t.dataset.act])ACT[t.dataset.act](t.dataset.arg);});
@@ -1806,7 +2047,7 @@ function drawEnemy(e,p,col){
   ctx.lineWidth=e.b.boss?4:2.5;ctx.strokeStyle=elc;
   if(e.b.boss){ctx.save();ctx.globalAlpha*=.5;ctx.strokeStyle=elc;ctx.lineWidth=2;ctx.setLineDash([10,8]);ctx.beginPath();ctx.arc(x,y,r*1.45,t,t+6.283);ctx.stroke();ctx.setLineDash([]);ctx.restore();ctx.lineWidth=4;ctx.strokeStyle=elc;}
   const T=e.type;
-  if(T==='gloop'){const wob=Math.sin(t*6+x)*.08;ctx.fillStyle=fillC;ctx.beginPath();ctx.moveTo(x-r*(1+wob),y+r*.6);ctx.bezierCurveTo(x-r*1.15,y-r*.6,x-r*.4,y-r*(1.15-wob),x,y-r*(1.1-wob));ctx.bezierCurveTo(x+r*.4,y-r*(1.15-wob),x+r*1.15,y-r*.6,x+r*(1+wob),y+r*.6);ctx.closePath();ctx.fill();ctx.stroke();
+  if(T==='gloop'||T==='mireshell'){const wob=Math.sin(t*6+x)*.08;ctx.fillStyle=fillC;ctx.beginPath();ctx.moveTo(x-r*(1+wob),y+r*.6);ctx.bezierCurveTo(x-r*1.15,y-r*.6,x-r*.4,y-r*(1.15-wob),x,y-r*(1.1-wob));ctx.bezierCurveTo(x+r*.4,y-r*(1.15-wob),x+r*1.15,y-r*.6,x+r*(1+wob),y+r*.6);ctx.closePath();ctx.fill();ctx.stroke();
     ctx.fillStyle='rgba(255,255,255,.45)';ctx.beginPath();ctx.ellipse(x-r*.35,y-r*.55,r*.22,r*.12,-.5,0,6.3);ctx.fill();eyes(.32,r*.18);}
   else if(T==='wisp'||T==='cinder'){const fl=Math.sin(t*14+x)*.15,pu=T==='cinder'&&e.st==='wind'?1+Math.sin(t*40)*.15:1;ctx.fillStyle=fillC;ctx.beginPath();
     ctx.moveTo(x,y-r*(1.7+fl)*pu);ctx.bezierCurveTo(x+r*1.2*pu,y-r*.4,x+r*1.05*pu,y+r*.9,x,y+r*pu);ctx.bezierCurveTo(x-r*1.05*pu,y+r*.9,x-r*1.2*pu,y-r*.4,x,y-r*(1.7+fl)*pu);ctx.fill();ctx.stroke();
@@ -1821,7 +2062,7 @@ function drawEnemy(e,p,col){
     ctx.fillStyle=fillC;ctx.beginPath();ctx.moveTo(x,y-r*1.3);ctx.quadraticCurveTo(x+r*1.1,y-r*.2,x+r*1.05,y+r);ctx.lineTo(x-r*1.05,y+r);ctx.quadraticCurveTo(x-r*1.1,y-r*.2,x,y-r*1.3);ctx.fill();ctx.stroke();
     ctx.fillStyle='#14081f';ctx.beginPath();ctx.ellipse(x+lx*r*.15,y-r*.25+ly*r*.1,r*.5,r*.42,0,0,6.3);ctx.fill();glowEyes(.2,r*.1,big?'#e2b6ff':'#ffd84a');
     if(big){ctx.fillStyle='#ffd66d';for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(x+i*r*.25-r*.1,y-r*1.15);ctx.lineTo(x+i*r*.25,y-r*1.55+Math.abs(i)*r*.1);ctx.lineTo(x+i*r*.25+r*.1,y-r*1.15);ctx.fill();}}}
-  else if(T==='brute'||T==='gatekeeper'){const big=T==='gatekeeper',wd=e.st==='wind'?Math.sin(t*20)*3:0;
+  else if(T==='brute'||T==='gatekeeper'||T==='lockwarden'){const big=T!=='brute',wd=e.st==='wind'?Math.sin(t*20)*3:0;
     ctx.fillStyle=shade(e.b.c,-.25);for(const s of[-1,1]){ctx.beginPath();ctx.arc(x+s*(r*1.05+wd),y+r*.2,r*.38,0,6.3);ctx.fill();ctx.stroke();} // fists
     ctx.fillStyle=fillC;rrx(ctx,x-r,y-r,r*2,r*2,r*.45);ctx.fill();ctx.stroke();
     ctx.fillStyle='rgba(0,0,0,.18)';rrx(ctx,x-r*.55,y+r*.05,r*1.1,r*.65,r*.2);ctx.fill();
@@ -1888,11 +2129,11 @@ function boardLive(b,m,ts,ox,oy,pad,biome){
   { const k=(G.time/THEME.ms.sweep*1000)%1,y=-H*.2+k*H*1.4,g=ctx.createLinearGradient(0,y-40,0,y+40);g.addColorStop(0,'rgba(111,211,255,0)');g.addColorStop(.5,'rgba(111,211,255,.07)');g.addColorStop(1,'rgba(111,211,255,0)');ctx.fillStyle=g;ctx.fillRect(0,y-40,W,80);}
   { // the round sigil in the middle of the board
     const xs=b.tiles.map(t=>t.x),ys=b.tiles.map(t=>t.y),cx=ox+(Math.min(...xs)+Math.max(...xs)+1)/2*ts,cy=oy+(Math.min(...ys)+Math.max(...ys)+1)/2*ts,R=Math.min(b.cols,b.rows)*ts*.28;
-    const boss=!!BOSSR[m.round],col=boss?'#C23AFF':'#EEF1FF',pulse=boss?.5+.5*Math.sin(G.time*6):0;
+    const boss=!!BOSSR[m.round]&&!m.story,col=boss?'#C23AFF':'#EEF1FF',pulse=boss?.5+.5*Math.sin(G.time*6):0;
     ctx.save();ctx.translate(cx,cy);ctx.globalAlpha=.12+pulse*.25;ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,R,0,6.3);ctx.stroke();ctx.beginPath();ctx.arc(0,0,R*.8,0,6.3);ctx.stroke();
     ctx.rotate(G.time*6.283/(THEME.ms.sigilTurn/1000));for(let i=0;i<12;i++){const a=i/12*6.283;icon(ctx,['flame','flake','bolt','leaf'].at(i%4),Math.cos(a)*R*.9,Math.sin(a)*R*.9,R*.14,col);}
     ctx.restore();ctx.save();ctx.globalAlpha=.55+pulse*.4;ctx.fillStyle=col;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`700 ${Math.round(Math.max(11,R*.22))}px ${THEME.font.title}`;ctx.fillText(boss?'BOSS ROUND':'ROUND',cx,cy-R*.16);
-    ctx.font=`700 ${Math.round(Math.max(14,R*.36))}px ${THEME.font.title}`;ctx.fillText(`${m.round} / ${ROUNDS}`,cx,cy+R*.18);ctx.restore();
+    ctx.font=`700 ${Math.round(Math.max(14,R*.36))}px ${THEME.font.title}`;ctx.fillText(`${m.round} / ${RND(m)}`,cx,cy+R*.18);ctx.restore();
   }
   ctx.drawImage(boardLayer(b,ts,ox,oy),0,0,W,H);
   const cen=GFX.bcen,n=cen.length;
@@ -2006,6 +2247,7 @@ function drawBoard(dt){
   }
   for(const t of m.traps)if(t.owner==='me'){const T=b.tiles[t.pos],cx=ox+(T.x+.5)*ts,cy=oy+(T.y+.5)*ts,rr2=ts*.3;ctx.save();ctx.strokeStyle='#FF8AD1';ctx.lineWidth=1.5;ctx.shadowColor='#FF8AD1';ctx.shadowBlur=6;ctx.beginPath();for(let k=0;k<6;k++){const a=G.time*1.57+k*Math.PI/3;ctx.lineTo(cx+Math.cos(a)*rr2,cy+Math.sin(a)*rr2);}ctx.closePath();ctx.stroke();ctx.restore();}
   for(let i=3;i>=0;i--){ // rivals first, you on top
+    if(i>0&&m.riv[i-1].out)continue;
     const tk=G.toks[i],t=b.tiles[posOf(i)];
     if(Math.abs(t.x-tk.x)+Math.abs(t.y-tk.y)>3){tk.x=t.x;tk.y=t.y;}
     tk.x+=(t.x-tk.x)*Math.min(1,dt*16*SPD);tk.y+=(t.y-tk.y)*Math.min(1,dt*16*SPD);G.hops[i]=Math.max(0,G.hops[i]-dt*5.5);
@@ -2021,7 +2263,7 @@ function drawBoard(dt){
   drawBfx(dt);
   const nextBoss=m.round<=10?10:m.round<=20?20:30;
   const L=leaderKey(),chip=(col,n,d,g,k)=>`<span class="${k===L?'lead':''}" style="--oc:${col}"><b>${n}</b><em style="font-style:normal;opacity:.85">${d}t · ${fmt(g)}</em></span>`;
-  const html=`${b.def.n} · Round ${m.round}/${ROUNDS} · boss on ${nextBoss} · ${cur.kind==='start'?'Sanctuary':cur.kind==='shop'?"Merchant's Rest":cur.biome.n}<div class="sb">${chip('#EEF1FF','You',m.dist,m.dmg,'me')}${m.riv.map((r,k)=>chip(r.col,r.n,r.dist,r.dmg,k)).join('')}</div>`;
+  const html=`${b.def.n} · Round ${m.round}/${RND(m)} · ${m.story?storyGoal(m):'boss on '+nextBoss} · ${cur.kind==='start'?'Sanctuary':cur.kind==='shop'?"Merchant's Rest":cur.biome.n}<div class="sb">${chip('#EEF1FF','You',m.dist,m.dmg,'me')}${m.riv.map((r,k)=>r.out?'':chip(r.col,r.n,r.dist,r.dmg,k)).join('')}</div>`;
   if(hc.info!==html){hc.info=html;$('info').innerHTML=html;}
   const ps=m.ps,fx=activeFx(ps),pl=ps.hand.map(c=>c.id+(c.t?'*':'')).join()+'|'+ps.plays+ps.discUsed+ps.deck.length+'|'+fx.join()+'|'+G.sel+'|'+!!G.targeting;
   if(hc.pl!==pl){hc.pl=pl;const prev=G.lastHand||[],off=ps.plays>=PLAYMAX;G.lastHand=ps.hand.slice();
@@ -2167,7 +2409,7 @@ html:not(.kg-can-install) [data-install]{display:none!important}
 // Kralnu Games update check. When you push an update, change the game's version
 // AND version.json to the same new value; players then get a "new version" notice.
 (function(){
-  var NAME="Crystal Circuit",BUILD="1.4.0",CACHES=["cc-"],CHECK=true;
+  var NAME="Crystal Circuit",BUILD="1.7.0",CACHES=["cc-"],CHECK=true;
   var path=location.pathname,dir=path.replace(/[^/]*$/,''),last=0,bar=null,busy=false;
   if(/^\?v=\d+$/.test(location.search)){try{history.replaceState(history.state,'',path+location.hash)}catch(e){}}
   function build(){return String(window.kgBuild!=null?window.kgBuild:BUILD)}
